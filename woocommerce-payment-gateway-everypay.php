@@ -97,7 +97,7 @@ if( !class_exists( 'WC_Everypay' ) ) {
      * @access public
      * @var    string
      */
-     public $web_url = "https://every-pay.com/documentation-overview/";
+     public $web_url = "https://every-pay.com/";
 
     /**
      * The Gateway documentation URL.
