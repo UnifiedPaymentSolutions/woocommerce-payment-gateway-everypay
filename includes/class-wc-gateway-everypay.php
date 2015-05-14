@@ -287,7 +287,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			$args_array[] = '<input type="hidden" name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'" />';
 		}
 		
-/*
 			wc_enqueue_js( '
 				$.blockUI({
 						message: "' . esc_js( __( 'Thank you for your order. We are now redirecting you to payment gateway.', 'everypay' ) ) . '",
@@ -310,7 +309,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 					});
 				jQuery("#submit_payment_form").click();
 			' );
-*/
 
     echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
     echo implode('', $args_array);
