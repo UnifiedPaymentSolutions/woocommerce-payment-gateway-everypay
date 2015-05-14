@@ -24,7 +24,7 @@ For detailed information and signup please visit: [every-pay.com](https://every-
 
 === Accepting payment cards on website with EveryPay is easy ===
 
-**Simple setup***
+**Simple setup**
 EveryPay toolbox comes with free modules for most popular e-commerce platforms which makes it smooth to integrate with our payment gateway.
 
 **It takes just one agreement and one integration**
