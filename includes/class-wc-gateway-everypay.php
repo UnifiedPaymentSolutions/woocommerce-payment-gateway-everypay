@@ -307,7 +307,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 							lineHeight:		  "24px",
 						}
 					});
-				jQuery("#submit_payment_form").click();
+				jQuery("#everypay-button").click();
 			' );
 
     echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
