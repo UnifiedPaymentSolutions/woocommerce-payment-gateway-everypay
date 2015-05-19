@@ -100,7 +100,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     ?>
         <h3><?php _e( 'EveryPay', 'everypay' ); ?></h3>
         <p><?php _e( 'EveryPay is a card payment gateway service provider, enabling e-commerce merchants to collect credit and debit card online payments from their customers.', 'everypay' ); ?></p>
-        <p><a href="https://portal.every-pay.eu/"><?= __('Merchant Portal', 'everypay'); ?></a> | <a href="https://every-pay.com/contact/"><?= __('Contacts', 'everypay'); ?></a> | <a href="https://every-pay.com/contact/"><?= __('Documentation', 'everypay'); ?></a>
+        <p><a href="https://portal.every-pay.eu/"><?= __('Merchant Portal', 'everypay'); ?></a> | <a href="https://every-pay.com/contact/"><?= __('Contacts', 'everypay'); ?></a> | <a href="https://every-pay.com/documentation-overview/"><?= __('Documentation', 'everypay'); ?></a>
         </p>
 
         <table class="form-table">
