@@ -197,7 +197,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
         'label'       => __( 'Enable Test Mode', 'everypay' ),
         'type'        => 'checkbox',
         'description' => __( 'Place the payment gateway in test mode using test API credentials (real payments will not be taken).', 'everypay' ),
-        'default'     => 'yes'
+        'default'     => 'no'
       ),
      'title' => array(
           'title' => __( 'Title', 'everypay' ),
