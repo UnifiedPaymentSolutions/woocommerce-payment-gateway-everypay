@@ -466,52 +466,94 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * Process returning user or automatic callback
 	 *
 	 */
-	 
+
 	public function everypay_return_handler() {
 		@ob_clean();
-		header( 'HTTP/1.1 200 OK' );
-		
-		$_REQUEST = stripslashes_deep( $_REQUEST );
 
-    if( $this->debug == 'yes' ) {
-      $this->log->add( $this->id, 'EveryPay return handler started. ' . print_r($_REQUEST, true) );
-    }
-    
+    header( 'HTTP/1.1 200 OK' );
+
+		$_REQUEST = stripslashes_deep( $_REQUEST );
+		
+		if (!isset($_REQUEST['api_username']) ||
+		    !isset($_REQUEST['nonce']) ||
+		    !isset($_REQUEST['order_reference']) ||
+		    !isset($_REQUEST['payment_state']) ||
+		    !isset($_REQUEST['timestamp']) ||
+		    !isset($_REQUEST['transaction_result']) ) {
+          die();
+		    }
+
     $order_id  = absint( $_REQUEST['order_reference'] );
 		$order     = wc_get_order( $order_id );
 		
-		$this->log->add( $this->id, 'Order '. var_export($order, true) );
-		
+		if (!$order) {
+  		$this->log->add( $this->id, 'Invalid order ID received: ' . print_r($order_id, true) );
+  		die("Order was lost during payment attempt - please inform merchant about WooCommerce EveryPay gateway problem.");
+		}
+				
+    if( $this->debug == 'yes' ) {
+      $this->log->add( $this->id, 'EveryPay return handler started. ' . print_r($_REQUEST, true) );
+  		$this->log->add( $this->id, 'Order '. var_export($order, true) );
+    }
+
+    $this->change_language($order->id);
+
 		$order_complete = $this->process_order_status( $order, $_REQUEST );
 		
 		if ( $order_complete === self::_VERIFY_SUCCESS ) {
-  		$this->log->add( $this->id, 'Order complete');  		
+  		$this->log->add( $this->id, 'Order complete');
+  		$redirect_url = $this->get_return_url( $order );
+  				
 		}	else {
+      
+		  $redirect_url = $order->get_cancel_order_url();
   		
   		switch ($order_complete)
     		{
     			case self::_VERIFY_FAIL:
     			  $order->update_status( 'failed', __( 'Payment was declined by payment processor.', 'everypay' ) );
-        		$this->log->add( $this->id, 'Payment was declined by payment processor.' );     			  
+        		$this->log->add( $this->id, 'Payment was declined by payment processor.' );
     			  break;
     			case self::_VERIFY_CANCEL:
     			  $order->update_status( 'failed', __( 'Payment was cancelled by user.', 'everypay' ) );
-        		$this->log->add( $this->id, 'Payment was cancelled by user.' ); 
+        		$this->log->add( $this->id, 'Payment was cancelled by user.' );
     			  break;    		
           default:
     			  $order->update_status( 'failed', __( 'An error occurred while processing the payment response - please notify merchant!', 'everypay' ) );
-        		$this->log->add( $this->id, 'An error occurred while processing the payment response.' ); 
+        		$this->log->add( $this->id, 'An error occurred while processing the payment response.' );
     			  break;
     		}
 		}
 
     if( $this->debug == 'yes' ) {
-      $this->log->add( $this->id, 'Redirected to ' . $this->get_return_url( $order ) );
+      $this->log->add( $this->id, 'Redirected to ' . $redirect_url );
     }
 
-		wp_redirect( $this->get_return_url( $order ) );
+		wp_redirect( $redirect_url );
+		
 
 	}
+
+  private function change_language($order_id) {
+
+    if ( function_exists('icl_object_id') ) {
+        
+      // adapted from WooCommerce Multilingual /inc/emails.class.php      
+      $lang = get_post_meta($order_id, 'wpml_language', TRUE);
+      
+      if(!empty($lang)){
+        global $sitepress,$woocommerce;
+        $sitepress->switch_lang($lang,true);
+        unload_textdomain('woocommerce');
+        unload_textdomain('default');
+        $woocommerce->load_plugin_textdomain();
+        load_default_textdomain();
+        global $wp_locale;
+        $wp_locale = new WP_Locale();
+      }
+    }
+  }
+
 
 	/**
 	 * Process the order status
@@ -526,11 +568,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	public function process_order_status( $order ) {
   	
   	$result = $this->verify_everypay_response($_REQUEST);
-  	
+
 		if ( self::_VERIFY_SUCCESS === $result ) {
 			// Payment complete
-			$order->payment_complete( $payment_id );
-
+			$order->payment_complete( $_REQUEST['payment_reference'] );
 			// Add order note
 			$order->add_order_note( sprintf( __( 'EveryPay payment approved (Reference: %s, Timestamp: %s)', 'everypay' ), $_REQUEST['payment_reference'], $_REQUEST['timestamp'] ) );
       // Store the transaction ID for WC 2.2 or later.
@@ -538,7 +579,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 			// Remove cart
 			WC()->cart->empty_cart();
-
 		}
 
 		return $result;
