@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WooCommerce EveryPay gateway\n"
-"POT-Creation-Date: 2015-05-13 12:42+0200\n"
-"PO-Revision-Date: 2015-05-13 13:08+0200\n"
+"POT-Creation-Date: 2015-05-19 15:51+0200\n"
+"PO-Revision-Date: 2015-05-19 15:51+0200\n"
 "Last-Translator: \n"
 "Language-Team: Peeter Marvet <pets@tehnokratt.net>\n"
 "Language: et\n"
@@ -20,7 +20,7 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
 #: includes/class-wc-gateway-everypay.php:32
-#: includes/class-wc-gateway-everypay.php:318
+#: includes/class-wc-gateway-everypay.php:316
 msgid "Pay with credit card"
 msgstr "Maksa krediitkaardiga"
 
@@ -216,35 +216,40 @@ msgid ""
 "card."
 msgstr "Tänud tellimuse eest! Kaardimakse alustaiseks klõpsa allolevat nuppu."
 
-#: includes/class-wc-gateway-everypay.php:318
+#: includes/class-wc-gateway-everypay.php:292
+msgid ""
+"Thank you for your order. We are now redirecting you to payment gateway."
+msgstr "Tänud tellimuse eest! Kaardimakse alustaiseks klõpsa allolevat nuppu."
+
+#: includes/class-wc-gateway-everypay.php:316
 msgid "Cancel order &amp; restore cart"
 msgstr "Tühista tellimus ja taasta ostukorv"
 
-#: includes/class-wc-gateway-everypay.php:344
+#: includes/class-wc-gateway-everypay.php:342
 msgid "Payment Details"
 msgstr "Makse üksikasjad"
 
-#: includes/class-wc-gateway-everypay.php:345
+#: includes/class-wc-gateway-everypay.php:343
 msgid ""
 "Please note that the charge on your credit card will appear as \"EveryPay AS"
 "\"."
 msgstr "Krediitkaardiväljavõttel kajastub see makse kui  \"EveryPay AS\"."
 
-#: includes/class-wc-gateway-everypay.php:490
+#: includes/class-wc-gateway-everypay.php:514
 msgid "Payment was declined by payment processor."
 msgstr "Makselahendus keeldus makse sooritamisest."
 
-#: includes/class-wc-gateway-everypay.php:494
+#: includes/class-wc-gateway-everypay.php:518
 msgid "Payment was cancelled by user."
 msgstr "Kasutaja katkestas makse."
 
-#: includes/class-wc-gateway-everypay.php:498
+#: includes/class-wc-gateway-everypay.php:522
 msgid ""
 "An error occurred while processing the payment response - please notify "
 "merchant!"
 msgstr "Makse töötlemisel tekkis tõrge - palun teavita kaupmeest!"
 
-#: includes/class-wc-gateway-everypay.php:531
+#: includes/class-wc-gateway-everypay.php:576
 #, php-format
 msgid "EveryPay payment approved (Reference: %s, Timestamp: %s)"
 msgstr "EveryPay teostas makse (Reference: %s, Timestamp: %s)"
@@ -276,94 +281,3 @@ msgid ""
 msgstr ""
 "WooCommerce %s eeldab WooCommerce versiooni 2.2 või uuemat! Palun uuenda "
 "WooCommerce enne selle plugina aktiveerimist."
-
-#~ msgid "Getting started"
-#~ msgstr "Alustuseks"
-
-#~ msgid ""
-#~ "EveryPay is a simple card payment collection service provider for e-"
-#~ "commerce merchants."
-#~ msgstr ""
-#~ "EveryPay on lihtne krediitkaardimaksete vastuvõtmise teenus e-kaubanduse "
-#~ "jaoks."
-
-#~ msgid "Sign up for EveryPay"
-#~ msgstr "Loo endale EveryPay konto"
-
-#~ msgid "Learn more"
-#~ msgstr "Uuri lähemalt"
-
-#~ msgid "EveryPay Error: Please enter your SANDBOX API username and secret."
-#~ msgstr ""
-#~ "EveryPay viga: Palun sisesta TEST API-liidese kasutajanimi ja saladus."
-
-#~ msgid ""
-#~ "EveryPay payment gateway is in sandbox mode, real payments not processed!"
-#~ msgstr "EveryPay makseliides on test-reziimis, päris makseid ei toimu!"
-
-#~ msgid "Sandbox"
-#~ msgstr "Test-reziim"
-
-#~ msgid "Enable Sandbox Mode"
-#~ msgstr "Luba test-reziim"
-
-#~ msgid ""
-#~ "Place the payment gateway in sandbox mode using sandbox API credentials "
-#~ "(real payments will not be taken)."
-#~ msgstr ""
-#~ "Paneb makseliidese test-reziimi (sandbox) mis kasutab eraldi API "
-#~ "ligipääsutunuseid (tegelikke makseid ei teostata)."
-
-#~ msgid "Instructions that will be added to the thank you page and emails."
-#~ msgstr ""
-#~ "Juhised, mis lisatakse pärast makse soovitamist kuvatavale kinnituslehele "
-#~ "ja e-postile."
-
-#~ msgid ""
-#~ "Card transaction type to be initiated - add explanation about difference."
-#~ msgstr "Kasutatava kaarditehingu tüüp - siia oleks vaja lisada selgitus."
-
-#~ msgid ""
-#~ "Get your API username from your EveryPay account (looks like: "
-#~ "49bcdd6fed983c12)"
-#~ msgstr ""
-#~ "API kasutajatunnuse leiad oma EveryPay kontolt (see näeb välja umbes "
-#~ "selline: 49bcdd6fed983c12)"
-
-#~ msgid ""
-#~ "Get your API secret from your EveryPay account (looks like "
-#~ "e7ed4e55d5f73158f6cf2890fb1c950e)"
-#~ msgstr ""
-#~ "API saladuse leiad oma EveryPay kontolt (see näeb välja umbes selline: "
-#~ "e7ed4e55d5f73158f6cf2890fb1c950e)"
-
-#~ msgid "Sandbox API username"
-#~ msgstr "Test-reziimi API kasutajatunnus"
-
-#~ msgid "Optional: API username for testing payments in sandbox mode."
-#~ msgstr "Valikuline: API kasutajatunnus test-reziimi (sandbox) jaoks"
-
-#~ msgid "Sandbox API secret"
-#~ msgstr "Test-reziimi API saladus"
-
-#~ msgid "Optional: API secret for testing payments in sandbox mode."
-#~ msgstr "Valikuline: API saladus test-reziimi (sandbox) jaoks"
-
-#~ msgid ""
-#~ "Thank you for your order, please click the button below to pay with "
-#~ "credit card using EveryPay."
-#~ msgstr ""
-#~ "Tänud tellimuse eest! Palun klõpsa allolevat nuppu, et teha EveryPay abil "
-#~ "krediitkaardimakse."
-
-#~ msgid "Pay with EveryPay"
-#~ msgstr "Maksa EveryPay'ga"
-
-#~ msgid "EveryPay payment approved (ID: %s)"
-#~ msgstr "EveryPay teostas makse (ID: %s)"
-
-#~ msgid "EveryPay payment declined"
-#~ msgstr "EveryPay ei teostanud makset"
-
-#~ msgid "Payment was declined by EveryPay."
-#~ msgstr "EveryPay keeldus makset sooritamast."
