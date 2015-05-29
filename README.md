@@ -54,9 +54,11 @@ Suggested installation and update of EveryPay plugin is using GitHub Updater plu
 1. Rename the archive to `github-updater.zip` removing any added version numbers
 1. Go to 'Plugins' > 'Add New' > 'Upload' `/wp-admin/plugin-install.php?tab#upload` and choose the ZIP file
 1. Activate the GitHub Updater plugin and got to 'Settings' > 'GitHub Updater' > 'Install Plugin'
-1. Enter `eepohsbit/woocommerce-payment-gateway-everypay` as 'Plugin URI' and select 'Bitbucket' as 'Remote Repository Host', click 'Install Plugin', then 'Activate Plugin'
+1. Enter `UnifiedPaymentSolutions/woocommerce-payment-gateway-everypay` as 'Plugin URI' and select 'Bitbucket' as 'Remote Repository Host', click 'Install Plugin', then 'Activate Plugin'
 1. Go to 'WooCommerce' > 'Settings' > 'Checkout' > 'EveryPay', enable it and enter your API username and password that can be found in EveryPay Merchant Portal
 1. You can optionally enable debug logging and test mode with separate API username and password that directs payments to test environment where real payments are not made (you'll see a warning in WordPress admin area about test mode being active)
+
+EveryPay has support for English and Estonian included, additional translations can be added by translating .po file found in `langugages` directory or with WPML's String Translation.
 
 ## Changelog ##
 
