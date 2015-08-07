@@ -29,7 +29,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     $this->has_fields         = false;
     $this->credit_fields      = false;
 
-    $this->order_button_text  = __( 'Pay with credit card', 'everypay' );
+    $this->order_button_text  = __( 'Pay with card', 'everypay' );
 
     // Title/description for WooCommerce admin
     $this->method_title       = __( 'EveryPay', 'everypay' );
@@ -209,7 +209,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
           'title' => __( 'Description', 'everypay' ),
           'type' => 'textarea',
           'description' => __( 'This controls the description which the user sees during checkout.', 'everypay' ),
-          'default' => __("Pay with credit card using EveryPay.", 'everypay')
+          'default' => __("Pay with credit or debit card.", 'everypay')
            ),
       'account_id' => array(
         'title'       => __( 'Processing Account', 'everypay' ),
@@ -313,7 +313,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
     echo implode('', $args_array);
 		echo '
-			<input type="submit" class="button alt" id="everypay-button" value="' . __( 'Pay with credit card', 'everypay' ) . '"> <a class="button cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">' . __( 'Cancel order &amp; restore cart', 'everypay' ) . '</a>
+			<input type="submit" class="button alt" id="everypay-button" value="' . __( 'Pay with credit or debit card', 'everypay' ) . '"> <a class="button cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">' . __( 'Cancel order &amp; restore cart', 'everypay' ) . '</a>
 			';
 		echo '</form>';
 

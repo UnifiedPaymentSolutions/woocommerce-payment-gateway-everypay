@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WooCommerce EveryPay gateway\n"
-"POT-Creation-Date: 2015-05-19 15:51+0200\n"
-"PO-Revision-Date: 2015-05-19 15:51+0200\n"
+"POT-Creation-Date: 2015-05-29 10:25+0200\n"
+"PO-Revision-Date: 2015-05-29 10:26+0200\n"
 "Last-Translator: \n"
 "Language-Team: Peeter Marvet <pets@tehnokratt.net>\n"
 "Language: et\n"
@@ -20,9 +20,8 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-0: *.js\n"
 
 #: includes/class-wc-gateway-everypay.php:32
-#: includes/class-wc-gateway-everypay.php:316
-msgid "Pay with credit card"
-msgstr "Maksa krediitkaardiga"
+msgid "Pay with card"
+msgstr "Maksa kaardiga"
 
 #: includes/class-wc-gateway-everypay.php:35
 #: includes/class-wc-gateway-everypay.php:101
@@ -220,6 +219,10 @@ msgstr "Tänud tellimuse eest! Kaardimakse alustaiseks klõpsa allolevat nuppu."
 msgid ""
 "Thank you for your order. We are now redirecting you to payment gateway."
 msgstr "Tänud tellimuse eest! Kaardimakse alustaiseks klõpsa allolevat nuppu."
+
+#: includes/class-wc-gateway-everypay.php:316
+msgid "Pay with credit card"
+msgstr "Maksa krediitkaardiga"
 
 #: includes/class-wc-gateway-everypay.php:316
 msgid "Cancel order &amp; restore cart"
