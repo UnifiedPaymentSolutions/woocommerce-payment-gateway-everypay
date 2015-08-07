@@ -2,7 +2,7 @@
 Contributors: petskratt  
 Tags: everypay, woocommerce, payment, payment gateway, credit card, debit card  
 Requires at least: 4.2  
-Tested up to: 4.2.2  
+Tested up to: 4.2.4  
 Stable tag: master  
 License: GPLv2 or later  
 License URI: http://www.gnu.org/licenses/gpl-2.0.html  
@@ -61,6 +61,10 @@ Suggested installation and update of EveryPay plugin is using GitHub Updater plu
 EveryPay has support for English and Estonian included, additional translations can be added by translating .po file found in `langugages` directory or with WPML's String Translation.
 
 ## Changelog ##
+
+# 0.9.3 #
+* added support of API hmac_fields (future-proof)
+* fix: billing email was not sent with payment data
 
 # 0.9.2 #
 * first public version
