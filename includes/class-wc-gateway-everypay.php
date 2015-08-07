@@ -52,7 +52,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     // Title/description for payment method selection page
     $this->title          = $this->get_option( 'title' );
     $this->description    = $this->get_option( 'description' );
-    
+
     $this->account_id     = $this->get_option( 'account_id' );
     $this->transaction_type   = $this->get_option( 'transaction_type' );
     $this->sandbox        = $this->get_option( 'sandbox' );
@@ -77,10 +77,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
       add_action( 'admin_notices', array( $this, 'checks' ) );
       add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
     }
-    
+
     // Receipt page creates POST to gateway
     add_action( 'woocommerce_receipt_' . $this->id, array( $this, 'receipt_page' ) );
-    
+
     // Displays additional information about payment on thankyou page and confirmation email
     add_action( 'woocommerce_thankyou_' . $this->id, array( $this, 'thankyou_page' ) );
     // add_action( 'woocommerce_email_before_order_table', array( $this, 'email_instructions' ), 10, 3 );
@@ -109,7 +109,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
           jQuery( '#woocommerce_gateway_everypay_sandbox' ).change( function () {
             var sandbox = jQuery( '#woocommerce_gateway_everypay_sandbox_api_username, #woocommerce_gateway_everypay_sandbox_api_secret' ).closest( 'tr' ),
             production  = jQuery( '#woocommerce_gateway_everypay_api_username, #woocommerce_gateway_everypay_api_secret' ).closest( 'tr' );
-        
+
             if ( jQuery( this ).is( ':checked' ) ) {
               sandbox.show();
               production.hide();
@@ -120,7 +120,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
           }).change();
           </script>
         </table>
-    
+
     <?php
   }
 
@@ -142,9 +142,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     // Check required fields.
     else if( !$this->api_username || !$this->api_secret ) {
       if ( $this->sandbox == 'no' ) {
-        echo '<div class="error"><p>' . __( 'EveryPay Error: Please enter your API username and secret.', 'everypay' ) . '</p></div>';        
+        echo '<div class="error"><p>' . __( 'EveryPay Error: Please enter your API username and secret.', 'everypay' ) . '</p></div>';
       } else {
-        echo '<div class="error"><p>' . __( 'EveryPay Error: Please enter your TEST API username and secret.', 'everypay' ) . '</p></div>';            
+        echo '<div class="error"><p>' . __( 'EveryPay Error: Please enter your TEST API username and secret.', 'everypay' ) . '</p></div>';
       }
     }
 
@@ -269,24 +269,24 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
   public function receipt_page( $order_id ) {
 
 		$order = wc_get_order( $order_id );
-		
+
 				$return_url = '';
 		$transaction_id = $order->get_transaction_id();
 
 		if ( ! empty( $this->view_transaction_url ) && ! empty( $transaction_id ) ) {
 			$return_url = $this->view_transaction_url;
 		}
-		
+
 		echo '<p>' . __( 'Thank you for your order, please click the button below to pay with credit card.', 'everypay' ) . '</p>';
 
 		$args        = $this->get_everypay_args( $order );
-		
+
     $args_array = [];
 
 		foreach ($args as $key => $value) {
 			$args_array[] = '<input type="hidden" name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'" />';
 		}
-		
+
 			wc_enqueue_js( '
 				$.blockUI({
 						message: "' . esc_js( __( 'Thank you for your order. We are now redirecting you to payment gateway.', 'everypay' ) ) . '",
@@ -353,7 +353,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
    * @return array
    */
   public function process_payment( $order_id ) {
-      
+
     $order = new WC_Order( $order_id );
 
     // Redirect to receipt page for automatic post to external gateway
@@ -394,7 +394,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     		default:
     			$language = 'en';
     			break;
-    	}      
+    	}
     }
 
     $args = [
@@ -420,7 +420,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     ];
 
     $args['hmac'] = $this->sign_everypay_request($this->prepare_everypay_string($args));
-      
+
   	$args['locale'] = $language;
 
     if( $this->debug == 'yes' ) {
@@ -444,9 +444,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		{
 			$arr[] = $k . '=' . $v;
 		}
-		
+
 		$str = implode('&', $arr);
-		
+
 		return $str;
 	}
 
@@ -456,7 +456,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * @param string $request
 	 * @return string
 	 */
-	 
+
 	protected function sign_everypay_request($request)
 	{
 		return hash_hmac('sha1', $request, $this->api_secret);
@@ -473,7 +473,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     header( 'HTTP/1.1 200 OK' );
 
 		$_REQUEST = stripslashes_deep( $_REQUEST );
-		
+
 		if (!isset($_REQUEST['api_username']) ||
 		    !isset($_REQUEST['nonce']) ||
 		    !isset($_REQUEST['order_reference']) ||
@@ -485,12 +485,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
     $order_id  = absint( $_REQUEST['order_reference'] );
 		$order     = wc_get_order( $order_id );
-		
+
 		if (!$order) {
   		$this->log->add( $this->id, 'Invalid order ID received: ' . print_r($order_id, true) );
   		die("Order was lost during payment attempt - please inform merchant about WooCommerce EveryPay gateway problem.");
 		}
-				
+
     if( $this->debug == 'yes' ) {
       $this->log->add( $this->id, 'EveryPay return handler started. ' . print_r($_REQUEST, true) );
   		$this->log->add( $this->id, 'Order '. var_export($order, true) );
@@ -499,15 +499,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     $this->change_language($order->id);
 
 		$order_complete = $this->process_order_status( $order, $_REQUEST );
-		
+
 		if ( $order_complete === self::_VERIFY_SUCCESS ) {
   		$this->log->add( $this->id, 'Order complete');
   		$redirect_url = $this->get_return_url( $order );
-  				
+
 		}	else {
-      
+
 		  $redirect_url = $order->get_cancel_order_url();
-  		
+
   		switch ($order_complete)
     		{
     			case self::_VERIFY_FAIL:
@@ -517,7 +517,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     			case self::_VERIFY_CANCEL:
     			  $order->update_status( 'failed', __( 'Payment was cancelled by user.', 'everypay' ) );
         		$this->log->add( $this->id, 'Payment was cancelled by user.' );
-    			  break;    		
+    			  break;
           default:
     			  $order->update_status( 'failed', __( 'An error occurred while processing the payment response - please notify merchant!', 'everypay' ) );
         		$this->log->add( $this->id, 'An error occurred while processing the payment response.' );
@@ -530,17 +530,17 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     }
 
 		wp_redirect( $redirect_url );
-		
+
 
 	}
 
   private function change_language($order_id) {
 
     if ( function_exists('icl_object_id') ) {
-        
-      // adapted from WooCommerce Multilingual /inc/emails.class.php      
+
+      // adapted from WooCommerce Multilingual /inc/emails.class.php
       $lang = get_post_meta($order_id, 'wpml_language', TRUE);
-      
+
       if(!empty($lang)){
         global $sitepress,$woocommerce;
         $sitepress->switch_lang($lang,true);
@@ -566,7 +566,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * @return bool
 	 */
 	public function process_order_status( $order ) {
-  	
+
   	$result = $this->verify_everypay_response($_REQUEST);
 
 		if ( self::_VERIFY_SUCCESS === $result ) {
@@ -621,15 +621,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 */
 	public function verify_everypay_response(array $data)
 	{
-  	
+
   	$statuses = [
   		'completed' => self::_VERIFY_SUCCESS,
   		'failed' => self::_VERIFY_FAIL,
   		'cancelled' => self::_VERIFY_CANCEL,
   	];
 
-  	
-  	
+
+
 		if ($data['api_username'] !== $this->api_username) {
       if( $this->debug == 'yes' ) {
         $this->log->add( $this->id, 'EveryPay error: API username in response does not match, order not completed!' );
@@ -684,7 +684,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		if ($data['hmac'] != $hmac) {
       if( $this->debug == 'yes' ) {
         $this->log->add( $this->id, 'EveryPay error: signature does not match data! '. print_r($data, true) . print_r($hmac, true) . print_r($this->prepare_everypay_string($verify), true) );
-        file_put_contents('verify.dump', $this->prepare_everypay_string($verify));
       }
       return self::_VERIFY_ERROR;
 		}
@@ -692,7 +691,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		return $status;
 	}
 
- 
+
 } // end class.
 
 ?>
