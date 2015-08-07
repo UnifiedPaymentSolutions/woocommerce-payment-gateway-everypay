@@ -411,13 +411,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
         'delivery_city' => $order->shipping_city,
         'delivery_country' => $order->shipping_country,
         'delivery_postcode' => $order->shipping_postcode,
-        'email' => $billing_email,
+        'email' => $order->billing_email,
         'nonce' => uniqid(true),
         'order_reference' => $order->id,
         'timestamp' => time(),
         'transaction_type' => $this->transaction_type,
         'user_ip' => $_SERVER['REMOTE_ADDR'],
     ];
+
+    $args['hmac_fields'] = implode(',', array_keys($args)) . ",hmac_fields";
 
     $args['hmac'] = $this->sign_everypay_request($this->prepare_everypay_string($args));
 
@@ -638,46 +640,21 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		}
 
 		$now = time();
-		if (($data['timestamp'] > $now) || ($data['timestamp'] < ($now - 300))){
+		if (($data['timestamp'] > $now) || ($data['timestamp'] < ($now - 600))){
       if( $this->debug == 'yes' ) {
-        $this->log->add( $this->id, 'EveryPay error: response is older than 5 minutes, order not completed!' );
+        $this->log->add( $this->id, 'EveryPay error: response is older than 10 minutes, order not completed!' );
       }
       return self::_VERIFY_ERROR;
 		}
 
 		$status = $statuses[$data['transaction_result']];
 
-		$verify = array(
-			'api_username' => $data['api_username'],
-			'nonce' => $data['nonce'],
-			'order_reference' => $data['order_reference'],
-			'payment_state' => $data['payment_state'],
-			'timestamp' => $data['timestamp'],
-			'transaction_result' => $data['transaction_result']
-		);
+    $verify = array();
+    $hmac_fields = explode(',', $data["hmac_fields"]);
 
-		switch ($data['transaction_result'])
-		{
-			case 'completed':
-			case 'failed':
-				// only in automatic callback message
-				if (isset($data['processing_errors']))
-				{
-					$verify['processing_errors'] = $data['processing_errors'];
-				}
-
-				if (isset($data['processing_warnings']))
-				{
-					$verify['processing_warnings'] = $data['processing_warnings'];
-				}
-
-				$verify['account_id'] = $data['account_id'];
-				$verify['amount'] = $data['amount'];
-				$verify['payment_reference'] = $data['payment_reference'];
-				break;
-			case 'cancelled':
-				break;
-		}
+    foreach ($hmac_fields as $value) {
+        $verify[$value] = empty($data[$value]) ? '' : $data[$value];
+    }
 
 		$hmac = $this->sign_everypay_request($this->prepare_everypay_string($verify));
 
