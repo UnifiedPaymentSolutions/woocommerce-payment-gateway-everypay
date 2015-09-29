@@ -24,19 +24,20 @@ var expandIframe = function() {
             backgroundColor: '#000000',
             opacity: 0.5
         });
-        var window_height = $(window).height();
-        var window_width = $(window).width();
+        var window_height = jQuery(window).height();
+        var window_width = jQuery(window).width();
         if (window_width < 960) {
             iframe.css({
                 height: window_height,
                 width: window_width,
-                top: 0
+                top: 0,
             });
         } else {
             iframe.css({
                 height: 640,
                 width: 960,
-                top: (window_height - 640) / 2
+                top: (window_height - 640) / 2,
+                left: iframe.position().left - (window_width - 960) / 2
             });
         }
         iframe.css({
@@ -44,6 +45,7 @@ var expandIframe = function() {
             zIndex: 9999,
             margin: 'auto'
         });
+        console.log(iframe_data);
         return iframe_data;
     };
 var shrinked_iframe_data;
