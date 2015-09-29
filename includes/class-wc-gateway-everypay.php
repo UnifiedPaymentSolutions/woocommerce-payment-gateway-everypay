@@ -55,6 +55,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
     $this->account_id     = $this->get_option( 'account_id' );
     $this->transaction_type   = $this->get_option( 'transaction_type' );
+    $this->payment_form   = $this->get_option( 'payment_form' );
+    $this->skin_name      = $this->get_option( 'skin_name' );
     $this->sandbox        = $this->get_option( 'sandbox' );
     $this->api_endpoint   = $this->sandbox == 'no' ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
     $this->api_username   = $this->sandbox == 'no' ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
@@ -78,8 +80,18 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
       add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
     }
 
-    // Receipt page creates POST to gateway
+    // Receipt page creates POST to gateway or hosts iFrame
     add_action( 'woocommerce_receipt_' . $this->id, array( $this, 'receipt_page' ) );
+
+    // If receipt page hosts iFrame and is being shown enqueue required JS
+
+    if ( $this->payment_form === 'iframe' && is_wc_endpoint_url( 'order-pay' ) ) {
+      add_action('wp_enqueue_scripts', array ($this, 'script_manager') );
+    }
+
+// plugins_url( '/assets/images/mastercard_visa.png', dirname( __FILE__ ) )
+
+
 
     // Displays additional information about payment on thankyou page and confirmation email
     add_action( 'woocommerce_thankyou_' . $this->id, array( $this, 'thankyou_page' ) );
@@ -89,6 +101,40 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     add_action('woocommerce_api_wc_gateway_' . $this->id, array($this, 'everypay_return_handler'));
 
   }
+
+
+  /**
+   * Register scripts for front-end
+   *
+   * @access public
+   * @return void
+   */
+
+  public function script_manager() {
+
+  	// wp_register_script template ( $handle, $src, $deps, $ver, $in_footer );
+  	wp_register_script('everypay-js', plugins_url( '/assets/js/everypay-iframe-handler.js', dirname( __FILE__ ) ), array('jquery'), false, true);
+  	wp_enqueue_script ('everypay-js');
+
+  }
+
+  /**
+   * Register scripts for admin
+   *
+   * @access public
+   * @return void
+   */
+
+  public function admin_script_manager() {
+
+  	// wp_register_script template ( $handle, $src, $deps, $ver, $in_footer );
+/*
+  	wp_register_script('everypay-js', plugins_url( '/assets/js/everypay-iframe-handler.js', dirname( __FILE__ ) ), array('jquery'), false, true);
+  	wp_enqueue_script ('everypay-js');
+*/
+
+  }
+
 
   /**
    * Admin Panel Options
@@ -106,18 +152,32 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
         <table class="form-table">
           <?php $this->generate_settings_html(); ?>
           <script type="text/javascript">
-          jQuery( '#woocommerce_gateway_everypay_sandbox' ).change( function () {
-            var sandbox = jQuery( '#woocommerce_gateway_everypay_sandbox_api_username, #woocommerce_gateway_everypay_sandbox_api_secret' ).closest( 'tr' ),
-            production  = jQuery( '#woocommerce_gateway_everypay_api_username, #woocommerce_gateway_everypay_api_secret' ).closest( 'tr' );
+          jQuery( '#woocommerce_everypay_sandbox' ).change( function () {
+            var sandbox = jQuery( '#woocommerce_everypay_sandbox_api_username, #woocommerce_everypay_sandbox_api_secret' ).closest( 'tr' ),
+            production  = jQuery( '#woocommerce_everypay_api_username, #woocommerce_everypay_api_secret' ).closest( 'tr' );
 
             if ( jQuery( this ).is( ':checked' ) ) {
               sandbox.show();
-              production.hide();
+              // production.hide();
             } else {
               sandbox.hide();
-              production.show();
+              // production.show();
             }
           }).change();
+
+          jQuery( '#woocommerce_everypay_payment_form' ).change( function () {
+            var skinname = jQuery( '#woocommerce_everypay_skin_name' ).closest( 'tr' );
+
+            if ( jQuery( this ).val() == 'iframe' ) {
+              skinname.show();
+              // production.hide();
+            } else {
+              skinname.hide();
+              // production.show();
+            }
+          }).change();
+
+
           </script>
         </table>
 
@@ -185,19 +245,23 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
         'description' => '',
         'default'     => 'no'
       ),
-      'debug' => array(
-        'title'       => __( 'Debug Log', 'everypay' ),
-        'type'        => 'checkbox',
-        'label'       => __( 'Enable logging', 'everypay' ),
-        'default'     => 'no',
-        'description' => sprintf( __( 'Log EveryPay events inside <code>%s</code>', 'everypay' ), wc_get_log_file_path( $this->id ) )
+      'payment_form' => array(
+        'title'       => __( 'Payment form', 'everypay' ),
+        'type'        => 'select',
+          'options' => array(
+            'redirect'        => __( 'Redirect to hosted form on EveryPay server', 'everypay' ),
+            'iframe' => __( 'iFrame payment form integrated into checkout', 'everypay' ),
+          ),
+        'description' => __( "Hosted form on EveryPay server is the secure solution of choice, while iFrame provides better customer experience (https strongly advised)", 'everypay' ),
+        'default'     => 'redirect',
+        'desc_tip'    => false,
       ),
-      'sandbox' => array(
-        'title'       => __( 'Test', 'everypay' ),
-        'label'       => __( 'Enable Test Mode', 'everypay' ),
-        'type'        => 'checkbox',
-        'description' => __( 'Place the payment gateway in test mode using test API credentials (real payments will not be taken).', 'everypay' ),
-        'default'     => 'no'
+     'skin_name' => array(
+          'title' => __( 'Skin name', 'everypay' ),
+          'type' => 'text',
+          'class' => 'everypay_iframe_option',
+          'description' => __( "Appearance of payment area can be set up in EveryPay Merchant Portal, under 'Settings' > 'iFrame skins'", 'everypay' ),
+          'default' => __( 'default', 'everypay' )
       ),
      'title' => array(
           'title' => __( 'Title', 'everypay' ),
@@ -243,6 +307,20 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
         'default'     => '',
         'desc_tip'    => false
       ),
+      'debug' => array(
+        'title'       => __( 'Debug Log', 'everypay' ),
+        'type'        => 'checkbox',
+        'label'       => __( 'Enable logging', 'everypay' ),
+        'default'     => 'no',
+        'description' => sprintf( __( 'Log EveryPay events inside <code>%s</code>', 'everypay' ), wc_get_log_file_path( $this->id ) )
+      ),
+      'sandbox' => array(
+        'title'       => __( 'Test', 'everypay' ),
+        'label'       => __( 'Enable Test Mode', 'everypay' ),
+        'type'        => 'checkbox',
+        'description' => __( 'Place the payment gateway in test mode using test API credentials (real payments will not be taken).', 'everypay' ),
+        'default'     => 'no'
+      ),
       'sandbox_api_username' => array(
         'title'       => __( 'Test API username', 'everypay' ),
         'type'        => 'text',
@@ -270,22 +348,40 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		$order = wc_get_order( $order_id );
 
-				$return_url = '';
+		$return_url = '';
 		$transaction_id = $order->get_transaction_id();
 
 		if ( ! empty( $this->view_transaction_url ) && ! empty( $transaction_id ) ) {
 			$return_url = $this->view_transaction_url;
 		}
 
-		echo '<p>' . __( 'Thank you for your order, please click the button below to pay with credit card.', 'everypay' ) . '</p>';
-
 		$args        = $this->get_everypay_args( $order );
 
-    $args_array = [];
+		if ($this->payment_form === 'iframe') {
+      echo '<div class="iframe_form_detail" id="iframe-payment-container" style="border: 0px; min-width: 460px; min-height: 325px">' . PHP_EOL;
+  		echo '<iframe id="iframepaymentcontainer" name="iframepaymentcontainer", width="460", height="400"></iframe>' . PHP_EOL;
+  		echo '</div>' . PHP_EOL;
+  		echo '<form action="https://igw-demo.every-pay.com/transactions" id="iframe_form" method="post" style="display: none" target="iframepaymentcontainer">' . PHP_EOL;
+      $args_array = [];
 
-		foreach ($args as $key => $value) {
-			$args_array[] = '<input type="hidden" name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'" />';
-		}
+  		foreach ($args as $key => $value) {
+  			$args_array[] = '<input name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'" />';
+  		}
+      echo implode(PHP_EOL, $args_array) . PHP_EOL;
+      echo '<input type="submit" value="submit">' . PHP_EOL;
+  		echo '</form>' . PHP_EOL;
+  		echo '<div class="transaction_result"></div>';
+
+		} else {
+  		// defaults to redirect
+
+  		echo '<p>' . __( 'Thank you for your order, please click the button below to pay with credit card.', 'everypay' ) . '</p>';
+
+      $args_array = [];
+
+  		foreach ($args as $key => $value) {
+  			$args_array[] = '<input type="hidden" name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'" />';
+  		}
 
 			wc_enqueue_js( '
 				$.blockUI({
@@ -310,12 +406,16 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				jQuery("#everypay-button").click();
 			' );
 
-    echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
-    echo implode('', $args_array);
-		echo '
-			<input type="submit" class="button alt" id="everypay-button" value="' . __( 'Pay with credit or debit card', 'everypay' ) . '"> <a class="button cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">' . __( 'Cancel order &amp; restore cart', 'everypay' ) . '</a>
-			';
-		echo '</form>';
+
+      echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
+      echo implode('', $args_array);
+  		echo '
+  			<input type="submit" class="button alt" id="everypay-button-inactive" value="' . __( 'Pay with credit or debit card', 'everypay' ) . '"> <a class="button cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">' . __( 'Cancel order &amp; restore cart', 'everypay' ) . '</a>
+  			';
+  		echo '</form>';
+
+		}
+
 
   }
 
@@ -412,14 +512,22 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
         'delivery_country' => $order->shipping_country,
         'delivery_postcode' => $order->shipping_postcode,
         'email' => $order->billing_email,
-        'nonce' => uniqid(true),
-        'order_reference' => $order->id,
+        'nonce' => uniqid('', true),
+        'order_reference' => uniqid('', true), // $order->id,
         'timestamp' => time(),
         'transaction_type' => $this->transaction_type,
         'user_ip' => $_SERVER['REMOTE_ADDR'],
     ];
 
-    $args['hmac_fields'] = implode(',', array_keys($args)) . ",hmac_fields";
+    if ($this->payment_form === 'iframe') {
+      $args['skin_name'] = $this->skin_name;
+    }
+
+    $args['hmac_fields'] = '';
+
+    ksort($args);
+
+    $args['hmac_fields'] = implode(',', array_keys($args));
 
     $args['hmac'] = $this->sign_everypay_request($this->prepare_everypay_string($args));
 
@@ -667,7 +775,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		return $status;
 	}
-
 
 } // end class.
 
