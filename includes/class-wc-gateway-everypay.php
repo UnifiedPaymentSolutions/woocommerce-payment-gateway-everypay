@@ -157,10 +157,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
             production  = jQuery( '#woocommerce_everypay_api_username, #woocommerce_everypay_api_secret' ).closest( 'tr' );
 
             if ( jQuery( this ).is( ':checked' ) ) {
-              sandbox.show();
+              sandbox.show("slow");
               // production.hide();
             } else {
-              sandbox.hide();
+              sandbox.hide("slow");
               // production.show();
             }
           }).change();
@@ -169,10 +169,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
             var skinname = jQuery( '#woocommerce_everypay_skin_name' ).closest( 'tr' );
 
             if ( jQuery( this ).val() == 'iframe' ) {
-              skinname.show();
+              skinname.show("slow");
               // production.hide();
             } else {
-              skinname.hide();
+              skinname.hide("slow");
               // production.show();
             }
           }).change();
