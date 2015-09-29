@@ -513,7 +513,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
         'delivery_postcode' => $order->shipping_postcode,
         'email' => $order->billing_email,
         'nonce' => uniqid('', true),
-        'order_reference' => uniqid('', true), // $order->id,
+        'order_reference' => $order->id . '_' . date(DATE_W3C),
         'timestamp' => time(),
         'transaction_type' => $this->transaction_type,
         'user_ip' => $_SERVER['REMOTE_ADDR'],
@@ -593,7 +593,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
           die();
 		    }
 
-    $order_id  = absint( $_REQUEST['order_reference'] );
+    $order_explosive = explode('_', $_REQUEST['order_reference']);
+
+    $order_id  = absint( $order_explosive[0] );
 		$order     = wc_get_order( $order_id );
 
 		if (!$order) {
