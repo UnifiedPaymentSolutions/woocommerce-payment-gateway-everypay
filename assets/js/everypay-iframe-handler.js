@@ -2,6 +2,7 @@ var shrinkIframe = function(iframe, iframe_data) {
         iframe.css(iframe_data);
         jQuery("#dimmed_background_box").remove();
     };
+
 var expandIframe = function() {
         var iframe_data = {
             position: iframe.attr("position") || "static",
@@ -37,33 +38,54 @@ var expandIframe = function() {
                 height: 640,
                 width: 960,
                 top: (window_height - 640) / 2,
-                left: iframe.position().left - (window_width - 960) / 2
+                left: (window_width - 960) / 2,
             });
         }
         iframe.css({
-            position: 'absolute',
+            position: 'fixed',
             zIndex: 9999,
             margin: 'auto'
         });
-        console.log(iframe_data);
+        if (true === wc_everypay_params.everypay_sandbox) {
+          console.log(iframe_data);
+        }
         return iframe_data;
     };
+
 var shrinked_iframe_data;
+
 var iframe = jQuery('#iframe-payment-container iframe');
+
 window.addEventListener('message', function(event) {
-    if (event.origin !== "https://igw-demo.every-pay.com") {
+
+    if (event.origin !== wc_everypay_params.uri) {
+        if (true === wc_everypay_params.everypay_sandbox) {
+          console.log('Received message from non-authorised origin ' + event.origin + ', expected ' + everypay_sandbox);
+        }
         return;
-    } // production or demo URL should be used (production URL: https://pay.every-pay.eu)
+    }
     var message = JSON.parse(event.data);
-    console.log(message);
+
+    if (true === wc_everypay_params.everypay_sandbox) {
+      console.log(message);
+    }
+
+    // resize messages
     if (message.resize_iframe == "expand") {
         shrinked_iframe_data = expandIframe(iframe);
     } else if (message.resize_iframe == "shrink") {
         shrinkIframe(iframe, shrinked_iframe_data);
     }
-    // It receives a message from the iframe about transaction's result. Possible states: completed, failed.
+    // transaction result message, possible states: completed, failed
     if (message.transaction_result) {
-        jQuery('.transaction_result').append(message.transaction_result);
+        // jQuery('.transaction_result').append(message.transaction_result);
+
+        if ('completed' === message.transaction_result) {
+          window.location = wc_everypay_params.completed;
+        } else {
+          window.location = wc_everypay_params.failed;
+        }
+
     }
 }, false);
 
