@@ -89,13 +89,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
       add_action('wp_enqueue_scripts', array ($this, 'script_manager') );
     }
 
-// plugins_url( '/assets/images/mastercard_visa.png', dirname( __FILE__ ) )
-
-
-
     // Displays additional information about payment on thankyou page and confirmation email
     add_action( 'woocommerce_thankyou_' . $this->id, array( $this, 'thankyou_page' ) );
-    // add_action( 'woocommerce_email_before_order_table', array( $this, 'email_instructions' ), 10, 3 );
 
     // Add returning user / callback handler to WC API
     add_action('woocommerce_api_wc_gateway_' . $this->id, array($this, 'everypay_return_handler'));
@@ -128,10 +123,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
   public function admin_script_manager() {
 
   	// wp_register_script template ( $handle, $src, $deps, $ver, $in_footer );
-/*
-  	wp_register_script('everypay-js', plugins_url( '/assets/js/everypay-iframe-handler.js', dirname( __FILE__ ) ), array('jquery'), false, true);
-  	wp_enqueue_script ('everypay-js');
-*/
 
   }
 
@@ -451,23 +442,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
    */
   public function thankyou_page( $order_id ) {
     // echo '<h2>' . __( 'Extra Details', 'everypay' ) . '</h2>' . PHP_EOL;
-  }
-
-  /**
-   * Add content to the WC emails.
-   *
-   * @access public
-   * @param  WC_Order $order
-   * @param  bool $sent_to_admin
-   * @param  bool $plain_text
-   */
-  public function email_instructions( $order, $sent_to_admin, $plain_text = false ) {
-    if( !$sent_to_admin && $this->id === $order->payment_method && $order->has_status( 'on-hold' ) ) {
-
-      echo '<h2>' . __( 'Payment Details', 'everypay' ) . '</h2>' . PHP_EOL;
-      echo '<p>' . __( 'Please note that the charge on your credit card will appear as "EveryPay AS".', 'everypay' ) . '</p>' . PHP_EOL;
-
-    }
   }
 
   /**
