@@ -435,7 +435,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
       echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
       echo implode('', $args_array);
   		echo '
-  			<input type="submit" class="button alt" id="everypay-button-i" value="' . __( 'Pay with credit or debit card', 'everypay' ) . '"> <a class="button cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">' . __( 'Cancel order &amp; restore cart', 'everypay' ) . '</a>
+  			<input type="submit" class="button alt" id="everypay-button" value="' . __( 'Pay with credit or debit card', 'everypay' ) . '"> <a class="button cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">' . __( 'Cancel order &amp; restore cart', 'everypay' ) . '</a>
   			';
   		echo '</form>';
 
