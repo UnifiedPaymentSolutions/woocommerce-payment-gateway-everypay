@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WooCommerce EveryPay gateway\n"
-"POT-Creation-Date: 2015-10-23 13:19+0300\n"
+"POT-Creation-Date: 2015-10-24 11:27+0300\n"
 "PO-Revision-Date: 2015-10-23 13:18+0300\n"
 "Language-Team: Peeter Marvet <pets@tehnokratt.net>\n"
 "MIME-Version: 1.0\n"
@@ -24,8 +24,8 @@ msgid "Pay with card"
 msgstr ""
 
 #: includes/class-wc-gateway-everypay.php:35
-#: includes/class-wc-gateway-everypay.php:147
-#: includes/class-wc-gateway-everypay.php:270
+#: includes/class-wc-gateway-everypay.php:138
+#: includes/class-wc-gateway-everypay.php:268
 msgid "EveryPay"
 msgstr ""
 
@@ -33,234 +33,241 @@ msgstr ""
 msgid "Pay with credit cards via EveryPay."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:148
+#: includes/class-wc-gateway-everypay.php:139
 msgid ""
 "EveryPay is a card payment gateway service provider, enabling e-commerce "
 "merchants to collect credit and debit card online payments from their "
 "customers."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:149
+#: includes/class-wc-gateway-everypay.php:140
 msgid "Merchant Portal"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:149
+#: includes/class-wc-gateway-everypay.php:140
 msgid "Contacts"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:149
+#: includes/class-wc-gateway-everypay.php:140
 #: woocommerce-payment-gateway-everypay.php:220
 msgid "Documentation"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:199
+#: includes/class-wc-gateway-everypay.php:190
 #, php-format
 msgid ""
 "EveryPay Error: EveryPay requires PHP 5.3 and above. You are using version "
 "%s."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:205
+#: includes/class-wc-gateway-everypay.php:196
 msgid "EveryPay Error: Please enter your API username and secret."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:207
+#: includes/class-wc-gateway-everypay.php:198
 msgid "EveryPay Error: Please enter your TEST API username and secret."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:212
+#: includes/class-wc-gateway-everypay.php:204
 msgid "EveryPay payment gateway is in test mode, real payments not processed!"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:242
+#: includes/class-wc-gateway-everypay.php:209
+#, php-format
+msgid ""
+"EveryPay iFrame mode is enabled, but your checkout is not forced to use "
+"HTTPS. While EveryPay iFrame remains secure users may feel insecure due to "
+"missing confirmation in browser address bar. Please <a href=\"%s\">enforce "
+"SSL</a> and ensure your server has a valid SSL certificate!"
+msgstr ""
+
+#: includes/class-wc-gateway-everypay.php:240
 msgid "Enable/Disable"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:243
+#: includes/class-wc-gateway-everypay.php:241
 msgid "Enable EveryPay"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:249
+#: includes/class-wc-gateway-everypay.php:247
 msgid "Payment form type"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:252
+#: includes/class-wc-gateway-everypay.php:250
 msgid "Redirect to hosted form on EveryPay server"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:253
+#: includes/class-wc-gateway-everypay.php:251
 msgid "iFrame payment form integrated into checkout"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:255
+#: includes/class-wc-gateway-everypay.php:253
 msgid ""
 "Hosted form on EveryPay server is the secure solution of choice, while "
 "iFrame provides better customer experience (https strongly advised)"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:260
+#: includes/class-wc-gateway-everypay.php:258
 msgid "Skin name"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:263
+#: includes/class-wc-gateway-everypay.php:261
 msgid ""
 "Appearance of payment area can be set up in EveryPay Merchant Portal, under "
 "'Settings' > 'iFrame skins'"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:267
+#: includes/class-wc-gateway-everypay.php:265
 msgid "Title"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:269
+#: includes/class-wc-gateway-everypay.php:267
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:273
+#: includes/class-wc-gateway-everypay.php:271
 msgid "Description"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:275
+#: includes/class-wc-gateway-everypay.php:273
 msgid "This controls the description which the user sees during checkout."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:276
-#: includes/class-wc-gateway-everypay.php:438
+#: includes/class-wc-gateway-everypay.php:274
+#: includes/class-wc-gateway-everypay.php:435
 msgid "Pay with credit or debit card"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:279
+#: includes/class-wc-gateway-everypay.php:277
 msgid "Processing Account"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:281
+#: includes/class-wc-gateway-everypay.php:279
 msgid ""
 "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'Processing "
 "accounts' section (looks like: EUR1)."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:286
+#: includes/class-wc-gateway-everypay.php:284
 msgid "Transaction Type"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:289
+#: includes/class-wc-gateway-everypay.php:287
 msgid "Charge"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:290
+#: includes/class-wc-gateway-everypay.php:288
 msgid "Authorisation"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:292
+#: includes/class-wc-gateway-everypay.php:290
 msgid ""
 "Authorisation: A process of getting approval for the current payment. Funds "
 "are reserved on cardholder's account. Charge: An authorisation followed by "
 "immediate automatic capture."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:297
+#: includes/class-wc-gateway-everypay.php:295
 msgid "API username"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:299
+#: includes/class-wc-gateway-everypay.php:297
 msgid ""
 "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'General "
 "settings' section (looks like: 49bcdd6fed983c12)."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:304
+#: includes/class-wc-gateway-everypay.php:302
 msgid "API secret"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:306
+#: includes/class-wc-gateway-everypay.php:304
 msgid ""
 "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'General "
 "settings' section (looks like: e7ed4e55d5f73158f6cf2890fb1c950e)."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:311
+#: includes/class-wc-gateway-everypay.php:309
 msgid "Debug Log"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:313
+#: includes/class-wc-gateway-everypay.php:311
 msgid "Enable logging"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:315
+#: includes/class-wc-gateway-everypay.php:313
 #, php-format
 msgid "Log EveryPay events inside <code>%s</code>"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:318
+#: includes/class-wc-gateway-everypay.php:316
 msgid "Test"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:319
+#: includes/class-wc-gateway-everypay.php:317
 msgid "Enable Test Mode"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:321
+#: includes/class-wc-gateway-everypay.php:319
 msgid ""
 "Place the payment gateway in test mode using test API credentials (real "
 "payments will not be taken)."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:325
+#: includes/class-wc-gateway-everypay.php:323
 msgid "Test API username"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:327
+#: includes/class-wc-gateway-everypay.php:325
 msgid "Optional: API username for testing payments."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:332
+#: includes/class-wc-gateway-everypay.php:330
 msgid "Test API secret"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:334
+#: includes/class-wc-gateway-everypay.php:332
 msgid "Optional: API secret for testing payments."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:403
+#: includes/class-wc-gateway-everypay.php:376
+msgid "Cancel order"
+msgstr ""
+
+#: includes/class-wc-gateway-everypay.php:378
+msgid "Try another payment"
+msgstr ""
+
+#: includes/class-wc-gateway-everypay.php:400
 msgid ""
 "Thank you for your order, please click the button below to pay with credit "
 "card."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:413
+#: includes/class-wc-gateway-everypay.php:410
 msgid ""
 "Thank you for your order. We are now redirecting you to payment gateway."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:438
+#: includes/class-wc-gateway-everypay.php:437
 msgid "Cancel order &amp; restore cart"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:467
-msgid "Payment Details"
-msgstr ""
-
-#: includes/class-wc-gateway-everypay.php:468
-msgid ""
-"Please note that the charge on your credit card will appear as \"EveryPay AS"
-"\"."
-msgstr ""
-
-#: includes/class-wc-gateway-everypay.php:651
+#: includes/class-wc-gateway-everypay.php:631
 msgid "Payment was declined by payment processor."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:655
+#: includes/class-wc-gateway-everypay.php:635
 msgid "Payment was cancelled by user."
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:659
+#: includes/class-wc-gateway-everypay.php:639
 msgid ""
 "An error occurred while processing the payment response - please notify "
 "merchant!"
 msgstr ""
 
-#: includes/class-wc-gateway-everypay.php:713
+#: includes/class-wc-gateway-everypay.php:693
 #, php-format
 msgid "EveryPay payment approved (Reference: %s, Timestamp: %s)"
 msgstr ""
