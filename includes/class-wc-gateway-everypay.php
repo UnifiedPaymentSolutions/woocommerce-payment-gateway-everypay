@@ -371,10 +371,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
       global $woocommerce;
 
+      echo '<div id="wc_everypay_iframe_buttons">' . PHP_EOL;
   		echo '<a href="'.esc_url( $order->get_cancel_order_url() ).'" id="wc_everypay_iframe_cancel" class="button cancel">'
   		      . apply_filters('wc_everypay_iframe_cancel', __( 'Cancel order', 'everypay' )) . '</a> ';
       echo '<a href="'.esc_url( $woocommerce->cart->get_checkout_url() ).'" id="wc_everypay_iframe_retry" class="button alt" style="display: none;">'
             . apply_filters('wc_everypay_iframe_retry', __( 'Try another payment', 'everypay' )) . '</a>' . PHP_EOL;
+      echo '</div>' . PHP_EOL;
 
 
   		// used during testing only:
@@ -395,7 +397,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		} else {
   		// defaults to redirect
 
-  		echo '<p>' . apply_filters('wc_everypay_redirect_title', __( 'Thank you for your order, please click the button below to pay with credit card.', 'everypay' )) . '</p>';
+  		echo '<p id="wc_everypay_redirect_explanation">' . apply_filters('wc_everypay_redirect_explanation', __( 'Thank you for your order, please click the button below to pay with credit card.', 'everypay' )) . '</p>';
 
       $args_array = [];
 
@@ -403,7 +405,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
   			$args_array[] = '<input type="hidden" name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'" />';
   		}
 
-/*
 			wc_enqueue_js( '
 				$.blockUI({
 						message: "' . esc_js( apply_filters('wc_everypay_redirect_message', __( 'Thank you for your order. We are now redirecting you to payment gateway.', 'everypay' ) ) ) . '",
@@ -426,7 +427,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 					});
 				$("#wc_everypay_redirect_pay").click();
 			' );
-*/
 
 
       echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
