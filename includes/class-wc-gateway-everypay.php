@@ -187,26 +187,26 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
     // PHP Version.
     if( version_compare( phpversion(), '5.3', '<' ) ) {
-      echo '<div class="error"><p>' . sprintf( __( 'EveryPay Error: EveryPay requires PHP 5.3 and above. You are using version %s.', 'everypay' ), phpversion() ) . '</p></div>';
+      echo '<div class="error id="wc_everypay_notice_phpversion""><p>' . sprintf( __( 'EveryPay Error: EveryPay requires PHP 5.3 and above. You are using version %s.', 'everypay' ), phpversion() ) . '</p></div>';
     }
 
     // Check required fields.
     else if( !$this->api_username || !$this->api_secret ) {
       if ( $this->sandbox == 'no' ) {
-        echo '<div class="error"><p>' . __( 'EveryPay Error: Please enter your API username and secret.', 'everypay' ) . '</p></div>';
+        echo '<div class="error" id="wc_everypay_notice_credentials"><p>' . __( 'EveryPay Error: Please enter your API username and secret.', 'everypay' ) . '</p></div>';
       } else {
-        echo '<div class="error"><p>' . __( 'EveryPay Error: Please enter your TEST API username and secret.', 'everypay' ) . '</p></div>';
+        echo '<div class="error" id="wc_everypay_notice_credentials"><p>' . __( 'EveryPay Error: Please enter your TEST API username and secret.', 'everypay' ) . '</p></div>';
       }
     }
 
     // warn about test payments
     if ( $this->sandbox == 'yes' ) {
-      echo '<div class="update-nag"><p>' . __("EveryPay payment gateway is in test mode, real payments not processed!", 'everypay') . '</p></div>';
+      echo '<div class="update-nag" id="wc_everypay_notice_sandbox"><p>' . __("EveryPay payment gateway is in test mode, real payments not processed!", 'everypay') . '</p></div>';
     }
 
 		// warn about unsecure use if: iFrame in use and either WC force SSL or plugin with same effect is not active (borrowing logics from Stripe)
 		if ( get_option( 'woocommerce_force_ssl_checkout' ) == 'no' && ! class_exists( 'WordPressHTTPS' ) ) {
-			echo '<div class="error"><p>' . sprintf( __( 'EveryPay iFrame mode is enabled, but your checkout is not forced to use HTTPS. While EveryPay iFrame remains secure users may feel insecure due to missing confirmation in browser address bar. Please <a href="%s">enforce SSL</a> and ensure your server has a valid SSL certificate!', 'everypay' ), admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ) . '</p></div>';
+			echo '<div class="error" id="wc_everypay_notice_ssl"><p>' . sprintf( __( 'EveryPay iFrame mode is enabled, but your checkout is not forced to use HTTPS. While EveryPay iFrame remains secure users may feel insecure due to missing confirmation in browser address bar. Please <a href="%s">enforce SSL</a> and ensure your server has a valid SSL certificate!', 'everypay' ), admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ) . '</p></div>';
 		}
 
   }
@@ -356,10 +356,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$args = $this->get_everypay_args( $order );
 
 		if ($this->payment_form === 'iframe') {
-      echo '<div class="iframe_form_detail" id="iframe-payment-container" style="border: 0px; min-width: 460px; min-height: 325px">' . PHP_EOL;
-  		echo '<iframe id="iframepaymentcontainer" name="iframepaymentcontainer", width="460", height="400"></iframe>' . PHP_EOL;
+      echo '<div class="wc_everypay_iframe_form_detail" id="wc_everypay_iframe_payment_container" style="border: 0px; min-width: 460px; min-height: 325px">' . PHP_EOL;
+  		echo '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe", width="460", height="400"></iframe>' . PHP_EOL;
   		echo '</div>' . PHP_EOL;
-  		echo '<form action="'.$this->api_endpoint.'" id="iframe_form" method="post" style="display: none" target="iframepaymentcontainer">' . PHP_EOL;
+  		echo '<form action="'.$this->api_endpoint.'" id="wc_everypay_iframe_form" method="post" style="display: none" target="wc_everypay_iframe">' . PHP_EOL;
       $args_array = [];
 
   		foreach ($args as $key => $value) {
@@ -369,36 +369,33 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
       echo '<input type="submit" value="submit">' . PHP_EOL;
   		echo '</form>' . PHP_EOL;
 
+      global $woocommerce;
+
+  		echo '<a href="'.esc_url( $order->get_cancel_order_url() ).'" id="wc_everypay_iframe_cancel" class="button cancel">'
+  		      . apply_filters('wc_everypay_iframe_cancel', __( 'Cancel order', 'everypay' )) . '</a> ';
+      echo '<a href="'.esc_url( $woocommerce->cart->get_checkout_url() ).'" id="wc_everypay_iframe_retry" class="button alt" style="display: none;">'
+            . apply_filters('wc_everypay_iframe_retry', __( 'Try another payment', 'everypay' )) . '</a>' . PHP_EOL;
+
+
   		// used during testing only:
   		// echo '<div class="transaction_result"></div>' . PHP_EOL;
 
   		$is_sandbox = $this->sandbox == 'no' ? 'false' : 'true';
 
-  		$everypay_params = '
-        var wc_everypay_params = { "uri" : "https://'.parse_url($this->api_endpoint, PHP_URL_HOST).'",
-        "success" : "'.$this->get_return_url( $order ).'",
-        "failure" : "'.$order->get_cancel_order_url().'",
-        "sandbox" : '. $is_sandbox .',
-        };';
-
-			// wc_enqueue_js( $everypay_params );
-
     	$params = array(
         'uri' => 'https://' . parse_url($this->api_endpoint, PHP_URL_HOST),
         'completed' => $this->get_return_url( $order ),
-        'failed' => $order->get_cancel_order_url(),
-        'sandbox' => $this->sandbox == 'no' ? 'false' : 'true',
+        // 'failed' => $order->get_cancel_order_url(),
+        'sandbox' => $this->sandbox == 'no' ? false : true,
     	);
 
       wp_localize_script( 'wc-everypay-iframe', 'wc_everypay_params', $params );
 
 
-
-
 		} else {
   		// defaults to redirect
 
-  		echo '<p>' . __( 'Thank you for your order, please click the button below to pay with credit card.', 'everypay' ) . '</p>';
+  		echo '<p>' . apply_filters('wc_everypay_redirect_title', __( 'Thank you for your order, please click the button below to pay with credit card.', 'everypay' )) . '</p>';
 
       $args_array = [];
 
@@ -406,9 +403,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
   			$args_array[] = '<input type="hidden" name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'" />';
   		}
 
+/*
 			wc_enqueue_js( '
 				$.blockUI({
-						message: "' . esc_js( __( 'Thank you for your order. We are now redirecting you to payment gateway.', 'everypay' ) ) . '",
+						message: "' . esc_js( apply_filters('wc_everypay_redirect_message', __( 'Thank you for your order. We are now redirecting you to payment gateway.', 'everypay' ) ) ) . '",
 						baseZ: 99999,
 						overlayCSS:
 						{
@@ -426,17 +424,18 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 							lineHeight:		  "24px",
 						}
 					});
-				$("#everypay-button").click();
+				$("#wc_everypay_redirect_pay").click();
 			' );
+*/
 
 
       echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
       echo implode('', $args_array);
-  		echo '
-  			<input type="submit" class="button alt" id="everypay-button" value="' . __( 'Pay with credit or debit card', 'everypay' ) . '"> <a class="button cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">' . __( 'Cancel order &amp; restore cart', 'everypay' ) . '</a>
-  			';
+  		echo '<input type="submit" class="button alt" id="wc_everypay_redirect_pay" value="'
+  		      . apply_filters('wc_everypay_redirect_pay', __( 'Pay with credit or debit card', 'everypay' )) . '">
+  		      <a class="button cancel" id="wc_everypay_redirect_cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">'
+  		      . apply_filters('wc_everypay_redirect_cancel', __( 'Cancel order &amp; restore cart', 'everypay' )) . '</a>';
   		echo '</form>';
-
 		}
 
 

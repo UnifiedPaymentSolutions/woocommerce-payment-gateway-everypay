@@ -1,6 +1,6 @@
 var shrinkIframe = function(iframe, iframe_data) {
         iframe.css(iframe_data);
-        jQuery("#dimmed_background_box").remove();
+        jQuery("#wc_everypay_dimmed_background_box").remove();
     };
 
 var expandIframe = function() {
@@ -14,8 +14,8 @@ var expandIframe = function() {
             marginLeft: iframe.attr("marginLeft"),
             marginRight: iframe.attr("marginRight")
         };
-        jQuery('body').append("<div id='dimmed_background_box'></div>");
-        jQuery('#dimmed_background_box').css({
+        jQuery('body').append("<div id='wc_everypay_dimmed_background_box'></div>");
+        jQuery('#wc_everypay_dimmed_background_box').css({
             height: '100%',
             width: '100%',
             position: 'fixed',
@@ -46,7 +46,7 @@ var expandIframe = function() {
             zIndex: 9999,
             margin: 'auto'
         });
-        if (true === wc_everypay_params.everypay_sandbox) {
+        if (true == wc_everypay_params.everypay_sandbox) {
           console.log(iframe_data);
         }
         return iframe_data;
@@ -54,19 +54,19 @@ var expandIframe = function() {
 
 var shrinked_iframe_data;
 
-var iframe = jQuery('#iframe-payment-container iframe');
+var iframe = jQuery('#wc_everypay_iframe_payment_container iframe');
 
 window.addEventListener('message', function(event) {
 
     if (event.origin !== wc_everypay_params.uri) {
-        if (true === wc_everypay_params.everypay_sandbox) {
+        if (true === wc_everypay_params.sandbox) {
           console.log('Received message from non-authorised origin ' + event.origin + ', expected ' + everypay_sandbox);
         }
         return;
     }
     var message = JSON.parse(event.data);
 
-    if (true === wc_everypay_params.everypay_sandbox) {
+    if (true == wc_everypay_params.sandbox) {
       console.log(message);
     }
 
@@ -78,17 +78,19 @@ window.addEventListener('message', function(event) {
     }
     // transaction result message, possible states: completed, failed
     if (message.transaction_result) {
+        // used during testing:
         // jQuery('.transaction_result').append(message.transaction_result);
 
         if ('completed' === message.transaction_result) {
           window.location = wc_everypay_params.completed;
         } else {
-          window.location = wc_everypay_params.failed;
+          // window.location = wc_everypay_params.failed;
+          jQuery('#wc_everypay_iframe_retry').toggle();
         }
 
     }
 }, false);
 
 window.onload = function() {
-  document.getElementById("iframe_form").submit();
+  document.getElementById("wc_everypay_iframe_form").submit();
 }
