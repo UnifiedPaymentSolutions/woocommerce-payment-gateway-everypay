@@ -29,11 +29,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     $this->has_fields         = false;
     $this->credit_fields      = false;
 
-    $this->order_button_text  = __( 'Pay with card', 'everypay' );
+    $this->order_button_text  = __( 'Pay by card', 'everypay' );
 
     // Title/description for WooCommerce admin
     $this->method_title       = __( 'EveryPay', 'everypay' );
-    $this->method_description = __( 'Pay with credit cards via EveryPay.', 'everypay' );
+    $this->method_description = __( 'Card payments are provided by EveryPay.', 'everypay' );
 
     // URL for callback / user redirect from gateway
     $this->notify_url         = WC()->api_request_url( 'WC_Gateway_Everypay' );
@@ -54,9 +54,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     $this->description    = $this->get_option( 'description' );
 
     $this->account_id     = $this->get_option( 'account_id' );
-    $this->transaction_type   = $this->get_option( 'transaction_type', 'charge' );
-    $this->payment_form   = $this->get_option( 'payment_form', 'iframe' );
-    $this->skin_name      = $this->get_option( 'skin_name', 'default' );
+    $this->transaction_type   = $this->get_option( 'transaction_type' );
+    $this->payment_form   = $this->get_option( 'payment_form' );
+    $this->skin_name      = $this->get_option( 'skin_name' );
     $this->sandbox        = $this->get_option( 'sandbox' );
     $this->api_endpoint   = $this->sandbox == 'no' ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
     $this->api_username   = $this->sandbox == 'no' ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
@@ -250,7 +250,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
             'iframe' => __( 'iFrame payment form integrated into checkout', 'everypay' ),
           ),
         'description' => __( "Hosted form on EveryPay server is the secure solution of choice, while iFrame provides better customer experience (https strongly advised)", 'everypay' ),
-        'default'     => 'iframe',
+        'default'     => 'redirect',
         'desc_tip'    => false,
       ),
      'skin_name' => array(
@@ -264,13 +264,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
           'title' => __( 'Title', 'everypay' ),
           'type' => 'text',
           'description' => __( 'This controls the title which the user sees during checkout.', 'everypay' ),
-          'default' => __( 'EveryPay', 'everypay' )
+          'default' => __( 'Card payment', 'everypay' )
           ),
      'description' => array(
           'title' => __( 'Description', 'everypay' ),
           'type' => 'textarea',
           'description' => __( 'This controls the description which the user sees during checkout.', 'everypay' ),
-          'default' => __("Pay with credit or debit card", 'everypay')
+          'default' => __("Card payments are provided by EveryPay", 'everypay')
            ),
       'account_id' => array(
         'title'       => __( 'Processing Account', 'everypay' ),
@@ -374,7 +374,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
   		echo '<a href="'.esc_url( $order->get_cancel_order_url() ).'" id="wc_everypay_iframe_cancel" class="button cancel">'
   		      . apply_filters('wc_everypay_iframe_cancel', __( 'Cancel order', 'everypay' )) . '</a> ';
       echo '<a href="'.esc_url( $woocommerce->cart->get_checkout_url() ).'" id="wc_everypay_iframe_retry" class="button alt" style="display: none;">'
-            . apply_filters('wc_everypay_iframe_retry', __( 'Try another payment', 'everypay' )) . '</a>' . PHP_EOL;
+            . apply_filters('wc_everypay_iframe_retry', __( 'Try paying again', 'everypay' )) . '</a>' . PHP_EOL;
       echo '</div>' . PHP_EOL;
 
 
@@ -396,7 +396,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		} else {
   		// defaults to redirect
 
-  		echo '<p id="wc_everypay_redirect_explanation">' . apply_filters('wc_everypay_redirect_explanation', __( 'Thank you for your order, please click the button below to pay with credit card.', 'everypay' )) . '</p>';
+  		echo '<p id="wc_everypay_redirect_explanation">' . apply_filters('wc_everypay_redirect_explanation', __( 'Thank you for your order. Please click the button below to complete the card payment.', 'everypay' )) . '</p>';
 
       $args_array = [];
 
@@ -431,7 +431,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
       echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
       echo implode('', $args_array);
   		echo '<input type="submit" class="button alt" id="wc_everypay_redirect_pay" value="'
-  		      . apply_filters('wc_everypay_redirect_pay', __( 'Pay with credit or debit card', 'everypay' )) . '">
+  		      . apply_filters('wc_everypay_redirect_pay', __( 'Pay by card', 'everypay' )) . '">
   		      <a class="button cancel" id="wc_everypay_redirect_cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">'
   		      . apply_filters('wc_everypay_redirect_cancel', __( 'Cancel order &amp; restore cart', 'everypay' )) . '</a>';
   		echo '</form>';
@@ -627,15 +627,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
   		switch ($order_complete)
     		{
     			case self::_VERIFY_FAIL:
-    			  $order->update_status( 'failed', __( 'Payment was declined by payment processor.', 'everypay' ) );
+    			  $order->update_status( 'failed', __( 'Payment was declined. Please verify the card data and try again with the same or different card.', 'everypay' ) );
         		$this->log->add( $this->id, 'Payment was declined by payment processor.' );
     			  break;
     			case self::_VERIFY_CANCEL:
-    			  $order->update_status( 'failed', __( 'Payment was cancelled by user.', 'everypay' ) );
+    			  $order->update_status( 'failed', __( 'Payment cancelled.', 'everypay' ) );
         		$this->log->add( $this->id, 'Payment was cancelled by user.' );
     			  break;
           default:
-    			  $order->update_status( 'failed', __( 'An error occurred while processing the payment response - please notify merchant!', 'everypay' ) );
+    			  $order->update_status( 'failed', __( 'An error occurred while processing the payment response, please notify merchant!', 'everypay' ) );
         		$this->log->add( $this->id, 'An error occurred while processing the payment response.' );
     			  break;
     		}
@@ -689,7 +689,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			// Payment complete
 			$order->payment_complete( $_REQUEST['payment_reference'] );
 			// Add order note
-			$order->add_order_note( sprintf( __( 'EveryPay payment approved (Reference: %s, Timestamp: %s)', 'everypay' ), $_REQUEST['payment_reference'], $_REQUEST['timestamp'] ) );
+			$order->add_order_note( sprintf( __( 'Card payment was successfully processed by EveryPay (Reference: %s, Timestamp: %s)', 'everypay' ), $_REQUEST['payment_reference'], $_REQUEST['timestamp'] ) );
       // Store the transaction ID for WC 2.2 or later.
       add_post_meta( $order->id, '_transaction_id', $_REQUEST['payment_reference'], true );
 

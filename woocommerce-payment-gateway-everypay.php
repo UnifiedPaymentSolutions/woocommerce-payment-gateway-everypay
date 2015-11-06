@@ -3,7 +3,7 @@
  * Plugin Name:       WooCommerce EveryPay gateway
  * Plugin URI:        https://every-pay.com/documentation-overview/
  * Description:       EveryPay payment gateway for WooCommerce.
- * Version:           0.9.3
+ * Version:           0.9.4
  * Author:            EveryPay AS
  * Author URI:        https://every-pay.com/documentation-overview/
  * Requires at least: 4.0
@@ -89,7 +89,7 @@ if( !class_exists( 'WC_Everypay' ) ) {
      * @access public
      * @var    string
      */
-    public $version = '0.9.2';
+    public $version = '0.9.4';
 
     /**
      * The Gateway URL.
@@ -284,9 +284,11 @@ if( !class_exists( 'WC_Everypay' ) ) {
      * @TODO   List the country codes the payment gateway your building supports.
      * @access public
      */
+/*
     public function gateway_country_base() {
       return apply_filters( 'woocommerce_gateway_country_base', array( 'EE', 'US', 'UK', 'FR' ) );
     }
+*/
 
     /**
      * Add the gateway.
