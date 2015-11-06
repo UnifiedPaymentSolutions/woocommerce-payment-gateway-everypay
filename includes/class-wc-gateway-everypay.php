@@ -33,7 +33,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
     // Title/description for WooCommerce admin
     $this->method_title       = __( 'EveryPay', 'everypay' );
-    $this->method_description = __( 'Card payments are provided by EveryPay.', 'everypay' );
+    $this->method_description = __( 'Card payments are provided by EveryPay', 'everypay' );
 
     // URL for callback / user redirect from gateway
     $this->notify_url         = WC()->api_request_url( 'WC_Gateway_Everypay' );
