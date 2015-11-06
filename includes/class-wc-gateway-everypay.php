@@ -196,6 +196,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
       } else {
         echo '<div class="error" id="wc_everypay_notice_credentials"><p>' . __( 'EveryPay Error: Please enter your TEST API username and secret.', 'everypay' ) . '</p></div>';
       }
+    } if ( !$this->account_id ) {
+      echo '<div class="error" id="wc_everypay_notice_account"><p>' . __( 'EveryPay Error: Please enter your Processing Account.', 'everypay' ) . '</p></div>';
     }
 
     // warn about test payments
@@ -263,13 +265,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
      'title' => array(
           'title' => __( 'Title', 'everypay' ),
           'type' => 'text',
-          'description' => __( 'This controls the title which the user sees during checkout.', 'everypay' ),
+          'description' => __( 'This controls the title which the user sees during checkout.', 'everypay' ) . ' ' . __('For translation with WPML use here English and translate in String Translation'),
           'default' => __( 'Card payment', 'everypay' )
           ),
      'description' => array(
           'title' => __( 'Description', 'everypay' ),
           'type' => 'textarea',
-          'description' => __( 'This controls the description which the user sees during checkout.', 'everypay' ),
+          'description' => __( 'This controls the description which the user sees during checkout.', 'everypay' ) . ' ' . __('For translation with WPML use here English and translate in String Translation'),
           'default' => __("Card payments are provided by EveryPay", 'everypay')
            ),
       'account_id' => array(
