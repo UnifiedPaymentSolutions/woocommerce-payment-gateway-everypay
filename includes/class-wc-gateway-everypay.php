@@ -54,9 +54,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     $this->description    = $this->get_option( 'description' );
 
     $this->account_id     = $this->get_option( 'account_id' );
-    $this->transaction_type   = $this->get_option( 'transaction_type' );
-    $this->payment_form   = $this->get_option( 'payment_form' );
-    $this->skin_name      = $this->get_option( 'skin_name' );
+    $this->transaction_type   = $this->get_option( 'transaction_type', 'charge' );
+    $this->payment_form   = $this->get_option( 'payment_form', 'iframe' );
+    $this->skin_name      = $this->get_option( 'skin_name', 'default' );
     $this->sandbox        = $this->get_option( 'sandbox' );
     $this->api_endpoint   = $this->sandbox == 'no' ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
     $this->api_username   = $this->sandbox == 'no' ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
