@@ -204,7 +204,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     }
 
 		// warn about unsecure use if: iFrame in use and either WC force SSL or plugin with same effect is not active (borrowing logics from Stripe)
-		if ( get_option( 'woocommerce_force_ssl_checkout' ) == 'no' && ! class_exists( 'WordPressHTTPS' ) ) {
+		if ( ($this->payment_form === 'iframe') && (get_option( 'woocommerce_force_ssl_checkout' ) === 'no') && ! class_exists( 'WordPressHTTPS' ) ) {
 			echo '<div class="error" id="wc_everypay_notice_ssl"><p>' . sprintf( __( 'EveryPay iFrame mode is enabled, but your checkout is not forced to use HTTPS. While EveryPay iFrame remains secure users may feel insecure due to missing confirmation in browser address bar. Please <a href="%s">enforce SSL</a> and ensure your server has a valid SSL certificate!', 'everypay' ), admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ) . '</p></div>';
 		}
 
