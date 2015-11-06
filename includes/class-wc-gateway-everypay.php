@@ -62,17 +62,16 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     $this->api_username   = $this->sandbox == 'no' ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
     $this->api_secret     = $this->sandbox == 'no' ? $this->get_option( 'api_secret' ) : $this->get_option( 'sandbox_api_secret' );
 
+    // Log is created always for main transaction points - debug option adds more logging points during transaction
     $this->debug          = $this->get_option( 'debug' );
 
-    // Logs
-    if( $this->debug == 'yes' ) {
-      if( class_exists( 'WC_Logger' ) ) {
-        $this->log = new WC_Logger();
-      }
-      else {
-        $this->log = $woocommerce->logger();
-      }
+    if( class_exists( 'WC_Logger' ) ) {
+      $this->log = new WC_Logger();
     }
+    else {
+      $this->log = $woocommerce->logger();
+    }
+
 
     // Hooks
     if( is_admin() ) {
