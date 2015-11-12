@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WooCommerce EveryPay gateway\n"
-"POT-Creation-Date: 2015-11-12 14:29+0200\n"
+"POT-Creation-Date: 2015-11-12 14:45+0200\n"
 "PO-Revision-Date: 2015-10-23 13:18+0300\n"
 "Language-Team: Peeter Marvet <pets@tehnokratt.net>\n"
 "MIME-Version: 1.0\n"
