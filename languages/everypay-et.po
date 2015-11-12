@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WooCommerce EveryPay gateway\n"
 "POT-Creation-Date: 2015-11-12 14:59+0200\n"
-"PO-Revision-Date: 2015-11-12 14:59+0200\n"
+"PO-Revision-Date: 2015-11-12 15:02+0200\n"
 "Last-Translator: Peeter Marvet <pets@tehnokratt.net>\n"
 "Language-Team: Peeter Marvet <pets@tehnokratt.net>\n"
 "Language: et\n"
@@ -167,7 +167,7 @@ msgstr "Kirjeldus"
 
 #: includes/class-wc-gateway-everypay.php:282
 msgid "This controls the description which the user sees during checkout."
-msgstr "Kirjeldust kuvatakse makseviisi valiku lehel"
+msgstr "Kirjeldust kuvatakse makseviisi valiku lehel."
 
 #: includes/class-wc-gateway-everypay.php:286
 msgid "Processing Account"
