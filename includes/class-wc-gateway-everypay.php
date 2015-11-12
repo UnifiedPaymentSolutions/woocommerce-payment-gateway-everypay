@@ -236,6 +236,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
    * @access public
    */
   public function init_form_fields() {
+
+    $translation_notice = '';
+
+    if ( function_exists('icl_object_id') ) {
+      $translation_notice = ' ' . __('For translation with WPML use English here and translate in String Translation. Detailed instructions <a href="https://wpml.org/documentation/support/translating-woocommerce-sites-default-language-english/">here</a>.');
+    }
+
     $this->form_fields = array(
       'enabled' => array(
         'title'       => __( 'Enable/Disable', 'everypay' ),
@@ -265,13 +272,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
      'title' => array(
           'title' => __( 'Title', 'everypay' ),
           'type' => 'text',
-          'description' => __( 'This controls the title which the user sees during checkout.', 'everypay' ) . ' ' . __('For translation with WPML use here English and translate in String Translation'),
+          'description' => __( 'This controls the title which the user sees during checkout.', 'everypay' )  . $translation_notice,
           'default' => __( 'Card payment', 'everypay' )
           ),
      'description' => array(
           'title' => __( 'Description', 'everypay' ),
           'type' => 'textarea',
-          'description' => __( 'This controls the description which the user sees during checkout.', 'everypay' ) . ' ' . __('For translation with WPML use here English and translate in String Translation'),
+          'description' => __( 'This controls the description which the user sees during checkout.', 'everypay' ) . $translation_notice,
           'default' => __("Card payments are provided by EveryPay", 'everypay')
            ),
       'account_id' => array(
