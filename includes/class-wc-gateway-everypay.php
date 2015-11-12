@@ -69,6 +69,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
       $this->log = new WC_Logger();
     }
     else {
+      global $woocommerce;
       $this->log = $woocommerce->logger();
     }
 
@@ -240,7 +241,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     $translation_notice = '';
 
     if ( function_exists('icl_object_id') ) {
-      $translation_notice = ' ' . __('For translation with WPML use English here and translate in String Translation. Detailed instructions <a href="https://wpml.org/documentation/support/translating-woocommerce-sites-default-language-english/">here</a>.');
+      $translation_notice = ' ' . __('For translation with WPML use English here and translate in String Translation. Detailed instructions <a href="https://wpml.org/documentation/support/translating-woocommerce-sites-default-language-english/">here</a>.', 'everypay');
     }
 
     $this->form_fields = array(
