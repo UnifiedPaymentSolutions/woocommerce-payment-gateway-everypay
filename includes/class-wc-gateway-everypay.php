@@ -59,6 +59,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$this->transaction_type = $this->get_option( 'transaction_type' );
 		$this->payment_form     = $this->get_option( 'payment_form' );
 		$this->skin_name        = $this->get_option( 'skin_name' );
+		$this->token_enabled    = $this->get_option( 'token_enabled' );
+		$this->token_ask        = $this->get_option( 'token_ask' );
 		$this->sandbox          = $this->get_option( 'sandbox' );
 		$this->api_endpoint     = $this->sandbox == 'no' ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
 		$this->api_username     = $this->sandbox == 'no' ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
@@ -153,7 +155,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 					}
 				}).change();
 
-				jQuery('#woocommerce_everypay_token_enable').change(function () {
+				jQuery('#woocommerce_everypay_token_enabled').change(function () {
 					var  tokenask = jQuery('#woocommerce_everypay_token_ask').closest('tr');
 
 					if (jQuery(this).is(':checked')) {
@@ -264,15 +266,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				'default'     => 'default'
 			),
 			'token_enabled'       => array(
-					'title'       => __( 'Enable/Disable', 'everypay' ),
-					'label'       => __( 'Enable token payments', 'everypay' ),
+					'title'       => __( 'Enable token payments', 'everypay' ),
+					'label'       => __( 'Storing credit card token is enabled', 'everypay' ),
 					'type'        => 'checkbox',
 					'description' => __( "When token payments are enabled users get an option to store reference to credit card and can make future purchases without need to enter card details.", 'everypay' ),
 					'default'     => 'no'
 			),
 			'token_ask'       => array(
-					'title'       => __( 'Ask when storing', 'everypay' ),
-					'label'       => __( 'Is storing tokens user-selectable?', 'everypay' ),
+					'title'       => __( 'Ask when storing token', 'everypay' ),
+					'label'       => __( 'Storing tokens is user-selectable', 'everypay' ),
 					'type'        => 'checkbox',
 					'description' => __( "When this option is cleared all purchases store token on user's account.", 'everypay' ),
 					'default'     => 'yes'
