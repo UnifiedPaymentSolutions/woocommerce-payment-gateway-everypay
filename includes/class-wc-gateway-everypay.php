@@ -134,8 +134,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			<?php $this->generate_settings_html(); ?>
 			<script type="text/javascript">
 				jQuery('#woocommerce_everypay_sandbox').change(function () {
-					var sandbox = jQuery('#woocommerce_everypay_sandbox_api_username, #woocommerce_everypay_sandbox_api_secret').closest('tr'),
-						production = jQuery('#woocommerce_everypay_api_username, #woocommerce_everypay_api_secret').closest('tr');
+					var sandbox = jQuery('#woocommerce_everypay_sandbox_api_username, #woocommerce_everypay_sandbox_api_secret').closest('tr');
 
 					if (jQuery(this).is(':checked')) {
 						sandbox.show("slow");
@@ -154,6 +153,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 					}
 				}).change();
 
+				jQuery('#woocommerce_everypay_token_enable').change(function () {
+					var  tokenask = jQuery('#woocommerce_everypay_token_ask').closest('tr');
+
+					if (jQuery(this).is(':checked')) {
+						tokenask.show("slow");
+					} else {
+						tokenask.hide("slow");
+					}
+				}).change();
 
 			</script>
 		</table>
@@ -254,6 +262,20 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				'class'       => 'everypay_iframe_option',
 				'description' => __( "Appearance of payment area can be set up in EveryPay Merchant Portal, under 'Settings' > 'iFrame skins'", 'everypay' ),
 				'default'     => 'default'
+			),
+			'token_enabled'       => array(
+					'title'       => __( 'Enable/Disable', 'everypay' ),
+					'label'       => __( 'Enable token payments', 'everypay' ),
+					'type'        => 'checkbox',
+					'description' => __( "When token payments are enabled users get an option to store reference to credit card and can make future purchases without need to enter card details.", 'everypay' ),
+					'default'     => 'no'
+			),
+			'token_ask'       => array(
+					'title'       => __( 'Ask when storing', 'everypay' ),
+					'label'       => __( 'Is storing tokens user-selectable?', 'everypay' ),
+					'type'        => 'checkbox',
+					'description' => __( "When this option is cleared all purchases store token on user's account.", 'everypay' ),
+					'default'     => 'yes'
 			),
 			'title'                => array(
 				'title'       => __( 'Title', 'everypay' ),
