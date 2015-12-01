@@ -52,6 +52,10 @@
 		font-size: 0.85em;
 	}
 
+	.everypay_manage_tokens form {
+		display: inline-block;
+	}
+
 	td.everypay_manage_tokens__actions, th.everypay_manage_tokens__actions {
 		text-align: right;
 	}
