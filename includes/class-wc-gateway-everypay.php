@@ -28,7 +28,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	public function __construct() {
 		$this->id            = 'everypay';
 		$this->icon          = apply_filters( 'woocommerce_gateway_everypay_icon', plugins_url( '/assets/images/mastercard_visa.png', dirname( __FILE__ ) ) );
-		$this->has_fields    = false;
+		$this->has_fields    = true;
 		$this->credit_fields = false;
 
 		$this->order_button_text = __( 'Pay by card', 'everypay' );
@@ -59,12 +59,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$this->transaction_type = $this->get_option( 'transaction_type' );
 		$this->payment_form     = $this->get_option( 'payment_form' );
 		$this->skin_name        = $this->get_option( 'skin_name' );
-		$this->token_enabled    = $this->get_option( 'token_enabled' );
-		$this->token_ask        = $this->get_option( 'token_ask' );
-		$this->sandbox          = $this->get_option( 'sandbox' );
-		$this->api_endpoint     = $this->sandbox == 'no' ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
-		$this->api_username     = $this->sandbox == 'no' ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
-		$this->api_secret       = $this->sandbox == 'no' ? $this->get_option( 'api_secret' ) : $this->get_option( 'sandbox_api_secret' );
+		$this->token_enabled    = $this->get_option( 'token_enabled' ) === 'yes' ? true : false;
+		$this->token_ask        = $this->get_option( 'token_ask' ) === 'yes' ? true : false;
+		$this->sandbox          = $this->get_option( 'sandbox' ) === 'yes' ? true : false;
+		$this->api_endpoint     = $this->sandbox === false ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
+		$this->api_username     = $this->sandbox === false ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
+		$this->api_secret       = $this->sandbox === false ? $this->get_option( 'api_secret' ) : $this->get_option( 'sandbox_api_secret' );
 
 		// Log is created always for main transaction points - debug option adds more logging points during transaction
 		$this->debug = $this->get_option( 'debug' );
@@ -98,6 +98,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		// Add returning user / callback handler to WC API
 		add_action( 'woocommerce_api_wc_gateway_' . $this->id, array( $this, 'everypay_return_handler' ) );
 
+		// Add token management to user's account page
+		add_action( 'woocommerce_after_my_account', array( $this, 'generate_account_page_html' ) );
+
 	}
 
 
@@ -124,6 +127,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * @return void
 	 */
 	public function admin_options() {
+
 		?>
 		<h3><?php _e( 'EveryPay', 'everypay' ); ?></h3>
 		<p><?php _e( 'EveryPay is a card payment gateway service provider, enabling e-commerce merchants to collect credit and debit card online payments from their customers.', 'everypay' ); ?></p>
@@ -156,7 +160,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				}).change();
 
 				jQuery('#woocommerce_everypay_token_enabled').change(function () {
-					var  tokenask = jQuery('#woocommerce_everypay_token_ask').closest('tr');
+					var tokenask = jQuery('#woocommerce_everypay_token_ask').closest('tr');
 
 					if (jQuery(this).is(':checked')) {
 						tokenask.show("slow");
@@ -183,10 +187,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		// PHP Version.
 		if ( version_compare( phpversion(), '5.3', '<' ) ) {
-			echo '<div class="error id="wc_everypay_notice_phpversion""><p>' . sprintf( __( 'EveryPay Error: EveryPay requires PHP 5.3 and above. You are using version %s.', 'everypay' ), phpversion() ) . '</p></div>';
+			echo '<div class="error" id="wc_everypay_notice_phpversion"><p>' . sprintf( __( 'EveryPay Error: EveryPay requires PHP 5.3 and above. You are using version %s.', 'everypay' ), phpversion() ) . '</p></div>';
 		} // Check required fields.
 		else if ( ! $this->api_username || ! $this->api_secret ) {
-			if ( $this->sandbox == 'no' ) {
+			if ( $this->sandbox === false ) {
 				echo '<div class="error" id="wc_everypay_notice_credentials"><p>' . __( 'EveryPay Error: Please enter your API username and secret.', 'everypay' ) . '</p></div>';
 			} else {
 				echo '<div class="error" id="wc_everypay_notice_credentials"><p>' . __( 'EveryPay Error: Please enter your TEST API username and secret.', 'everypay' ) . '</p></div>';
@@ -197,7 +201,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		}
 
 		// warn about test payments
-		if ( $this->sandbox == 'yes' ) {
+		if ( $this->sandbox === true ) {
 			echo '<div class="update-nag" id="wc_everypay_notice_sandbox"><p>' . __( "EveryPay payment gateway is in test mode, real payments not processed!", 'everypay' ) . '</p></div>';
 		}
 
@@ -265,19 +269,19 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				'description' => __( "Appearance of payment area can be set up in EveryPay Merchant Portal, under 'Settings' > 'iFrame skins'", 'everypay' ),
 				'default'     => 'default'
 			),
-			'token_enabled'       => array(
-					'title'       => __( 'Enable token payments', 'everypay' ),
-					'label'       => __( 'Storing credit card token is enabled', 'everypay' ),
-					'type'        => 'checkbox',
-					'description' => __( "When token payments are enabled users get an option to store reference to credit card and can make future purchases without need to enter card details.", 'everypay' ),
-					'default'     => 'no'
+			'token_enabled'        => array(
+				'title'       => __( 'Saved cards', 'everypay' ),
+				'label'       => __( 'Enable payments with saved cards', 'everypay' ),
+				'type'        => 'checkbox',
+				'description' => __( "When card token payments are enabled users get an option to store reference to credit card and can make future purchases without need to enter card details.", 'everypay' ),
+				'default'     => 'no'
 			),
-			'token_ask'       => array(
-					'title'       => __( 'Ask when storing token', 'everypay' ),
-					'label'       => __( 'Storing tokens is user-selectable', 'everypay' ),
-					'type'        => 'checkbox',
-					'description' => __( "When this option is cleared all purchases store token on user's account.", 'everypay' ),
-					'default'     => 'yes'
+			'token_ask'            => array(
+				'title'       => __( 'Ask when storing cards', 'everypay' ),
+				'label'       => __( 'Storing cards is user-selectable', 'everypay' ),
+				'type'        => 'checkbox',
+				'description' => __( "When this option is cleared all purchases store card token on user's account.", 'everypay' ),
+				'default'     => 'yes'
 			),
 			'title'                => array(
 				'title'       => __( 'Title', 'everypay' ),
@@ -354,113 +358,256 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		);
 	}
 
-	/**
-	 * Output for the order received page.
-	 *
-	 * @access public
-	 * @return void
-	 */
-	public function receipt_page( $order_id ) {
 
-		$order = wc_get_order( $order_id );
+	public function payment_fields() {
 
-		$return_url     = '';
-		$transaction_id = $order->get_transaction_id();
-
-		if ( ! empty( $this->view_transaction_url ) && ! empty( $transaction_id ) ) {
-			$return_url = $this->view_transaction_url;
+		if ( ! empty( $this->description ) ) {
+			echo wpautop( wptexturize( $this->description ) );
 		}
 
-		$args = $this->get_everypay_args( $order );
-
-		if ( $this->payment_form === 'iframe' ) {
-			echo '<div class="wc_everypay_iframe_form_detail" id="wc_everypay_iframe_payment_container" style="border: 0px; min-width: 460px; min-height: 325px">' . PHP_EOL;
-			echo '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe", width="460", height="400"></iframe>' . PHP_EOL;
-			echo '</div>' . PHP_EOL;
-			echo '<form action="' . $this->api_endpoint . '" id="wc_everypay_iframe_form" method="post" style="display: none" target="wc_everypay_iframe">' . PHP_EOL;
-			$args_array = [ ];
-
-			foreach ( $args as $key => $value ) {
-				$args_array[] = '<input name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
-			}
-			echo implode( PHP_EOL, $args_array ) . PHP_EOL;
-			echo '<input type="submit" value="submit">' . PHP_EOL;
-			echo '</form>' . PHP_EOL;
-
-			global $woocommerce;
-
-			echo '<div id="wc_everypay_iframe_buttons">' . PHP_EOL;
-			echo '<a href="' . esc_url( $order->get_cancel_order_url() ) . '" id="wc_everypay_iframe_cancel" class="button cancel">'
-			     . apply_filters( 'wc_everypay_iframe_cancel', __( 'Cancel order', 'everypay' ) ) . '</a> ';
-			echo '<a href="' . esc_url( $woocommerce->cart->get_checkout_url() ) . '" id="wc_everypay_iframe_retry" class="button alt" style="display: none;">'
-			     . apply_filters( 'wc_everypay_iframe_retry', __( 'Try paying again', 'everypay' ) ) . '</a>' . PHP_EOL;
-			echo '</div>' . PHP_EOL;
-
-
-			// used during testing only:
-			// echo '<div class="transaction_result"></div>' . PHP_EOL;
-
-			$is_sandbox = $this->sandbox == 'no' ? 'false' : 'true';
-
-			$params = array(
-				'uri'       => 'https://' . parse_url( $this->api_endpoint, PHP_URL_HOST ),
-				'completed' => $this->get_return_url( $order ),
-				// 'failed' => $order->get_cancel_order_url(),
-				'sandbox'   => $this->sandbox == 'no' ? false : true,
-			);
-
-			wp_localize_script( 'wc-everypay-iframe', 'wc_everypay_params', $params );
-
-
-		} else {
-			// defaults to redirect
-
-			echo '<p id="wc_everypay_redirect_explanation">' . apply_filters( 'wc_everypay_redirect_explanation', __( 'Thank you for your order. Please click the button below to complete the card payment.', 'everypay' ) ) . '</p>';
-
-			$args_array = [ ];
-
-			foreach ( $args as $key => $value ) {
-				$args_array[] = '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
-			}
-
-			wc_enqueue_js( '
-				$.blockUI({
-						message: "' . esc_js( apply_filters( 'wc_everypay_redirect_message', __( 'Thank you for your order. We are now redirecting you to payment gateway.', 'everypay' ) ) ) . '",
-						baseZ: 99999,
-						overlayCSS:
-						{
-							background: "#fff",
-							opacity: 0.6
-						},
-						css: {
-							padding:        "20px",
-							zindex:         "9999999",
-							textAlign:      "center",
-							color:          "#555",
-							border:         "3px solid #aaa",
-							backgroundColor:"#fff",
-							cursor:         "wait",
-							lineHeight:		  "24px",
-						}
-					});
-				$("#wc_everypay_redirect_pay").click();
-			' );
-
-
-			echo '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
-			echo implode( '', $args_array );
-			echo '<input type="submit" class="button alt" id="wc_everypay_redirect_pay" value="'
-			     . apply_filters( 'wc_everypay_redirect_pay', __( 'Pay by card', 'everypay' ) ) . '">
-  		      <a class="button cancel" id="wc_everypay_redirect_cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">'
-			     . apply_filters( 'wc_everypay_redirect_cancel', __( 'Cancel order &amp; restore cart', 'everypay' ) ) . '</a>';
-			echo '</form>';
+		if ( ! is_user_logged_in() && $this->token_enabled) {
+			echo wpautop(__('To save your card securely for easier future payments, sign up for an account or log in to your existing account.', 'everypay'));
 		}
 
+		if ($this->token_enabled) {
+			$this->credit_card_form();
+		}
 
 	}
 
+	public function credit_card_form( $args = array(), $fields = array() ) {
+
+		?>
+		<fieldset id="<?php echo $this->id; ?>-cc-form">
+			<?php
+			do_action( 'woocommerce_credit_card_form_start', $this->id );
+
+			$tokenized_cards_html = $this->generate_tokenized_cards_html();
+
+			echo $tokenized_cards_html;
+
+			do_action( 'woocommerce_credit_card_form_end', $this->id );
+			?>
+			<div class="clear"></div>
+			<?php echo $this->generate_tokenize_checkbox_html( ! empty( $tokenized_cards_html ) ); ?>
+		</fieldset>
+		<script type="text/javascript">
+			jQuery('input#createaccount').change(function () {
+				var tokenize = jQuery('#wc_everypay_tokenize_payment').closest('p.form-row');
+
+				if (jQuery(this).is(':checked')) {
+					tokenize.show("slow");
+				} else {
+					tokenize.hide("slow");
+				}
+			}).change();
+			jQuery('input[name=wc_everypay_token]').change(function () {
+				var tokenize = jQuery('#wc_everypay_tokenize_payment').closest('p.form-row');
+				if (jQuery(this).val() == 'add_new') {
+					tokenize.show("slow");
+				} else {
+					tokenize.hide("slow");
+				}
+			});
+		</script>
+		<?php
+	}
+
+
+	protected function generate_tokenize_checkbox_html( $has_tokens = false ) {
+
+		$html = '';
+
+		if ( $this->token_enabled ) {
+			if ( ! $this->token_ask ) {
+				$html .= '<input name="wc_everypay_tokenize_payment" id="wc_everypay_tokenize_payment" type="hidden" value="true" />';
+			} else {
+
+				// hidden if existing tokenized card is shown and   selected
+				if ( true === $has_tokens ) {
+					$display = "display: none";
+				} else {
+					$display = '';
+				}
+				$html .= '<p class="form-row form-row-wide" style="' . $display . '">';
+				$html .= '<input name="wc_everypay_tokenize_payment" id="wc_everypay_tokenize_payment" type="checkbox" value="true" style="width:auto;" />';
+				$html .= '<label for="wc_everypay_tokenize_payment" style="display:inline;">' . apply_filters( 'wc_everypay_tokenize_payment', __( 'Save card securely', 'everypay' ) ) . '</label>';
+				$html .= '</p>';
+			}
+		}
+
+		return $html;
+	}
+
+	protected function generate_tokenized_cards_html() {
+
+		$html = '';
+
+		if ( $this->token_enabled ) {
+
+			$tokens = $this->get_user_tokens();
+
+
+			if ( ! empty( $tokens ) ) {
+				$html .= '<p class="form-row form-row-wide">';
+
+				foreach ( $tokens as $token ) {
+
+					if (true === $token['active']) {
+						$checked = '';
+
+						if ( isset( $token['default'] ) && true === $token['default'] ) {
+							$checked = 'checked="checked"';
+						}
+						$html .= '<input type="radio" id="wc_everypay_token_' . $token['cc_token'] . '" name="wc_everypay_token" class="wc_everypay_token" style="width:auto;" value="' . $token['cc_token'] . '" ' . $checked . '/>';
+
+						$html .= '<label class="wc_everypay_token_label" for="wc_everypay_token_' . $token['cc_token'] . '" style="display: inline-block">';
+
+						$html .= '<img src="' . plugins_url( '/assets/images/', dirname( __FILE__ ) ) . $token['cc_type'] . '.png" alt="' . $this->get_token_type_fullname( $token['cc_type'] ) . '" width="47" height="30" style="padding-right: 0.5em"> ';
+						// $html .= $this->get_token_type_fullname( $token['cc_type'] );
+						if ( ! empty( $token['cc_last_four_digits'] ) ) {
+							$html .= ' **** **** **** ' . $token['cc_last_four_digits'];
+						}
+
+						if ( ! empty( $token['cc_month'] ) && ! empty( $token['cc_year'] ) ) {
+							$html .= ' (' . __( 'expires', 'everypay' ) . ' ' . $token['cc_month'] . '/' . $token['cc_year'] . ')';
+						}
+
+
+						$html .= '</label><br />';
+					}
+
+				}
+
+				$html .= $this->generate_add_or_manage_cards_html();
+				$html .= '</p>';
+
+			}
+
+
+		}
+
+		return $html;
+	}
+
+	public function get_user_tokens() {
+
+		if ( ( true === $this->token_enabled ) && is_user_logged_in() ) {
+			$tokens = maybe_unserialize( get_user_meta( get_current_user_id(), '_wc_everypay_tokens', true ) );
+		}
+
+		if ( empty( $tokens ) ) {
+			$tokens = [ ];
+		}
+
+
+		/*		$tokens = [
+					[
+						'cc_token'            => 'e54aa3d4c766ac3f1584be20',
+						'cc_last_four_digits' => '1234',
+						'cc_year'             => '2017',
+						'cc_month'            => '1',
+						'cc_type'             => 'visa',
+					],
+					[
+						'cc_token'            => 'e54aa3d4c766ac3f1584be20',
+						'cc_last_four_digits' => '2335',
+						'cc_year'             => '2015',
+						'cc_month'            => '11',
+						'cc_type'             => 'master_card',
+						'default'             => true,
+					],
+				];*/
+
+		// mark expired cards as inactive - should not be used and marked default, can be deleted
+
+		$now = new DateTime();
+
+		foreach ( $tokens as $key => $token ) {
+
+			$cc_expires = DateTime::createFromFormat( 'n Y', $token['cc_month'] . ' ' . $token['cc_year'] );
+
+			if ( $cc_expires < $now ) {
+				$tokens[ $key ]['active']  = false;
+				$tokens[ $key ]['default'] = false; // can't be default anymore
+			} else {
+				$tokens[ $key ]['active'] = true;
+			}
+		}
+
+		return $tokens;
+	}
+
+
+	public function remove_user_token( $token = '' ) {
+
+		$tokens = $this->get_user_tokens();
+
+		if ( ! empty( $tokens[ $token ] ) ) {
+
+			unset($tokens[ $token ]);
+
+			return (bool) update_user_meta( get_current_user_id(), '_wc_everypay_tokens', $tokens );
+
+		}
+
+		return false;
+
+	}
+
+	public function set_user_token_default( $token = '' ) {
+
+		$tokens = $this->get_user_tokens();
+
+		if ( ! empty( $tokens[ $token ] ) ) {
+
+			foreach ( $tokens as $key => $value ) {
+				$tokens[ $key ]['default'] = false;
+			}
+
+			$tokens[ $token ]['default'] = true;
+
+			return (bool) update_user_meta( get_current_user_id(), '_wc_everypay_tokens', $tokens );
+
+		}
+
+		return false;
+
+	}
+
+
+	protected function get_token_type_fullname( $type ) {
+
+		$cc_types = [
+			'visa'        => "Visa",
+			'master_card' => "MasterCard",
+		];
+
+		$fullname = isset( $cc_types[ $type ] ) ? $cc_types[ $type ] : '';
+
+		return $fullname;
+	}
+
+
+	protected function generate_add_or_manage_cards_html() {
+
+		$html = '';
+
+		$html .= '<input type="radio" id="wc_everypay_token_add" name="wc_everypay_token" class="wc_everypay_token" style="width:auto;" value="add_new" />';
+		$html .= '<label class="wc_everypay_token_label" for="wc_everypay_token_add" style="display: inline-block">' . __( 'Use a new card', 'everypay' ) . '</label>';
+
+		$myaccount_page_id = get_option( 'woocommerce_myaccount_page_id' );
+		if ( $myaccount_page_id ) {
+			$myaccount_page_url = get_permalink( $myaccount_page_id );
+		}
+
+		$html .= '<a class="button" style="float:right;" href="' . $myaccount_page_url . '#saved-cards">' . __( 'Manage cards', 'everypay' ) . '</a>';
+
+		return $html;
+	}
+
 	/**
-	 * Process the payment and return the result.
+	 * Run on submitting the checkout page - process payment fields and redirect to payment e.g receipt page
 	 *
 	 * @access public
 	 *
@@ -471,6 +618,33 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	public function process_payment( $order_id ) {
 
 		$order = new WC_Order( $order_id );
+
+		if ( true === $this->token_enabled ) {
+
+			// expected in POST:
+			// 'wc_everypay_token' => '123456789abc123456789def',
+			// 'wc_everypay_tokenize_payment' => 'true',
+
+			if ( ! empty( trim( $_POST['wc_everypay_token'] ) ) ) {
+				update_post_meta( $order_id, '_wc_everypay_token', trim( $_POST['wc_everypay_token'] ) );
+			} else {
+				delete_post_meta( $order_id, '_wc_everypay_token' );
+			}
+
+			if ( true === $this->token_ask ) {
+
+				if ( ! empty( trim( $_POST['wc_everypay_tokenize_payment'] ) ) ) {
+					$tokenize = trim( $_POST['wc_everypay_tokenize_payment'] ) === 'true' ? true : false;
+					update_post_meta( $order_id, '_wc_everypay_tokenize_payment', $tokenize );
+				} else {
+					update_post_meta( $order_id, '_wc_everypay_tokenize_payment', false );
+				}
+
+			} else {
+				update_post_meta( $order_id, '_wc_everypay_tokenize_payment', true );
+			}
+
+		}
 
 		// Redirect to receipt page for automatic post to external gateway
 
@@ -485,10 +659,31 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 	}
 
+
+	/**
+	 * Output redirect or iFrame form on receipt page
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function receipt_page( $order_id ) {
+
+		$order = wc_get_order( $order_id );
+		$args  = $this->get_everypay_args( $order );
+
+		if ( $this->payment_form === 'iframe' ) {
+			echo $this->generate_iframe_form_html( $args, $order );
+		} else {
+			// defaults to redirect
+			echo $this->generate_redirect_form_html( $args, $order );
+		}
+	}
+
+
 	/**
 	 * Prepare data package for signing
 	 *
-	 * @param array $args
+	 * @param array $order
 	 *
 	 * @return array
 	 */
@@ -529,15 +724,34 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			'email'             => $order->billing_email,
 			'nonce'             => uniqid( '', true ),
 			'order_reference'   => $order->id . '_' . date( DATE_W3C ),
+			'request_cc_token'  => '0',
 			'timestamp'         => time(),
 			'transaction_type'  => $this->transaction_type,
 			'user_ip'           => $_SERVER['REMOTE_ADDR'],
 		];
 
+		// handle iFrame skin
 		if ( $this->payment_form === 'iframe' ) {
 			$args['skin_name'] = $this->skin_name;
 		}
 
+
+		// handle request / provide token
+		if ( $this->token_enabled ) {
+			$token = get_post_meta( $order->id, '_wc_everypay_token', true );
+
+			if ( empty ( $token ) || ( $token === 'add_new' ) ) {
+				if ( true === $this->token_ask ) {
+					$args['request_cc_token'] = (bool) get_post_meta( $order->id, '_wc_everypay_tokenize_payment', true ) ? '1' : '0';
+				} else {
+					$args['request_cc_token'] = '1';
+				}
+			} else {
+				$args['cc_token'] = $token;
+			}
+		}
+
+		// prepare and sign fields string
 		$args['hmac_fields'] = '';
 
 		ksort( $args );
@@ -625,7 +839,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		$this->change_language( $order->id );
 
-		$order_complete = $this->process_order_status( $order, $_REQUEST );
+		$order_complete = $this->process_order_status( $order );
 
 		if ( $order_complete === self::_VERIFY_SUCCESS ) {
 			$this->log->add( $this->id, 'Order complete' );
@@ -660,7 +874,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 	}
 
-	private function change_language( $order_id ) {
+	public function change_language( $order_id ) {
 
 		if ( function_exists( 'icl_object_id' ) ) {
 
@@ -685,9 +899,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * Process the order status
 	 *
 	 * @param  WC_Order $order
-	 * @param  string $payment_id
-	 * @param  string $status
-	 * @param  string $auth_code
 	 *
 	 * @return bool
 	 */
@@ -702,6 +913,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			$order->add_order_note( sprintf( __( 'Card payment was successfully processed by EveryPay (Reference: %s, Timestamp: %s)', 'everypay' ), $_REQUEST['payment_reference'], $_REQUEST['timestamp'] ) );
 			// Store the transaction ID for WC 2.2 or later.
 			add_post_meta( $order->id, '_transaction_id', $_REQUEST['payment_reference'], true );
+
+			$this->maybe_add_token( $order );
 
 			// Remove cart
 			WC()->cart->empty_cart();
@@ -792,6 +1005,157 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		return $status;
 	}
+
+	/**
+	 * Build iFrame form for receipt page
+	 *
+	 * @param $args
+	 * @param $order
+	 *
+	 * @return string
+	 */
+	protected function generate_iframe_form_html( $args, $order ) {
+
+		global $woocommerce;
+
+		$html = '';
+
+		$html .= '<div class="wc_everypay_iframe_form_detail" id="wc_everypay_iframe_payment_container" style="border: 0; min-width: 460px; min-height: 325px">' . PHP_EOL;
+		$html .= '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="460" height="400"></iframe>' . PHP_EOL;
+		$html .= '</div>' . PHP_EOL;
+		$html .= '<form action="' . $this->api_endpoint . '" id="wc_everypay_iframe_form" method="post" style="display: none" target="wc_everypay_iframe">' . PHP_EOL;
+		$args_array = [ ];
+
+		foreach ( $args as $key => $value ) {
+			$args_array[] = '<input name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
+		}
+		$html .= implode( PHP_EOL, $args_array ) . PHP_EOL;
+		$html .= '<input type="submit" value="submit">' . PHP_EOL;
+		$html .= '</form>' . PHP_EOL;
+
+
+		$html .= '<div id="wc_everypay_iframe_buttons">' . PHP_EOL;
+		$html .= '<a href="' . esc_url( $order->get_cancel_order_url() ) . '" id="wc_everypay_iframe_cancel" class="button cancel">'
+		         . apply_filters( 'wc_everypay_iframe_cancel', __( 'Cancel order', 'everypay' ) ) . '</a> ';
+		$html .= '<a href="' . esc_url( $woocommerce->cart->get_checkout_url() ) . '" id="wc_everypay_iframe_retry" class="button alt" style="display: none;">'
+		         . apply_filters( 'wc_everypay_iframe_retry', __( 'Try paying again', 'everypay' ) ) . '</a>' . PHP_EOL;
+		$html .= '</div>' . PHP_EOL;
+
+
+		// used during testing to display iFrame message:
+		// echo '<div class="transaction_result"></div>' . PHP_EOL;
+
+		$params = array(
+			'uri'       => 'https://' . parse_url( $this->api_endpoint, PHP_URL_HOST ),
+			'completed' => $this->get_return_url( $order ),
+			// 'failed' => $order->get_cancel_order_url(),
+			'sandbox'   => $this->sandbox,
+		);
+
+		wp_localize_script( 'wc-everypay-iframe', 'wc_everypay_params', $params );
+
+		return $html;
+	}
+
+	/**
+	 * Build redirect form & autosubmit for receipt page
+	 *
+	 * @param $args
+	 * @param $order
+	 *
+	 * @return string
+	 */
+	protected function generate_redirect_form_html( $args, $order ) {
+
+		$html = '';
+
+		$args_array = [ ];
+
+		foreach ( $args as $key => $value ) {
+			$args_array[] = '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
+		}
+
+		$html .= '<p id="wc_everypay_redirect_explanation">' . apply_filters( 'wc_everypay_redirect_explanation', __( 'Thank you for your order. Please click the button below to complete the card payment.', 'everypay' ) ) . '</p>';
+
+		$html .= '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
+
+		$html .= implode( '', $args_array );
+		$html .= '<input type="submit" class="button alt" id="wc_everypay_redirect_pay" value="'
+		         . apply_filters( 'wc_everypay_redirect_pay', __( 'Pay by card', 'everypay' ) ) . '">
+  		      <a class="button cancel" id="wc_everypay_redirect_cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">'
+		         . apply_filters( 'wc_everypay_redirect_cancel', __( 'Cancel order &amp; restore cart', 'everypay' ) ) . '</a>';
+
+		$html .= '</form>';
+
+		wc_enqueue_js( '
+				$.blockUI({
+						message: "' . esc_js( apply_filters( 'wc_everypay_redirect_message', __( 'Thank you for your order. We are now redirecting you to payment gateway.', 'everypay' ) ) ) . '",
+						baseZ: 99999,
+						overlayCSS:
+						{
+							background: "#fff",
+							opacity: 0.6
+						},
+						css: {
+							padding:        "20px",
+							zindex:         "9999999",
+							textAlign:      "center",
+							color:          "#555",
+							border:         "3px solid #aaa",
+							backgroundColor:"#fff",
+							cursor:         "wait",
+							lineHeight:		  "24px",
+						}
+					});
+				$("#wc_everypay_redirect_pay").click();
+			' );
+
+		return $html;
+	}
+
+	/**
+	 * Maybe add new token to user - when processing callback
+	 *
+	 * @param $order
+	 */
+	protected function maybe_add_token( $order ) {
+
+		if ( $this->token_enabled && ! empty( $_REQUEST['cc_token'] ) && ! empty( $_REQUEST['cc_last_four_digits'] ) && ! empty( $_REQUEST['cc_year'] ) && ! empty( $_REQUEST['cc_month'] ) && ! empty( $_REQUEST['cc_type'] ) ) {
+			// 'return to merchant' may have token, but does not carry rest of the information needed to build card selector on next purchase
+			$user = $order->get_user();
+
+			if ( isset( $user->ID ) ) {
+
+				$new_token = [
+					'cc_token'            => $_REQUEST['cc_token'],
+					'cc_last_four_digits' => $_REQUEST['cc_last_four_digits'],
+					'cc_year'             => $_REQUEST['cc_year'],
+					'cc_month'            => $_REQUEST['cc_month'],
+					'cc_type'             => $_REQUEST['cc_type'],
+					'default'             => false,
+				];
+
+				$tokens = maybe_unserialize( get_user_meta( $user->ID, '_wc_everypay_tokens', true ) );
+
+				if ( empty( $tokens ) ) {
+					$tokens               = [ ];
+					$new_token['default'] = true;
+				}
+
+				if ( ! isset( $tokens[ $_REQUEST['cc_token'] ] ) ) {
+					$tokens[ $_REQUEST['cc_token'] ] = $new_token;
+					update_user_meta( $user->ID, '_wc_everypay_tokens', $tokens );
+				}
+			}
+
+		}
+	}
+
+
+	public function generate_account_page_html() {
+		echo "###blaahdeblaah";
+	}
+
 
 } // end class.
 

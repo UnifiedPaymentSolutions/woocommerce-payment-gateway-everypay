@@ -270,7 +270,8 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @return void
 		 */
 		private function includes() {
-			require_once( 'includes/class-wc-gateway-' . str_replace( '_', '-', $this->gateway_slug ) . '.php' );
+			require_once( 'includes/class-wc-gateway-everypay.php' );
+			require_once( 'includes/class-wc-gateway-everypay-account.php' );
 
 			// This supports the plugin extensions 'WooCommerce Subscriptions' and 'WooCommerce Pre-orders'.
 			/*
