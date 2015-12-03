@@ -22,7 +22,7 @@ page
 
 For detailed information and signup please visit: [every-pay.com](https://every-pay.com)
 
-=== Accepting payment cards on website with EveryPay is easy ===
+= Accepting payment cards on website with EveryPay is easy =
 
 **Simple setup**
 EveryPay toolbox comes with free modules for most popular e-commerce platforms which makes it smooth to integrate with our payment gateway.
@@ -39,7 +39,7 @@ With EveryPay you get money transfer for the payments made on your e-shop on nex
 **Vast array of currencies**
 With EveryPay your customers can make purchases in many currencies. We support  EUR, USD, GBP, SEK, DKK, NOK, CAD  and CHF.
 
-=== Features ==
+= Features =
 
 * easy configuration in WooCommerce - only API username and password need to be copied from EveryPay Merchant Portal
 * easy customization - payment method name and description can be changed easily
@@ -86,3 +86,8 @@ EveryPay has support for English and Estonian included, additional translations 
 
 = 0.9.2 =
 * first public version
+
+== Upgrade Notice ==
+
+= 0.9.4 =
+Adds support for iFrame payment form and improves WPML support.
