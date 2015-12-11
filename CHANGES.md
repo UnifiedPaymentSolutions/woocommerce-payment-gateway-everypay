@@ -1,5 +1,8 @@
 ## Changelog ##
 
+# 0.9.5 #
+* fix: bug in calculating hmac signature in callbacks
+
 # 0.9.4 #
 * added support for iFrame payment form
 * added notification warning about non-https checkouts
