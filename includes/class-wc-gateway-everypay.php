@@ -777,7 +777,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
     $hmac_fields = explode(',', $data["hmac_fields"]);
 
     foreach ($hmac_fields as $value) {
-        $verify[$value] = empty($data[$value]) ? '' : $data[$value];
+	    $verify[ $value ] = isset( $data[ $value ] ) ? $data[ $value ] : '';
     }
 
 		$hmac = $this->sign_everypay_request($this->prepare_everypay_string($verify));
