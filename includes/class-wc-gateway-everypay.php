@@ -1072,7 +1072,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			$html .= apply_filters( 'wc_everypay_iframe_processing', __( 'Processing payment with saved card...', 'everypay' ) );
 			$html .= '</div>' . PHP_EOL;
 			$html .= '<div class="wc_everypay_iframe_form_detail" id="wc_everypay_iframe_payment_container" style="display: none;">' . PHP_EOL;
-			$cancel_style = 'style="display: none;"':
+			$cancel_style = 'style="display: none;"';
 		}
 
 		$html .= '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="460" height="400"></iframe>' . PHP_EOL;
