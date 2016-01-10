@@ -38,7 +38,7 @@ var expandIframe = function () {
             height: 640,
             width: 960,
             top: (window_height - 640) / 2,
-            left: (window_width - 960) / 2,
+            left: (window_width - 960) / 2
         });
     }
     iframe.css({
@@ -46,7 +46,7 @@ var expandIframe = function () {
         zIndex: 9999,
         margin: 'auto'
     });
-    if (true == wc_everypay_params.everypay_sandbox) {
+    if (true == wc_everypay_params.sandbox) {
         console.log(iframe_data);
     }
     return iframe_data;
@@ -60,7 +60,7 @@ window.addEventListener('message', function (event) {
 
     if (event.origin !== wc_everypay_params.uri) {
         if (true === wc_everypay_params.sandbox) {
-            console.log('Received message from non-authorised origin ' + event.origin + ', expected ' + everypay_sandbox);
+            console.log('Received message from non-authorised origin ' + event.origin + ', expected ' + wc_everypay_params.uri);
         }
         return;
     }
@@ -88,7 +88,7 @@ window.addEventListener('message', function (event) {
             jQuery('#wc_everypay_iframe_cancel').show();
             jQuery('#wc_everypay_iframe_retry').show();
 
-            messager = $("#wc_everypay_iframe_messager");
+            messager = jQuery("#wc_everypay_iframe_messager");
             // messaging area is present for token payments with hidden iframe
             if (messager.length) {
                 message_html = '';
