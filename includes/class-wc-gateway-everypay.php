@@ -75,15 +75,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$this->token_enabled    = $this->get_option( 'token_enabled' ) === 'yes' ? true : false;
 		// asking for permission is not optional for regulatory reasons
 		// $this->token_ask        = $this->get_option( 'token_ask' ) === 'yes' ? true : false;
-		$this->token_ask        = true;
-		$this->sandbox          = $this->get_option( 'sandbox' ) === 'yes' ? true : false;
-		$this->api_endpoint     = $this->sandbox === false ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
-		$this->api_username     = $this->sandbox === false ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
-		$this->api_secret       = $this->sandbox === false ? $this->get_option( 'api_secret' ) : $this->get_option( 'sandbox_api_secret' );
+		$this->token_ask    = true;
+		$this->sandbox      = $this->get_option( 'sandbox' ) === 'yes' ? true : false;
+		$this->api_endpoint = $this->sandbox === false ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
+		$this->api_username = $this->sandbox === false ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
+		$this->api_secret   = $this->sandbox === false ? $this->get_option( 'api_secret' ) : $this->get_option( 'sandbox_api_secret' );
 
 		// Log is created always for main transaction points - debug option adds more logging points during transaction
 		$this->debug = $this->get_option( 'debug' );
-		$this->log = new WC_Logger();
+		$this->log   = new WC_Logger();
 
 
 		// Hooks
@@ -286,13 +286,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				'default'     => 'no'
 			),
 			// for regulatory reasons asking is currently mandatory
-/*			'token_ask'            => array(
-				'title'       => __( 'Ask when storing cards', 'everypay' ),
-				'label'       => __( 'Storing cards is user-selectable', 'everypay' ),
-				'type'        => 'checkbox',
-				'description' => __( "When this option is cleared all purchases store card token on user's account.", 'everypay' ),
-				'default'     => 'yes'
-			),*/
+			/*			'token_ask'            => array(
+							'title'       => __( 'Ask when storing cards', 'everypay' ),
+							'label'       => __( 'Storing cards is user-selectable', 'everypay' ),
+							'type'        => 'checkbox',
+							'description' => __( "When this option is cleared all purchases store card token on user's account.", 'everypay' ),
+							'default'     => 'yes'
+						),*/
 			'title'                => array(
 				'title'       => __( 'Title', 'everypay' ),
 				'type'        => 'text',
@@ -681,7 +681,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$order = wc_get_order( $order_id );
 		$args  = $this->get_everypay_args( $order );
 
-		if ( $this->payment_form === 'iframe' ) {
+		// iFrame should be used IF configured in settings OR doing payment with existing token
+		// (logic currently implemented in get_everypay_args)
+		if ( isset( $args['skin_name'] ) ) {
 			echo $this->generate_iframe_form_html( $args, $order );
 		} else {
 			// defaults to redirect
@@ -745,7 +747,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			$args['skin_name'] = $this->skin_name;
 		}
 
-
 		// handle request / provide token
 		if ( $this->token_enabled ) {
 			$token = get_post_meta( $order->id, '_wc_everypay_token', true );
@@ -758,6 +759,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				}
 			} else {
 				$args['cc_token'] = $token;
+				// payments with existing token are always (hidden) iFrame payments
+				$args['skin_name'] = $this->skin_name;
 			}
 		}
 
@@ -1139,24 +1142,28 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			$user = $order->get_user();
 
 			if ( isset( $user->ID ) ) {
-
-				$new_token = [
-					'cc_token'            => $_REQUEST['cc_token'],
-					'cc_last_four_digits' => $_REQUEST['cc_last_four_digits'],
-					'cc_year'             => $_REQUEST['cc_year'],
-					'cc_month'            => $_REQUEST['cc_month'],
-					'cc_type'             => $_REQUEST['cc_type'],
-					'default'             => false,
-				];
-
 				$tokens = maybe_unserialize( get_user_meta( $user->ID, '_wc_everypay_tokens', true ) );
 
 				if ( empty( $tokens ) ) {
-					$tokens               = [ ];
-					$new_token['default'] = true;
+					$tokens = [ ];
 				}
 
 				if ( ! isset( $tokens[ $_REQUEST['cc_token'] ] ) ) {
+
+					$new_token = [
+						'cc_token'            => $_REQUEST['cc_token'],
+						'cc_last_four_digits' => $_REQUEST['cc_last_four_digits'],
+						'cc_year'             => $_REQUEST['cc_year'],
+						'cc_month'            => $_REQUEST['cc_month'],
+						'cc_type'             => $_REQUEST['cc_type'],
+						'default'             => false,
+						'added'               => time(),
+					];
+
+					if ( 0 === count( $tokens ) ) {
+						$new_token['default'] = true;
+					}
+
 					$tokens[ $_REQUEST['cc_token'] ] = $new_token;
 					update_user_meta( $user->ID, '_wc_everypay_tokens', $tokens );
 				}
