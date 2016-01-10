@@ -54,7 +54,7 @@ var expandIframe = function() {
 
 var shrinked_iframe_data;
 
-var iframe = jQuery('#wc_everypay_iframe_payment_container iframe');
+var iframe = jQuery('#wc_everypay_iframe');
 
 window.addEventListener('message', function(event) {
 
