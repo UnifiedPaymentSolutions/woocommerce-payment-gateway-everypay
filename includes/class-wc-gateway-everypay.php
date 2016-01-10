@@ -73,7 +73,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$this->payment_form     = $this->get_option( 'payment_form' );
 		$this->skin_name        = $this->get_option( 'skin_name' );
 		$this->token_enabled    = $this->get_option( 'token_enabled' ) === 'yes' ? true : false;
-		$this->token_ask        = $this->get_option( 'token_ask' ) === 'yes' ? true : false;
+		// asking for permission is not optional for regulatory reasons
+		// $this->token_ask        = $this->get_option( 'token_ask' ) === 'yes' ? true : false;
+		$this->token_ask        = true;
 		$this->sandbox          = $this->get_option( 'sandbox' ) === 'yes' ? true : false;
 		$this->api_endpoint     = $this->sandbox === false ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
 		$this->api_username     = $this->sandbox === false ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
@@ -283,13 +285,14 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				'description' => __( "When card token payments are enabled users get an option to store reference to credit card and can make future purchases without need to enter card details.", 'everypay' ),
 				'default'     => 'no'
 			),
-			'token_ask'            => array(
+			// for regulatory reasons asking is currently mandatory
+/*			'token_ask'            => array(
 				'title'       => __( 'Ask when storing cards', 'everypay' ),
 				'label'       => __( 'Storing cards is user-selectable', 'everypay' ),
 				'type'        => 'checkbox',
 				'description' => __( "When this option is cleared all purchases store card token on user's account.", 'everypay' ),
 				'default'     => 'yes'
-			),
+			),*/
 			'title'                => array(
 				'title'       => __( 'Title', 'everypay' ),
 				'type'        => 'text',
