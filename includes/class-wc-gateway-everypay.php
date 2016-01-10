@@ -555,7 +555,28 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		if ( ! empty( $tokens[ $token ] ) ) {
 
-			unset( $tokens[ $token ] );
+			if (isset($tokens[ $token ]['default']) && true === $tokens[ $token ]['default']) {
+
+				unset( $tokens[ $token ] );
+
+				// try finding new default
+				$latest = 0;
+				$new_default = null;
+
+				foreach ($tokens as $key => $token) {
+					if 	( true === $token['active'] && $token['added'] > $latest ) {
+						$latest = $token['added'];
+						$new_default = $key;
+					}
+				}
+
+				if (!is_null($new_default)) {
+					$tokens[ $new_default ]['default'] = true;
+				}
+
+			} else {
+				unset( $tokens[ $token ] );
+			}
 
 			return (bool) update_user_meta( get_current_user_id(), '_wc_everypay_tokens', $tokens );
 
