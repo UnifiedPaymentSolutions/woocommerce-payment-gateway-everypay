@@ -518,6 +518,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 						'cc_year'             => '2017',
 						'cc_month'            => '1',
 						'cc_type'             => 'visa',
+						'added'               => 1452440229,
+
 					],
 					[
 						'cc_token'            => 'e54aa3d4c766ac3f1584be20',
@@ -525,6 +527,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 						'cc_year'             => '2015',
 						'cc_month'            => '11',
 						'cc_type'             => 'master_card',
+						'added'               => 1452441229,
 						'default'             => true,
 					],
 				];*/
@@ -557,22 +560,22 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 			// handle removal of default card by possibly assigning one added before that
 
-			if (isset($tokens[ $token ]['default']) && true === $tokens[ $token ]['default']) {
+			if ( isset( $tokens[ $token ]['default'] ) && true === $tokens[ $token ]['default'] ) {
 
 				unset( $tokens[ $token ] );
 
 				// try finding new default
-				$latest = 0;
+				$latest      = 0;
 				$new_default = null;
 
-				foreach ($tokens as $key => $token) {
-					if 	( true === $token['active'] && $token['added'] > $latest ) {
-						$latest = $token['added'];
+				foreach ( $tokens as $key => $token ) {
+					if ( true === $token['active'] && $token['added'] > $latest ) {
+						$latest      = $token['added'];
 						$new_default = $key;
 					}
 				}
 
-				if (!is_null($new_default)) {
+				if ( ! is_null( $new_default ) ) {
 					$tokens[ $new_default ]['default'] = true;
 				}
 
@@ -1058,9 +1061,20 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		global $woocommerce;
 
-		$html = '';
+		$html         = '';
+		$cancel_style = '';
 
-		$html .= '<div class="wc_everypay_iframe_form_detail" id="wc_everypay_iframe_payment_container" style="border: 0; min-width: 460px; min-height: 325px">' . PHP_EOL;
+		// if doing a token payment hide the iFrame (and commnunicate through messages) until there is a direct api solution
+		if ( empty( $args['cc_token'] ) ) {
+			$html .= '<div class="wc_everypay_iframe_form_detail" id="wc_everypay_iframe_payment_container" style="border: 0; min-width: 460px; min-height: 325px;">' . PHP_EOL;
+		} else {
+			$html .= '<div class="wc_everypay_iframe_messager" id="wc_everypay_iframe_messager">';
+			$html .= apply_filters( 'wc_everypay_iframe_processing', __( 'Processing payment with saved card...', 'everypay' ) );
+			$html .= '</div>' . PHP_EOL;
+			$html .= '<div class="wc_everypay_iframe_form_detail" id="wc_everypay_iframe_payment_container" style="display: none;">' . PHP_EOL;
+			$cancel_style = 'style="display: none;"':
+		}
+
 		$html .= '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="460" height="400"></iframe>' . PHP_EOL;
 		$html .= '</div>' . PHP_EOL;
 		$html .= '<form action="' . $this->api_endpoint . '" id="wc_everypay_iframe_form" method="post" style="display: none" target="wc_everypay_iframe">' . PHP_EOL;
@@ -1075,7 +1089,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 
 		$html .= '<div id="wc_everypay_iframe_buttons">' . PHP_EOL;
-		$html .= '<a href="' . esc_url( $order->get_cancel_order_url() ) . '" id="wc_everypay_iframe_cancel" class="button cancel">'
+
+		// cancel is hidden for token payments, retry for all payments - enabling happens on payment fail
+		$html .= '<a href="' . esc_url( $order->get_cancel_order_url() ) . '" id="wc_everypay_iframe_cancel" class="button cancel" ' . $cancel_style . '>'
 		         . apply_filters( 'wc_everypay_iframe_cancel', __( 'Cancel order', 'everypay' ) ) . '</a> ';
 		$html .= '<a href="' . esc_url( $woocommerce->cart->get_checkout_url() ) . '" id="wc_everypay_iframe_retry" class="button alt" style="display: none;">'
 		         . apply_filters( 'wc_everypay_iframe_retry', __( 'Try paying again', 'everypay' ) ) . '</a>' . PHP_EOL;
@@ -1144,7 +1160,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 							border:         "3px solid #aaa",
 							backgroundColor:"#fff",
 							cursor:         "wait",
-							lineHeight:		  "24px",
+							lineHeight:		"24px",
 						}
 					});
 				$("#wc_everypay_redirect_pay").click();
