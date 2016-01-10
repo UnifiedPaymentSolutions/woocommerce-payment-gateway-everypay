@@ -555,6 +555,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		if ( ! empty( $tokens[ $token ] ) ) {
 
+			// handle removal of default card by possibly assigning one added before that
+
 			if (isset($tokens[ $token ]['default']) && true === $tokens[ $token ]['default']) {
 
 				unset( $tokens[ $token ] );
