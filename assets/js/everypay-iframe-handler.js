@@ -85,21 +85,28 @@ window.addEventListener('message', function (event) {
             window.location = wc_everypay_params.completed;
         } else {
             // window.location = wc_everypay_params.failed;
-            jQuery('#wc_everypay_iframe_cancel').show();
-            jQuery('#wc_everypay_iframe_retry').show();
+
 
             messager = jQuery("#wc_everypay_iframe_messager");
             // messaging area is present for token payments with hidden iframe
             if (messager.length) {
                 message_html = '';
-                message_html += '<h2>' + message.message_title + '</h2>';
+                message_html += '<p class="wc_everypay_iframe_message_title">' + message.message_title + '</p>';
                 if (message.message_error.length) {
                     message_html += '<p>' + message.message_error + '</p>';
                 }
-                message_html += '<p>' + message.message_action + '</p>';
-                message_html += '<p>' + message.message_contact + '</p>';
-
+                if (message.message_action.length) {
+                    message_html += '<p>' + message.message_action + '</p>';
+                }
+                if (message.message_contact.length) {
+                    message_html += '<p>' + message.message_contact + '</p>';
+                }
                 messager.html(message_html);
+                
+                jQuery('#wc_everypay_iframe_retry').show();
+            } else {
+                jQuery('#wc_everypay_iframe_cancel').show();
+                jQuery('#wc_everypay_iframe_retry').show();
             }
         }
 
