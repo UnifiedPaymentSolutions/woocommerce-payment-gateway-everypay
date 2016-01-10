@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WooCommerce EveryPay gateway\n"
-"POT-Creation-Date: 2015-12-01 16:00+0200\n"
-"PO-Revision-Date: 2015-12-01 16:10+0200\n"
+"POT-Creation-Date: 2016-01-11 01:15+0200\n"
+"PO-Revision-Date: 2016-01-11 01:15+0200\n"
 "Last-Translator: Peeter Marvet <pets@tehnokratt.net>\n"
 "Language-Team: Peeter Marvet <pets@tehnokratt.net>\n"
 "Language: et\n"
@@ -39,22 +39,22 @@ msgstr "Kaart seatud vaikimisi kasutavaks."
 msgid "Unable to update card."
 msgstr "Kaardi vaikimisi kaardiks muutmine ei õnnestunud."
 
-#: includes/class-wc-gateway-everypay.php:34
-#: includes/class-wc-gateway-everypay.php:1084
+#: includes/class-wc-gateway-everypay.php:47
+#: includes/class-wc-gateway-everypay.php:1144
 msgid "Pay by card"
 msgstr "Maksa kaardiga"
 
-#: includes/class-wc-gateway-everypay.php:37
-#: includes/class-wc-gateway-everypay.php:132
+#: includes/class-wc-gateway-everypay.php:50
+#: includes/class-wc-gateway-everypay.php:144
 msgid "EveryPay"
 msgstr "EveryPay"
 
-#: includes/class-wc-gateway-everypay.php:38
-#: includes/class-wc-gateway-everypay.php:296
+#: includes/class-wc-gateway-everypay.php:51
+#: includes/class-wc-gateway-everypay.php:309
 msgid "Card payments are provided by EveryPay"
 msgstr "Kaardimaksete lahenduse eest hoolitseb EveryPay"
 
-#: includes/class-wc-gateway-everypay.php:133
+#: includes/class-wc-gateway-everypay.php:145
 msgid ""
 "EveryPay is a card payment gateway service provider, enabling e-commerce "
 "merchants to collect credit and debit card online payments from their "
@@ -63,20 +63,20 @@ msgstr ""
 "EveryPay on krediit- ja deebetkaardimaksete vastuvõtmise teenus e-kaubanduse "
 "jaoks."
 
-#: includes/class-wc-gateway-everypay.php:134
+#: includes/class-wc-gateway-everypay.php:146
 msgid "Merchant Portal"
 msgstr "Kaupmeheportaal"
 
-#: includes/class-wc-gateway-everypay.php:135
+#: includes/class-wc-gateway-everypay.php:147
 msgid "Contacts"
 msgstr "Kontaktid"
 
-#: includes/class-wc-gateway-everypay.php:136
-#: woocommerce-payment-gateway-everypay.php:224
+#: includes/class-wc-gateway-everypay.php:148
+#: woocommerce-payment-gateway-everypay.php:225
 msgid "Documentation"
 msgstr "Dokumentatsioon"
 
-#: includes/class-wc-gateway-everypay.php:190
+#: includes/class-wc-gateway-everypay.php:202
 #, php-format
 msgid ""
 "EveryPay Error: EveryPay requires PHP 5.3 and above. You are using version "
@@ -85,24 +85,24 @@ msgstr ""
 "EveryPay viga: EveryPay nõuab PHP versiooniks vähemalt 5.3. Sinu serveris on "
 "kasutusel versioon %s."
 
-#: includes/class-wc-gateway-everypay.php:194
+#: includes/class-wc-gateway-everypay.php:206
 msgid "EveryPay Error: Please enter your API username and secret."
 msgstr "EveryPay viga: Palun sisesta API-liidese kasutajanimi ja salasõna."
 
-#: includes/class-wc-gateway-everypay.php:196
+#: includes/class-wc-gateway-everypay.php:208
 msgid "EveryPay Error: Please enter your TEST API username and secret."
 msgstr ""
 "EveryPay viga: Palun sisesta TEST API-liidese kasutajanimi ja salasõna."
 
-#: includes/class-wc-gateway-everypay.php:200
+#: includes/class-wc-gateway-everypay.php:212
 msgid "EveryPay Error: Please enter your Processing Account."
 msgstr "EveryPay viga: Palun sisesta maksete konto."
 
-#: includes/class-wc-gateway-everypay.php:205
+#: includes/class-wc-gateway-everypay.php:217
 msgid "EveryPay payment gateway is in test mode, real payments not processed!"
 msgstr "EveryPay makseliides on test-režiimis, päris makseid ei toimu!"
 
-#: includes/class-wc-gateway-everypay.php:210
+#: includes/class-wc-gateway-everypay.php:222
 #, php-format
 msgid ""
 "EveryPay iFrame mode is enabled, but your checkout is not forced to use "
@@ -117,7 +117,7 @@ msgstr ""
 "aadressi-real. Palun <a href=\"%s\">jõusta SSL kasutamine</a> ning veendu, "
 "et serveril on kehtiv ja tunnustatud sertifikaat!"
 
-#: includes/class-wc-gateway-everypay.php:243
+#: includes/class-wc-gateway-everypay.php:255
 msgid ""
 "For translation with WPML use English here and translate in String "
 "Translation. Detailed instructions <a href=\"https://wpml.org/documentation/"
@@ -128,27 +128,27 @@ msgstr ""
 "org/documentation/support/translating-woocommerce-sites-default-language-"
 "english/\">siin</a>."
 
-#: includes/class-wc-gateway-everypay.php:248
+#: includes/class-wc-gateway-everypay.php:260
 msgid "Enable/Disable"
 msgstr "Luba/Keela"
 
-#: includes/class-wc-gateway-everypay.php:249
+#: includes/class-wc-gateway-everypay.php:261
 msgid "Enable EveryPay"
 msgstr "Luba EveryPay"
 
-#: includes/class-wc-gateway-everypay.php:255
+#: includes/class-wc-gateway-everypay.php:267
 msgid "Payment form type"
 msgstr "Maksevormi tüüp"
 
-#: includes/class-wc-gateway-everypay.php:258
+#: includes/class-wc-gateway-everypay.php:270
 msgid "Redirect to hosted form on EveryPay server"
 msgstr "Edasisuunamine (redirect) EveryPay serveris olevale maksevormile"
 
-#: includes/class-wc-gateway-everypay.php:259
+#: includes/class-wc-gateway-everypay.php:271
 msgid "iFrame payment form integrated into checkout"
 msgstr "Integreeritud iFrame maksevorm"
 
-#: includes/class-wc-gateway-everypay.php:261
+#: includes/class-wc-gateway-everypay.php:273
 msgid ""
 "Hosted form on EveryPay server is the secure solution of choice, while "
 "iFrame provides better customer experience (https strongly advised)"
@@ -156,11 +156,11 @@ msgstr ""
 "EveryPay serveris asuv maksevorm on turvalisim lahendus, samas pakub iFrame "
 "vorm paremat kasutajakogemust (https kasutamine on rangelt soovituslik)"
 
-#: includes/class-wc-gateway-everypay.php:266
+#: includes/class-wc-gateway-everypay.php:278
 msgid "Skin name"
 msgstr "Skin’i nimi"
 
-#: includes/class-wc-gateway-everypay.php:269
+#: includes/class-wc-gateway-everypay.php:281
 msgid ""
 "Appearance of payment area can be set up in EveryPay Merchant Portal, under "
 "'Settings' > 'iFrame skins'"
@@ -168,15 +168,15 @@ msgstr ""
 "Maksevormi välimust saab seadistada EveryPay Kaupmeheportaalis ‘Seaded’ -> "
 "‘iFrame’i skin’id’"
 
-#: includes/class-wc-gateway-everypay.php:273
+#: includes/class-wc-gateway-everypay.php:285
 msgid "Saved cards"
 msgstr "Salvestatud kaardid"
 
-#: includes/class-wc-gateway-everypay.php:274
+#: includes/class-wc-gateway-everypay.php:286
 msgid "Enable payments with saved cards"
 msgstr "Võimalda maksed salvestatud kaartidega"
 
-#: includes/class-wc-gateway-everypay.php:276
+#: includes/class-wc-gateway-everypay.php:288
 msgid ""
 "When card token payments are enabled users get an option to store reference "
 "to credit card and can make future purchases without need to enter card "
@@ -186,47 +186,32 @@ msgstr ""
 "võimalust kaardi-viite e. token’i salvestamiseks ja järgmiste ostude korral "
 "kaardiandmete sisestamist enam ei küsita."
 
-#: includes/class-wc-gateway-everypay.php:280
-msgid "Ask when storing cards"
-msgstr "Kaardi salvestamisel küsi"
-
-#: includes/class-wc-gateway-everypay.php:281
-msgid "Storing cards is user-selectable"
-msgstr "Kasutaja saab lubada või keelata kaardi salvestamise"
-
-#: includes/class-wc-gateway-everypay.php:283
-msgid ""
-"When this option is cleared all purchases store card token on user's account."
-msgstr ""
-"Kui see valik ei ole aktiivne salvestatakse kõik kaardid ilma kasutaja "
-"nõusolekut küsimata."
-
-#: includes/class-wc-gateway-everypay.php:287
+#: includes/class-wc-gateway-everypay.php:300
 msgid "Title"
 msgstr "Nimetus"
 
-#: includes/class-wc-gateway-everypay.php:289
+#: includes/class-wc-gateway-everypay.php:302
 msgid "This controls the title which the user sees during checkout."
 msgstr ""
 "Võimaldab muuta makseviisi nimetust mida kuvatakse tellimuse vormistamisel."
 
-#: includes/class-wc-gateway-everypay.php:290
+#: includes/class-wc-gateway-everypay.php:303
 msgid "Card payment"
 msgstr "Kaardimakse"
 
-#: includes/class-wc-gateway-everypay.php:293
+#: includes/class-wc-gateway-everypay.php:306
 msgid "Description"
 msgstr "Kirjeldus"
 
-#: includes/class-wc-gateway-everypay.php:295
+#: includes/class-wc-gateway-everypay.php:308
 msgid "This controls the description which the user sees during checkout."
 msgstr "Kirjeldust kuvatakse makseviisi valiku lehel."
 
-#: includes/class-wc-gateway-everypay.php:299
+#: includes/class-wc-gateway-everypay.php:312
 msgid "Processing Account"
 msgstr "Maksete konto"
 
-#: includes/class-wc-gateway-everypay.php:301
+#: includes/class-wc-gateway-everypay.php:314
 msgid ""
 "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'Processing "
 "accounts' section (looks like: EUR1)."
@@ -234,19 +219,19 @@ msgstr ""
 "Leiad selle EveryPay Kaupmeheportaalist, 'Seaded' > 'Töötlemiskontod' all "
 "(see näeb välja umbes selline: EUR1)."
 
-#: includes/class-wc-gateway-everypay.php:306
+#: includes/class-wc-gateway-everypay.php:319
 msgid "Transaction Type"
 msgstr "Makse tüüp"
 
-#: includes/class-wc-gateway-everypay.php:309
+#: includes/class-wc-gateway-everypay.php:322
 msgid "Charge"
 msgstr "Kohene töötlemine"
 
-#: includes/class-wc-gateway-everypay.php:310
+#: includes/class-wc-gateway-everypay.php:323
 msgid "Authorisation"
 msgstr "Autoriseering"
 
-#: includes/class-wc-gateway-everypay.php:312
+#: includes/class-wc-gateway-everypay.php:325
 msgid ""
 "Authorisation: A process of getting approval for the current payment. Funds "
 "are reserved on cardholder's account. Charge: An authorisation followed by "
@@ -256,11 +241,11 @@ msgstr ""
 "broneeritakse kaardiomaniku kontol. Kohene töötlemine: Autoriseering ja "
 "sellele koheselt järgnev automaatne tehingu töötlemisele saatmine."
 
-#: includes/class-wc-gateway-everypay.php:317
+#: includes/class-wc-gateway-everypay.php:330
 msgid "API username"
 msgstr "API kasutajanimi"
 
-#: includes/class-wc-gateway-everypay.php:319
+#: includes/class-wc-gateway-everypay.php:332
 msgid ""
 "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'General "
 "settings' section (looks like: 49bcdd6fed983c12)."
@@ -268,11 +253,11 @@ msgstr ""
 "Leiad selle EveryPay Kaupmeheportaalist, 'Seaded' > 'Üldised seaded' all "
 "(see näeb välja umbes selline: 49bcdd6fed983c12)."
 
-#: includes/class-wc-gateway-everypay.php:324
+#: includes/class-wc-gateway-everypay.php:337
 msgid "API secret"
 msgstr "API salasõna"
 
-#: includes/class-wc-gateway-everypay.php:326
+#: includes/class-wc-gateway-everypay.php:339
 msgid ""
 "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'General "
 "settings' section (looks like: e7ed4e55d5f73158f6cf2890fb1c950e)."
@@ -280,28 +265,28 @@ msgstr ""
 "Leiad selle EveryPay Kaupmeheportaalist, 'Seaded' > 'Üldised seaded' all "
 "(see näeb välja umbes selline: e7ed4e55d5f73158f6cf2890fb1c950e)."
 
-#: includes/class-wc-gateway-everypay.php:331
+#: includes/class-wc-gateway-everypay.php:344
 msgid "Debug Log"
 msgstr "Logifail"
 
-#: includes/class-wc-gateway-everypay.php:333
+#: includes/class-wc-gateway-everypay.php:346
 msgid "Enable logging"
 msgstr "Luba logimine"
 
-#: includes/class-wc-gateway-everypay.php:335
+#: includes/class-wc-gateway-everypay.php:348
 #, php-format
 msgid "Log EveryPay events inside <code>%s</code>"
 msgstr "Logib kõik EveryPay sündmused faili <code>%s</code>"
 
-#: includes/class-wc-gateway-everypay.php:338
+#: includes/class-wc-gateway-everypay.php:351
 msgid "Test"
 msgstr "Test-režiim"
 
-#: includes/class-wc-gateway-everypay.php:339
+#: includes/class-wc-gateway-everypay.php:352
 msgid "Enable Test Mode"
 msgstr "Luba test-režiim"
 
-#: includes/class-wc-gateway-everypay.php:341
+#: includes/class-wc-gateway-everypay.php:354
 msgid ""
 "Place the payment gateway in test mode using test API credentials (real "
 "payments will not be taken)."
@@ -309,23 +294,23 @@ msgstr ""
 "Paneb makseliidese test-režiimi mis kasutab eraldi API ligipääsutunuseid "
 "(tegelikke makseid ei teostata)."
 
-#: includes/class-wc-gateway-everypay.php:345
+#: includes/class-wc-gateway-everypay.php:358
 msgid "Test API username"
 msgstr "Test API kasutajanimi"
 
-#: includes/class-wc-gateway-everypay.php:347
+#: includes/class-wc-gateway-everypay.php:360
 msgid "Optional: API username for testing payments."
 msgstr "Valikuline: API kasutajanimi test-režiimi jaoks."
 
-#: includes/class-wc-gateway-everypay.php:352
+#: includes/class-wc-gateway-everypay.php:365
 msgid "Test API secret"
 msgstr "Test API salasõna"
 
-#: includes/class-wc-gateway-everypay.php:354
+#: includes/class-wc-gateway-everypay.php:367
 msgid "Optional: API secret for testing payments."
 msgstr "Valikuline: API salasõna test-režiimi jaoks."
 
-#: includes/class-wc-gateway-everypay.php:369
+#: includes/class-wc-gateway-everypay.php:382
 msgid ""
 "To save your card securely for easier future payments, sign up for an "
 "account or log in to your existing account."
@@ -333,23 +318,23 @@ msgstr ""
 "Selleks, et oma kaart turvaliselt salvestada edasiste maksete "
 "lihtsustamiseks, registreeri konto või sisene olemasolevale kontole."
 
-#: includes/class-wc-gateway-everypay.php:434
+#: includes/class-wc-gateway-everypay.php:447
 msgid "Save card securely"
 msgstr "Salvesta kaart turvaliselt"
 
-#: includes/class-wc-gateway-everypay.php:473
+#: includes/class-wc-gateway-everypay.php:486
 msgid "expires"
 msgstr "aegub"
 
-#: includes/class-wc-gateway-everypay.php:597
+#: includes/class-wc-gateway-everypay.php:636
 msgid "Use a new card"
 msgstr "Kasuta uut kaarti"
 
-#: includes/class-wc-gateway-everypay.php:604
+#: includes/class-wc-gateway-everypay.php:641
 msgid "Manage cards"
 msgstr "Halda kaarte"
 
-#: includes/class-wc-gateway-everypay.php:854
+#: includes/class-wc-gateway-everypay.php:897
 msgid ""
 "Payment was declined. Please verify the card data and try again with the "
 "same or different card."
@@ -357,17 +342,17 @@ msgstr ""
 "Makse ebaõnnestus. Palun kontrolli kaardi andmeid ja proovi uuesti sama või "
 "muu kaardiga."
 
-#: includes/class-wc-gateway-everypay.php:858
+#: includes/class-wc-gateway-everypay.php:901
 msgid "Payment cancelled."
 msgstr "Makse katkestatud."
 
-#: includes/class-wc-gateway-everypay.php:862
+#: includes/class-wc-gateway-everypay.php:905
 msgid ""
 "An error occurred while processing the payment response, please notify "
 "merchant!"
 msgstr "Makse töötlemisel tekkis tõrge,  palun teavita kaupmeest!"
 
-#: includes/class-wc-gateway-everypay.php:913
+#: includes/class-wc-gateway-everypay.php:956
 #, php-format
 msgid ""
 "Card payment was successfully processed by EveryPay (Reference: %s, "
@@ -375,26 +360,30 @@ msgid ""
 msgstr ""
 "Kaardimakse sooritati EveryPay poolt edukalt (Reference: %s, Timestamp: %s)"
 
-#: includes/class-wc-gateway-everypay.php:1039
+#: includes/class-wc-gateway-everypay.php:1076
+msgid "Processing payment with saved card..."
+msgstr "Teostan makset salvestatud kaardiga…"
+
+#: includes/class-wc-gateway-everypay.php:1099
 msgid "Cancel order"
 msgstr "Tühista tellimus"
 
-#: includes/class-wc-gateway-everypay.php:1041
+#: includes/class-wc-gateway-everypay.php:1101
 msgid "Try paying again"
 msgstr "Proovi uuesti maksta"
 
-#: includes/class-wc-gateway-everypay.php:1078
+#: includes/class-wc-gateway-everypay.php:1138
 msgid ""
 "Thank you for your order. Please click the button below to complete the card "
 "payment."
 msgstr ""
 "Täname tellimuse eest! Kaardimakse alustamiseks klõpsa palun allolevat nuppu."
 
-#: includes/class-wc-gateway-everypay.php:1086
+#: includes/class-wc-gateway-everypay.php:1146
 msgid "Cancel order &amp; restore cart"
 msgstr "Tühista tellimus ja taasta ostukorv"
 
-#: includes/class-wc-gateway-everypay.php:1092
+#: includes/class-wc-gateway-everypay.php:1152
 msgid ""
 "Thank you for your order. We are now redirecting you to payment gateway."
 msgstr "Tänud tellimuse eest! Suuname sind edasi maksekeskkonda."
@@ -428,11 +417,11 @@ msgstr "Kustuta"
 msgid "Cheatin&#8217; huh?"
 msgstr "Proovid petta?"
 
-#: woocommerce-payment-gateway-everypay.php:199
+#: woocommerce-payment-gateway-everypay.php:200
 msgid "Payment Settings"
 msgstr "Makse seadistused"
 
-#: woocommerce-payment-gateway-everypay.php:317
+#: woocommerce-payment-gateway-everypay.php:318
 #, php-format
 msgid ""
 "Sorry, <strong>WooCommerce %s</strong> requires WooCommerce to be installed "
@@ -442,7 +431,7 @@ msgstr ""
 "paigaldamist ja aktiveerimist. Palun paigalda <a href=\"%s\">WooCommerce</a> "
 "plugin."
 
-#: woocommerce-payment-gateway-everypay.php:327
+#: woocommerce-payment-gateway-everypay.php:328
 #, php-format
 msgid ""
 "WooCommerce %s depends on version 2.2 and up of WooCommerce for this gateway "
@@ -450,6 +439,19 @@ msgid ""
 msgstr ""
 "WooCommerce %s eeldab WooCommerce versiooni 2.2 või uuemat! Palun uuenda "
 "WooCommerce enne selle plugina aktiveerimist."
+
+#~ msgid "Ask when storing cards"
+#~ msgstr "Kaardi salvestamisel küsi"
+
+#~ msgid "Storing cards is user-selectable"
+#~ msgstr "Kasutaja saab lubada või keelata kaardi salvestamise"
+
+#~ msgid ""
+#~ "When this option is cleared all purchases store card token on user's "
+#~ "account."
+#~ msgstr ""
+#~ "Kui see valik ei ole aktiivne salvestatakse kõik kaardid ilma kasutaja "
+#~ "nõusolekut küsimata."
 
 #~ msgid ""
 #~ "For translation with WPML use English here and translate in String "
