@@ -192,6 +192,7 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @access public
 		 *
 		 * @param  mixed $links
+		 * @return mixed $links
 		 */
 		public function action_links( $links ) {
 			if ( current_user_can( 'manage_woocommerce' ) ) {
@@ -363,5 +364,3 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 function WC_Everypay() {
 	return WC_Everypay::get_instance();
 }
-
-?>

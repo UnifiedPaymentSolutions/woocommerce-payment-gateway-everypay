@@ -19,17 +19,30 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	const _VERIFY_FAIL = 2;     // payment failed
 	const _VERIFY_CANCEL = 3;   // payment cancelled by user
 
+	protected $account_id;
+	protected $transaction_type;
+	protected $payment_form;
+	protected $skin_name;
+	protected $token_enabled;
+	protected $token_ask;
+	protected $sandbox;
+	protected $api_endpoint;
+	protected $api_username;
+	protected $api_secret;
+	protected $debug;
+	protected $notify_url;
+	protected $log;
+
 	/**
 	 * Constructor for the gateway.
 	 *
 	 * @access public
-	 * @return void
+	 * @return mixed
 	 */
 	public function __construct() {
-		$this->id            = 'everypay';
-		$this->icon          = apply_filters( 'woocommerce_gateway_everypay_icon', plugins_url( '/assets/images/mastercard_visa.png', dirname( __FILE__ ) ) );
-		$this->has_fields    = true;
-		$this->credit_fields = false;
+		$this->id         = 'everypay';
+		$this->icon       = apply_filters( 'woocommerce_gateway_everypay_icon', plugins_url( '/assets/images/mastercard_visa.png', dirname( __FILE__ ) ) );
+		$this->has_fields = true;
 
 		$this->order_button_text = __( 'Pay by card', 'everypay' );
 
@@ -68,13 +81,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		// Log is created always for main transaction points - debug option adds more logging points during transaction
 		$this->debug = $this->get_option( 'debug' );
-
-		if ( class_exists( 'WC_Logger' ) ) {
-			$this->log = new WC_Logger();
-		} else {
-			global $woocommerce;
-			$this->log = $woocommerce->logger();
-		}
+		$this->log = new WC_Logger();
 
 
 		// Hooks
@@ -365,11 +372,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			echo wpautop( wptexturize( $this->description ) );
 		}
 
-		if ( ! is_user_logged_in() && $this->token_enabled) {
-			echo wpautop(__('To save your card securely for easier future payments, sign up for an account or log in to your existing account.', 'everypay'));
+		if ( ! is_user_logged_in() && $this->token_enabled ) {
+			echo wpautop( __( 'To save your card securely for easier future payments, sign up for an account or log in to your existing account.', 'everypay' ) );
 		}
 
-		if ($this->token_enabled) {
+		if ( $this->token_enabled ) {
 			$this->credit_card_form();
 		}
 
@@ -453,7 +460,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 				foreach ( $tokens as $token ) {
 
-					if (true === $token['active']) {
+					if ( true === $token['active'] ) {
 						$checked = '';
 
 						if ( isset( $token['default'] ) && true === $token['default'] ) {
@@ -545,7 +552,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		if ( ! empty( $tokens[ $token ] ) ) {
 
-			unset($tokens[ $token ]);
+			unset( $tokens[ $token ] );
 
 			return (bool) update_user_meta( get_current_user_id(), '_wc_everypay_tokens', $tokens );
 
@@ -599,9 +606,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$myaccount_page_id = get_option( 'woocommerce_myaccount_page_id' );
 		if ( $myaccount_page_id ) {
 			$myaccount_page_url = get_permalink( $myaccount_page_id );
+			$html .= '<a class="button" style="float:right;" href="' . $myaccount_page_url . '#saved-cards">' . __( 'Manage cards', 'everypay' ) . '</a>';
 		}
-
-		$html .= '<a class="button" style="float:right;" href="' . $myaccount_page_url . '#saved-cards">' . __( 'Manage cards', 'everypay' ) . '</a>';
 
 		return $html;
 	}
@@ -664,7 +670,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * Output redirect or iFrame form on receipt page
 	 *
 	 * @access public
-	 * @return void
+	 *
+	 * @param $order_id
 	 */
 	public function receipt_page( $order_id ) {
 
@@ -683,7 +690,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	/**
 	 * Prepare data package for signing
 	 *
-	 * @param array $order
+	 * @param WC_Order $order
 	 *
 	 * @return array
 	 */
@@ -841,7 +848,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		$order_complete = $this->process_order_status( $order );
 
-		if ( $order_complete === self::_VERIFY_SUCCESS ) {
+		if ( self::_VERIFY_SUCCESS === $order_complete ) {
 			$this->log->add( $this->id, 'Order complete' );
 			$redirect_url = $this->get_return_url( $order );
 
@@ -994,7 +1001,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		}
 
 		if ( $this->debug == 'yes' ) {
-			$this->log->add( $this->id, '$verify array: ' . var_export($verify, true));
+			$this->log->add( $this->id, '$verify array: ' . var_export( $verify, true ) );
 		}
 
 		$hmac = $this->sign_everypay_request( $this->prepare_everypay_string( $verify ) );
@@ -1013,8 +1020,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	/**
 	 * Build iFrame form for receipt page
 	 *
-	 * @param $args
-	 * @param $order
+	 * @param array $args
+	 * @param WC_Order $order
 	 *
 	 * @return string
 	 */
@@ -1064,8 +1071,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	/**
 	 * Build redirect form & autosubmit for receipt page
 	 *
-	 * @param $args
-	 * @param $order
+	 * @param array $args
+	 * @param WC_Order $order
 	 *
 	 * @return string
 	 */
@@ -1120,7 +1127,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	/**
 	 * Maybe add new token to user - when processing callback
 	 *
-	 * @param $order
+	 * @param WC_order $order
 	 */
 	protected function maybe_add_token( $order ) {
 

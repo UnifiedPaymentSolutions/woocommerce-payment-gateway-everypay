@@ -31,7 +31,7 @@ var expandIframe = function() {
             iframe.css({
                 height: window_height,
                 width: window_width,
-                top: 0,
+                top: 0
             });
         } else {
             iframe.css({
@@ -93,4 +93,4 @@ window.addEventListener('message', function(event) {
 
 window.onload = function() {
   document.getElementById("wc_everypay_iframe_form").submit();
-}
+};
