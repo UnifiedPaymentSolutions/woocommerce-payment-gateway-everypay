@@ -102,7 +102,7 @@ window.addEventListener('message', function (event) {
                     message_html += '<p>' + message.message_contact + '</p>';
                 }
                 messager.html(message_html);
-                
+
                 jQuery('#wc_everypay_iframe_retry').show();
             } else {
                 jQuery('#wc_everypay_iframe_cancel').show();

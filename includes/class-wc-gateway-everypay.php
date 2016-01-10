@@ -100,9 +100,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		// If receipt page hosts iFrame and is being shown enqueue required JS
 
-		if ( $this->payment_form === 'iframe' && is_wc_endpoint_url( 'order-pay' ) ) {
-			add_action( 'wp_enqueue_scripts', array( $this, 'script_manager' ) );
-		}
+		// moving registering scripts to iFrame receipt_page so they can be easily loaded for redirect mode's hidden iframe
+/*		if ( is_wc_endpoint_url( 'order-pay' ) ) {
+			if ( $this->payment_form === 'iframe' ) {
+				add_action( 'wp_enqueue_scripts', array( $this, 'script_manager' ) );
+			}
+		}*/
 
 		// Add returning user / callback handler to WC API
 		add_action( 'woocommerce_api_wc_gateway_' . $this->id, array( $this, 'everypay_return_handler' ) );
@@ -710,6 +713,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		// iFrame should be used IF configured in settings OR doing payment with existing token
 		// (logic currently implemented in get_everypay_args)
 		if ( isset( $args['skin_name'] ) ) {
+			$this->script_manager();
 			echo $this->generate_iframe_form_html( $args, $order );
 		} else {
 			// defaults to redirect
