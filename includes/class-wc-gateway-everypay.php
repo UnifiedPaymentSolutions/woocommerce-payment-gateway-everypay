@@ -862,7 +862,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 					$this->log->add( $this->id, 'Payment was declined by payment processor.' );
 					break;
 				case self::_VERIFY_CANCEL:
-					$order->update_status( 'failed', __( 'Payment cancelled.', 'everypay' ) );
+					$order->cancel_order( __( 'Payment cancelled.', 'everypay' ) );
 					$this->log->add( $this->id, 'Payment was cancelled by user.' );
 					break;
 				default:
@@ -1164,10 +1164,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 
 	public function generate_account_page_html() {
-		echo "###blaahdeblaah";
+		// unused
 	}
 
 
 } // end class.
-
-?>
