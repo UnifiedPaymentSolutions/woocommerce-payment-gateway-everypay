@@ -68,8 +68,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$this->title       = $this->get_option( 'title' );
 		$this->description = $this->get_option( 'description' );
 
-		$this->account_id       = $this->get_option( 'account_id' );
-		$this->transaction_type = $this->get_option( 'transaction_type' );
+		$this->account_id = $this->get_option( 'account_id' );
+		// implemented initially, but removed in favor of 'capture delay' that can be confed in merchant portal
+		// $this->transaction_type = $this->get_option( 'transaction_type' );
+		$this->transaction_type = 'charge';
 		$this->payment_form     = $this->get_option( 'payment_form' );
 		$this->skin_name        = $this->get_option( 'skin_name' );
 		$this->token_enabled    = $this->get_option( 'token_enabled' ) === 'yes' ? true : false;
@@ -101,11 +103,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		// If receipt page hosts iFrame and is being shown enqueue required JS
 
 		// moving registering scripts to iFrame receipt_page so they can be easily loaded for redirect mode's hidden iframe
-/*		if ( is_wc_endpoint_url( 'order-pay' ) ) {
-			if ( $this->payment_form === 'iframe' ) {
-				add_action( 'wp_enqueue_scripts', array( $this, 'script_manager' ) );
-			}
-		}*/
+		/*		if ( is_wc_endpoint_url( 'order-pay' ) ) {
+					if ( $this->payment_form === 'iframe' ) {
+						add_action( 'wp_enqueue_scripts', array( $this, 'script_manager' ) );
+					}
+				}*/
 
 		// Add returning user / callback handler to WC API
 		add_action( 'woocommerce_api_wc_gateway_' . $this->id, array( $this, 'everypay_return_handler' ) );
@@ -315,17 +317,18 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				'default'     => '',
 				'desc_tip'    => false,
 			),
-			'transaction_type'     => array(
-				'title'       => __( 'Transaction Type', 'everypay' ),
-				'type'        => 'select',
-				'options'     => array(
-					'charge'        => __( 'Charge', 'everypay' ),
-					'authorisation' => __( 'Authorisation', 'everypay' ),
-				),
-				'description' => __( "Authorisation: A process of getting approval for the current payment. Funds are reserved on cardholder's account. Charge: An authorisation followed by immediate automatic capture.", 'everypay' ),
-				'default'     => 'charge',
-				'desc_tip'    => false,
-			),
+			// implemented initially, but removed in favor of 'capture delay' that can be confed in merchant portal
+			/*			'transaction_type'     => array(
+							'title'       => __( 'Transaction Type', 'everypay' ),
+							'type'        => 'select',
+							'options'     => array(
+								'charge'        => __( 'Charge', 'everypay' ),
+								'authorisation' => __( 'Authorisation', 'everypay' ),
+							),
+							'description' => __( "Authorisation: A process of getting approval for the current payment. Funds are reserved on cardholder's account. Charge: An authorisation followed by immediate automatic capture.", 'everypay' ),
+							'default'     => 'charge',
+							'desc_tip'    => false,
+						),*/
 			'api_username'         => array(
 				'title'       => __( 'API username', 'everypay' ),
 				'type'        => 'text',
