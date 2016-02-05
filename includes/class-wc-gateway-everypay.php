@@ -641,7 +641,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$myaccount_page_id = get_option( 'woocommerce_myaccount_page_id' );
 		if ( $myaccount_page_id ) {
 			$myaccount_page_url = get_permalink( $myaccount_page_id );
-			$html .= '<a class="button" style="float:right;" href="' . $myaccount_page_url . '#saved-cards" target="_blank">' . __( 'Manage cards', 'everypay' ) . '</a>';
+			$html .= '<a style="float:right;" href="' . $myaccount_page_url . '#saved-cards" class="wc_everypay_manage_cards" target="_blank">' . __( 'Manage cards', 'everypay' ) . '</a>';
 		}
 
 		return $html;
