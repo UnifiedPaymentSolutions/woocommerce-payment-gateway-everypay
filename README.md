@@ -48,21 +48,17 @@ With EveryPay your customers can make purchases in many currencies. We support  
 
 ## Installation ##
 
-Suggested installation and update of EveryPay plugin is using GitHub Updater plugin:
-
-1. Download the latest [tagged archive](https://github.com/afragen/github-updater/releases) (choose the "zip" option).
-2. Unzip the archive, rename the folder correctly to `github-updater`, then re-zip the file.
-3. Go to the __Plugins -> Add New__ screen and click the __Upload__ tab.
-4. Upload the zipped archive directly.
-5. Go to the Plugins screen and click __Activate__.
-6. Go to 'Settings' > 'GitHub Updater' > 'Install Plugin'
-7. Enter `UnifiedPaymentSolutions/woocommerce-payment-gateway-everypay` as 'Plugin URI' and select 'GitHub' as 'Remote Repository Host', click 'Install Plugin', then 'Activate Plugin'
-8. Go to 'WooCommerce' > 'Settings' > 'Checkout' > 'EveryPay', enable it and enter your API username and password that can be found in EveryPay Merchant Portal
-9. You can optionally enable debug logging and test mode with separate API username and password that directs payments to test environment where real payments are not made (you'll see a warning in WordPress admin area about test mode being active)
+1. Upload `everypay-payment-gateway` folder to the `/wp-content/plugins/` directory
+2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Go to WooCommerce - Settings
+4. Everypay payment gateway will be available in "Checkout" settings
 
 EveryPay has support for English and Estonian included, additional translations can be added by translating .pot file found in `langugages` directory or with WPML's String Translation.
 
 ## Changelog ##
+
+= 0.9.6 =
+* added support for saved credit cards (token payments)
 
 # 0.9.5 #
 * fix: bug in calculating hmac signature in callbacks
