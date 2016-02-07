@@ -48,11 +48,9 @@ With EveryPay your customers can make purchases in many currencies. We support  
 
 == Screenshots ==
 
-1. Installing WooCommerce Payment Gateway for EveryPay
+1. Configuration options
 
-2. Configuration options
-
-3. EveryPay on checkout page
+2. EveryPay on checkout page
 
 == Installation ==
 
