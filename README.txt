@@ -3,7 +3,7 @@ Contributors: petskratt
 Tags: everypay, woocommerce, payment, payment gateway, credit card, debit card
 Requires at least: 4.2
 Tested up to: 4.4.2
-Stable tag: 0.9.6
+Stable tag: 0.9.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,7 +54,7 @@ With EveryPay your customers can make purchases in many currencies. We support  
 
 == Installation ==
 
-1. Upload `everypay-payment-gateway` folder to the `/wp-content/plugins/` directory
+1. Upload `everypay-payment-gateway-for-woocommerce` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Go to WooCommerce - Settings
 4. Everypay payment gateway will be available in "Checkout" settings
@@ -62,6 +62,9 @@ With EveryPay your customers can make purchases in many currencies. We support  
 EveryPay has support for English and Estonian included, additional translations can be added by translating .pot file found in `langugages` directory or with WPML's String Translation.
 
 == Changelog ==
+
+= 0.9.7 =
+* fix: php 5.4 compatibility requirement + update test
 
 = 0.9.6 =
 * added support for saved credit cards (token payments)
@@ -80,11 +83,10 @@ EveryPay has support for English and Estonian included, additional translations 
 * added support of API hmac_fields (future-proof)
 * fix: billing email was not sent with payment data
 
-
 = 0.9.2 =
 * first public version
 
 == Upgrade Notice ==
 
-= 0.9.4 =
-Adds support for iFrame payment form and improves WPML support.
+= 0.9.7 =
+Adds support for saved credit cards (token payment)

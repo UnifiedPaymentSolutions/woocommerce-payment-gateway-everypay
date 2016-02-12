@@ -3,7 +3,7 @@ Contributors: petskratt
 Tags: everypay, woocommerce, payment, payment gateway, credit card, debit card
 Requires at least: 4.2
 Tested up to: 4.3.1
-Stable tag: master
+Stable tag: 0.9.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,7 +57,10 @@ EveryPay has support for English and Estonian included, additional translations 
 
 ## Changelog ##
 
-= 0.9.6 =
+# 0.9.7 #
+* fix: php 5.4 compatibility requirement + update test
+
+# 0.9.6 #
 * added support for saved credit cards (token payments)
 
 # 0.9.5 #

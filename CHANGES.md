@@ -1,5 +1,11 @@
 ## Changelog ##
 
+# 0.9.7 #
+* fix: php 5.4 compatibility requirement + update test
+
+# 0.9.6 #
+* added support for saved credit cards (token payments)
+
 # 0.9.5 #
 * fix: bug in calculating hmac signature in callbacks
 
