@@ -1,5 +1,8 @@
 ## Changelog ##
 
+# 1.0.0 #
+* first public version in WP.org plugin directory
+
 # 0.9.7 #
 * fix: php 5.4 compatibility requirement + update test
 
