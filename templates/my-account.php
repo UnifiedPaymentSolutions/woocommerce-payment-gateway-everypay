@@ -24,7 +24,7 @@
 				echo '<img src="' . plugins_url( '/assets/images/', dirname( __FILE__ ) ) . $token['cc_type'] . '.png" alt="' . $token['cc_type'] . '" width="47" height="30" style="padding-right: 0.5em">';
 				echo '&nbsp;****&nbsp;****&nbsp;****&nbsp;' . $token['cc_last_four_digits'];
 				$expired_class = $token['active'] ? '' : 'class="everypay_manage_tokens__card_inactive"';
-				echo ' <span ' . $expired_class . '>('.$token['cc_month'] . '/' . $token['cc_year'] . ')</span>';
+				echo '&nbsp;&nbsp;<span ' . $expired_class . '>('.str_pad($token['cc_month'], 2, '0', STR_PAD_LEFT) . '/' . $token['cc_year'] . ')</span>';
 				?></td>
 			<td class="everypay_manage_tokens__actions"><?php if (isset($token['default']) && true === $token['default'] ) {
 					echo __('Default', 'everypay');

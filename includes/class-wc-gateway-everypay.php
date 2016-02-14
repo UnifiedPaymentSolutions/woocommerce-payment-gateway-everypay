@@ -486,7 +486,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 						}
 
 						if ( ! empty( $token['cc_month'] ) && ! empty( $token['cc_year'] ) ) {
-							$html .= ' (' . __( 'expires', 'everypay' ) . ' ' . $token['cc_month'] . '/' . $token['cc_year'] . ')';
+							$html .= ' (' . __( 'expires', 'everypay' ) . ' ' . str_pad($token['cc_month'], 2, '0', STR_PAD_LEFT) . '/' . $token['cc_year'] . ')';
 						}
 
 
