@@ -91,7 +91,7 @@ window.addEventListener('message', function (event) {
             // messaging area is present for token payments with hidden iframe
             if (messager.length) {
                 message_html = '';
-                message_html += '<p class="wc_everypay_iframe_message_title">' + message.message_title + '</p>';
+                message_html += '<h3 class="wc_everypay_iframe_message_title">' + message.message_title + '</h3>';
                 if (message.message_error.length) {
                     message_html += '<p>' + message.message_error + '</p>';
                 }
