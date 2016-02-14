@@ -852,6 +852,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 */
 
 	public function everypay_return_handler() {
+
+		global $woocommerce;
 		@ob_clean();
 
 		header( 'HTTP/1.1 200 OK' );
@@ -893,20 +895,21 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		} else {
 
-			$redirect_url = $order->get_cancel_order_url();
-
 			switch ( $order_complete ) {
 				case self::_VERIFY_FAIL:
 					$order->update_status( 'failed', __( 'Payment was declined. Please verify the card data and try again with the same or different card.', 'everypay' ) );
 					$this->log->add( $this->id, 'Payment was declined by payment processor.' );
+					$redirect_url = $woocommerce->cart->get_checkout_url();
 					break;
 				case self::_VERIFY_CANCEL:
 					$order->cancel_order( __( 'Payment cancelled.', 'everypay' ) );
 					$this->log->add( $this->id, 'Payment was cancelled by user.' );
+					$redirect_url = $order->get_cancel_order_url();
 					break;
 				default:
 					$order->update_status( 'failed', __( 'An error occurred while processing the payment response, please notify merchant!', 'everypay' ) );
 					$this->log->add( $this->id, 'An error occurred while processing the payment response.' );
+					$redirect_url = $woocommerce->cart->get_checkout_url();
 					break;
 			}
 		}
