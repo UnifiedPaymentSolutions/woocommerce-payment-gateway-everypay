@@ -1010,7 +1010,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	public function verify_everypay_response( array $data ) {
 
 		$statuses = [
-			'completed' => self::_VERIFY_SUCCESS,
+			'settled' => self::_VERIFY_SUCCESS,
 			'failed'    => self::_VERIFY_FAIL,
 			'cancelled' => self::_VERIFY_CANCEL,
 		];
@@ -1024,7 +1024,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			return self::_VERIFY_ERROR;
 		}
 
-		$now = time();
+		$now = time()+60;
 		if ( ( $data['timestamp'] > $now ) || ( $data['timestamp'] < ( $now - 600 ) ) ) {
 			if ( $this->debug == 'yes' ) {
 				$this->log->add( $this->id, 'EveryPay error: response is older than 10 minutes, order not completed!' );
@@ -1033,7 +1033,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			return self::_VERIFY_ERROR;
 		}
 
-		$status = $statuses[ $data['transaction_result'] ];
+		$status = $statuses[ $data['payment_state'] ];
 
 		$verify      = array();
 		$hmac_fields = explode( ',', $data["hmac_fields"] );

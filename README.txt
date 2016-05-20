@@ -3,7 +3,7 @@ Contributors: petskratt
 Tags: everypay, woocommerce, payment, payment gateway, credit card, debit card
 Requires at least: 4.2
 Tested up to: 4.4.2
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,11 @@ With EveryPay your customers can make purchases in many currencies. We support  
 EveryPay has support for English and Estonian included, additional translations can be added by translating .pot file found in `langugages` directory or with WPML's String Translation.
 
 == Changelog ==
+
+= 1.0.1 =
+* Payment status return value changed from 'transaction_result' to 'payment_state'
+* Successful payment state changed from 'completed' to 'settled'
+* Timestamp check gives a 60 second leeway to account for differences in server clock settings between the payment gateway and website host
 
 = 1.0.0 =
 * first public version in WP.org plugin directory
