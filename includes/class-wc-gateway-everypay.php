@@ -1010,8 +1010,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	public function verify_everypay_response( array $data ) {
 
 		$statuses = [
+			'settled' => self::_VERIFY_SUCCESS,
 			'authorised' => self::_VERIFY_SUCCESS,
 			'failed'    => self::_VERIFY_FAIL,
+			'cancelled' => self::_VERIFY_CANCEL,
 			'waiting_for_3ds_response' => self::_VERIFY_CANCEL,
 		];
 
