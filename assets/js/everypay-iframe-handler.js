@@ -14,7 +14,7 @@ var expandIframe = function () {
         marginLeft: iframe.attr("marginLeft"),
         marginRight: iframe.attr("marginRight")
     };
-    jQuery('body').append("<div id='wc_everypay_dimmed_background_box'></div>");
+    jQuery('#wc_everypay_iframe_payment_container').prepend("<div id='wc_everypay_dimmed_background_box'></div>");
     jQuery('#wc_everypay_dimmed_background_box').css({
         height: '100%',
         width: '100%',
@@ -29,12 +29,14 @@ var expandIframe = function () {
     var window_width = jQuery(window).width();
     if (window_width < 960) {
         iframe.css({
+            border: 0,
             height: window_height,
             width: window_width,
             top: 0
         });
     } else {
         iframe.css({
+            border: 0,
             height: 640,
             width: 960,
             top: (window_height - 640) / 2,
@@ -92,13 +94,13 @@ window.addEventListener('message', function (event) {
             if (messager.length) {
                 message_html = '';
                 message_html += '<h3 class="wc_everypay_iframe_message_title">' + message.message_title + '</h3>';
-                if (message.message_error.length) {
+                if (message.message_error != null && message.message_error.length) {
                     message_html += '<p>' + message.message_error + '</p>';
                 }
-                if (message.message_action.length) {
+                if (message.message_action != null && message.message_action.length) {
                     message_html += '<p>' + message.message_action + '</p>';
                 }
-                if (message.message_contact.length) {
+                if (message.message_contact != null && message.message_contact.length) {
                     message_html += '<p>' + message.message_contact + '</p>';
                 }
                 messager.html(message_html);

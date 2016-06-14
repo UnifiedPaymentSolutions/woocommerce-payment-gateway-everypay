@@ -117,7 +117,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 	}
 
-
 	/**
 	 * Register scripts for front-end
 	 *
@@ -374,6 +373,19 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		);
 	}
 
+	public function validate_text_field( $key ) {
+		if( in_array( $key, array('account_id', 'api_username', 'api_secret', 'sandbox_api_username', 'sandbox_api_secret') ) ) {
+			$text  = $this->get_option( $key );
+			$field = $this->get_field_key( $key );
+
+			if ( isset( $_POST[ $field ] ) ) {
+				$text = trim( wp_strip_all_tags( stripslashes( $_POST[ $field ] ) ) );
+			}
+			return $text;
+		} else {
+			return parent::validate_text_field( $key );
+		}
+	}
 
 	public function payment_fields() {
 
@@ -1087,7 +1099,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			$cancel_style = 'style="display: none;"';
 		}
 
-		$html .= '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="460" height="400"></iframe>' . PHP_EOL;
+		$html .= '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="460" height="400" style="border: 0;"></iframe>' . PHP_EOL;
 		$html .= '</div>' . PHP_EOL;
 		$html .= '<form action="' . $this->api_endpoint . '" id="wc_everypay_iframe_form" method="post" style="display: none" target="wc_everypay_iframe">' . PHP_EOL;
 		$args_array = [ ];
