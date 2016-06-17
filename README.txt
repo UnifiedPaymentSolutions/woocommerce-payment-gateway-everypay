@@ -62,6 +62,10 @@ With EveryPay your customers can make purchases in many currencies. We support  
 EveryPay has support for English and Estonian included, additional translations can be added by translating .pot file found in `langugages` directory or with WPML's String Translation.
 
 == Changelog ==
+= 1.0.2 =
+* Removed border from iFrame payment form
+* Added extra validation for admin settings
+* Moved dimmed background so that it wouldn't block iFrame
 
 = 1.0.1 =
 * Payment status return value changed from 'transaction_result' to 'payment_state'
