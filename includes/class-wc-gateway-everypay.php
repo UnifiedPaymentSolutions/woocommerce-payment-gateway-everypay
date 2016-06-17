@@ -686,7 +686,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 			if ( true === $this->token_ask ) {
 
-				if ( trim( $_POST['wc_everypay_tokenize_payment'] ) !== false ) {
+				if ( isset( $_POST['wc_everypay_tokenize_payment'] ) && trim( $_POST['wc_everypay_tokenize_payment'] ) !== false ) {
 					$tokenize = trim( $_POST['wc_everypay_tokenize_payment'] ) === 'true' ? true : false;
 					update_post_meta( $order_id, '_wc_everypay_tokenize_payment', $tokenize );
 				} else {
@@ -746,7 +746,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 */
 	protected function get_everypay_args( $order ) {
 
-		if ( defined( ICL_LANGUAGE_CODE ) ) {
+		if ( defined( 'ICL_LANGUAGE_CODE' ) ) {
 			$language = ICL_LANGUAGE_CODE;
 		} else {
 			switch ( get_locale() ) {
@@ -929,9 +929,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		if ( $this->debug == 'yes' ) {
 			$this->log->add( $this->id, 'Redirected to ' . $redirect_url );
 		}
-
+		
 		wp_redirect( $redirect_url );
-
 
 	}
 

@@ -67,7 +67,6 @@ window.addEventListener('message', function (event) {
         return;
     }
     var message = JSON.parse(event.data);
-
     if (true == wc_everypay_params.sandbox) {
         console.log(message);
     }
