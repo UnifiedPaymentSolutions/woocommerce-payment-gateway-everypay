@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @class   WC_Gateway_Everypay
  * @extends WC_Payment_Gateway
- * @version 1.0.0
+ * @version 1.0.3
  * @package WooCommerce Payment Gateway Everypay/Includes
  * @author  EveryPay
  */
@@ -53,7 +53,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		// URL for callback / user redirect from gateway
 		$this->notify_url = WC()->api_request_url( 'WC_Gateway_Everypay' );
 
-		$this->supports = [ 'products' ];
+		$this->supports = array( 'products' );
 
 		// Load the form fields.
 		$this->init_form_fields();
@@ -525,12 +525,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		}
 
 		if ( empty( $tokens ) ) {
-			$tokens = [ ];
+			$tokens = array( );
 		}
 
 
-		/*		$tokens = [
-					[
+		/*		$tokens = array(
+					array(
 						'cc_token'            => 'e54aa3d4c766ac3f1584be20',
 						'cc_last_four_digits' => '1234',
 						'cc_year'             => '2017',
@@ -538,8 +538,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 						'cc_type'             => 'visa',
 						'added'               => 1452440229,
 
-					],
-					[
+					),
+					array(
 						'cc_token'            => 'e54aa3d4c766ac3f1584be20',
 						'cc_last_four_digits' => '2335',
 						'cc_year'             => '2015',
@@ -547,8 +547,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 						'cc_type'             => 'master_card',
 						'added'               => 1452441229,
 						'default'             => true,
-					],
-				];*/
+					),
+				);*/
 
 		// mark expired cards as inactive - should not be used and marked default, can be deleted
 
@@ -632,10 +632,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 	protected function get_token_type_fullname( $type ) {
 
-		$cc_types = [
+		$cc_types = array(
 			'visa'        => "Visa",
 			'master_card' => "MasterCard",
-		];
+		);
 
 		$fullname = isset( $cc_types[ $type ] ) ? $cc_types[ $type ] : '';
 
@@ -764,7 +764,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			}
 		}
 
-		$args = [
+		$args = array(
 			'account_id'        => $this->account_id,
 			'amount'            => number_format( $order->get_total(), 2, '.', '' ),
 			'api_username'      => $this->api_username,
@@ -785,7 +785,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			'timestamp'         => time(),
 			'transaction_type'  => $this->transaction_type,
 			'user_ip'           => $_SERVER['REMOTE_ADDR'],
-		];
+		);
 
 		// handle iFrame skin
 		if ( $this->payment_form === 'iframe' ) {
@@ -835,7 +835,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * @return string
 	 */
 	protected function prepare_everypay_string( array $args ) {
-		$arr = array();
+		$arr = array( );
 		ksort( $args );
 		foreach ( $args as $k => $v ) {
 			$arr[] = $k . '=' . $v;
@@ -1020,13 +1020,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 */
 	public function verify_everypay_response( array $data ) {
 
-		$statuses = [
+		$statuses = array(
 			'settled' => self::_VERIFY_SUCCESS,
 			'authorised' => self::_VERIFY_SUCCESS,
 			'failed'    => self::_VERIFY_FAIL,
 			'cancelled' => self::_VERIFY_CANCEL,
 			'waiting_for_3ds_response' => self::_VERIFY_CANCEL,
-		];
+		);
 
 
 		if ( $data['api_username'] !== $this->api_username ) {
@@ -1101,7 +1101,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$html .= '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="460" height="400" style="border: 0;"></iframe>' . PHP_EOL;
 		$html .= '</div>' . PHP_EOL;
 		$html .= '<form action="' . $this->api_endpoint . '" id="wc_everypay_iframe_form" method="post" style="display: none" target="wc_everypay_iframe">' . PHP_EOL;
-		$args_array = [ ];
+		$args_array = array( );
 
 		foreach ( $args as $key => $value ) {
 			$args_array[] = '<input name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
@@ -1148,7 +1148,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		$html = '';
 
-		$args_array = [ ];
+		$args_array = array( );
 
 		foreach ( $args as $key => $value ) {
 			$args_array[] = '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
@@ -1207,12 +1207,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				$tokens = maybe_unserialize( get_user_meta( $user->ID, '_wc_everypay_tokens', true ) );
 
 				if ( empty( $tokens ) ) {
-					$tokens = [ ];
+					$tokens = array( );
 				}
 
 				if ( ! isset( $tokens[ $_REQUEST['cc_token'] ] ) ) {
 
-					$new_token = [
+					$new_token = array(
 						'cc_token'            => $_REQUEST['cc_token'],
 						'cc_last_four_digits' => $_REQUEST['cc_last_four_digits'],
 						'cc_year'             => $_REQUEST['cc_year'],
@@ -1220,7 +1220,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 						'cc_type'             => $_REQUEST['cc_type'],
 						'default'             => false,
 						'added'               => time(),
-					];
+					);
 
 					if ( 0 === count( $tokens ) ) {
 						$new_token['default'] = true;

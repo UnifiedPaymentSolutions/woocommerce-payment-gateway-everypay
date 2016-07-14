@@ -24,10 +24,10 @@ class WC_Gateway_Everypay_Account {
 
 		if ( ! empty( $tokens ) ) {
 
-			$args = [
+			$args = array(
 				'tokens'      => $tokens,
 				'nonce_field' => wp_nonce_field( 'everypay_manage_tokens_uid_' . get_current_user_id(), '_wpnonce', true, false )
-			];
+			);
 
 			wc_get_template( 'my-account.php', $args, '', WC_Everypay::get_instance()->plugin_path() . '/templates/' );
 		}
