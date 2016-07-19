@@ -3,11 +3,11 @@
  * Plugin Name:       EveryPay payment gateway for WooCommerce
  * Plugin URI:        https://every-pay.com/documentation-overview/
  * Description:       Payment gateway for adding EveryPay (https://every-pay.com/) credit card payments support to WooCommerce.
- * Version:           1.0.3
+ * Version:           1.0.4
  * Author:            EveryPay AS
  * Author URI:        https://every-pay.com/documentation-overview/
- * Requires at least: 4.0
- * Tested up to:      4.4.2
+ * Requires at least: 4.2
+ * Tested up to:      4.5.3
  * Text Domain:       everypay
  * Domain Path:       languages
  * Network:           false
