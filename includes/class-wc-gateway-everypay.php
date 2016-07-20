@@ -373,17 +373,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		);
 	}
 
-	public function validate_text_field( $key ) {
+	public function validate_text_field( $key, $value = null ) {
 		if( in_array( $key, array('account_id', 'api_username', 'api_secret', 'sandbox_api_username', 'sandbox_api_secret') ) ) {
-			$text  = $this->get_option( $key );
 			$field = $this->get_field_key( $key );
-
 			if ( isset( $_POST[ $field ] ) ) {
-				$text = trim( wp_strip_all_tags( stripslashes( $_POST[ $field ] ) ) );
+				$value = trim( wp_strip_all_tags( stripslashes( $_POST[ $field ] ) ) );
 			}
-			return $text;
+			return $value;
 		} else {
-			return parent::validate_text_field( $key );
+			return parent::validate_text_field( $key, $value );
 		}
 	}
 
