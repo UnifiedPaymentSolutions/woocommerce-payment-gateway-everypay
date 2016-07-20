@@ -1,6 +1,7 @@
 ## Changelog ##
 
 # 1.0.4 # 
+* Settings validation fix
 * Latest wp version compatibility tested
 
 # 1.0.3 #

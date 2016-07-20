@@ -63,6 +63,7 @@ EveryPay has support for English and Estonian included, additional translations 
 
 == Changelog ==
 = 1.0.4 = 
+* Settings validation fix
 * Latest wp version compatibility tested
 
 = 1.0.3 =
