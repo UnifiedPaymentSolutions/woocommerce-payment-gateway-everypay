@@ -116,4 +116,30 @@ window.addEventListener('message', function (event) {
 
 window.onload = function () {
     document.getElementById("wc_everypay_iframe_form").submit();
+    
+    everypay_iframe_default_width = jQuery('#wc_everypay_iframe').width();
+    everypay_iframe_default_height = jQuery('#wc_everypay_iframe').height();
+    everypay_iframe_size_check();
 };
+
+window.addEventListener('resize', function() {
+		everypay_iframe_size_check();
+}, true);
+
+var everypay_iframe_default_width;
+var everypay_iframe_default_height;
+function everypay_iframe_size_check() {
+	var w_width = jQuery(window).width();
+	var iframe_offset = jQuery('#wc_everypay_iframe').offset().left+10;
+	
+	if(w_width < everypay_iframe_default_width+iframe_offset) {
+		var new_iframe_width = Math.max(w_width-iframe_offset, 320);
+		jQuery('#wc_everypay_iframe_payment_container').attr('width', new_iframe_width);
+		jQuery('#wc_everypay_iframe').attr('width', new_iframe_width);
+		jQuery('#wc_everypay_iframe').attr('height', 450);
+	} else {
+		jQuery('#wc_everypay_iframe_payment_container').attr('width', everypay_iframe_default_width);
+		jQuery('#wc_everypay_iframe').attr('width', everypay_iframe_default_width);
+		jQuery('#wc_everypay_iframe').attr('height', everypay_iframe_default_height);
+	}
+}
