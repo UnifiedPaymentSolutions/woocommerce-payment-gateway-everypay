@@ -7,7 +7,7 @@
  * Author:            EveryPay AS
  * Author URI:        https://every-pay.com/documentation-overview/
  * Requires at least: 4.2
- * Tested up to:      4.5.3
+ * Tested up to:      4.6
  * Text Domain:       everypay
  * Domain Path:       languages
  * Network:           false
