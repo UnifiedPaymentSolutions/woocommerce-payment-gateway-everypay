@@ -1,9 +1,9 @@
 ### EveryPay WooCommerce Payment Gateway ###
-Contributors: petskratt
+Contributors: petskratt, aedes
 Tags: everypay, woocommerce, payment, payment gateway, credit card, debit card
 Requires at least: 4.2
-Tested up to: 4.5.3
-Stable tag: 1.0.4
+Tested up to: 4.7
+Stable tag: 1.0.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ credit and debit card payments on your WooCommerce store.
 
 ## Description ##
 
-EveryPay is an card payment gateway service provider, enabling e-commerce merchants
+EveryPay is a payment service provider, enabling e-commerce merchants
 to collect credit and debit card online payments. This plugin adds EveryPay as
 payment method to your WooCommerce store, the only required configuration step
 is copying API username and password from EveryPay Merchant Portal to Checkout Options
