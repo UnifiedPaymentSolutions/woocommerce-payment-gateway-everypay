@@ -676,7 +676,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			// 'wc_everypay_token' => '123456789abc123456789def',
 			// 'wc_everypay_tokenize_payment' => 'true',
 
-			if ( trim( $_POST['wc_everypay_token'] ) !== false ) {
+			if ( isset($_POST['wc_everypay_token']) && trim( $_POST['wc_everypay_token'] ) !== false ) {
 				update_post_meta( $order_id, '_wc_everypay_token', trim( $_POST['wc_everypay_token'] ) );
 			} else {
 				delete_post_meta( $order_id, '_wc_everypay_token' );
