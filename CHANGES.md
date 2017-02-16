@@ -1,5 +1,8 @@
 ## Changelog ##
 
+# 1.0.6 # 
+* Iframe responsive design fix
+
 # 1.0.5 # 
 * Added responsive design in Iframe
 
