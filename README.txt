@@ -62,6 +62,10 @@ With EveryPay your customers can make purchases in many currencies. We support  
 EveryPay has support for English and Estonian included, additional translations can be added by translating .pot file found in `langugages` directory or with WPML's String Translation.
 
 == Changelog ==
+
+= 1.0.5 = 
+* Added responsive design in Iframe
+
 = 1.0.4 = 
 * Settings validation fix
 * Latest wp version compatibility tested

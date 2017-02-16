@@ -57,6 +57,9 @@ EveryPay has support for English and Estonian included, additional translations 
 
 ## Changelog ##
 
+# 1.0.5 # 
+* Added responsive design in Iframe
+
 # 1.0.4 # 
 * Settings validation fix
 * Latest wp version compatibility tested

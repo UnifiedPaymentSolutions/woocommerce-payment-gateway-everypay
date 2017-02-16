@@ -2,8 +2,6 @@
 
 # 1.0.5 # 
 * Added responsive design in Iframe
-* Latest WordPress (4.6) version compatibility tested
-* Latest WooCemmerce (2.6.4) version compatibility tested
 
 # 1.0.4 # 
 * Settings validation fix
