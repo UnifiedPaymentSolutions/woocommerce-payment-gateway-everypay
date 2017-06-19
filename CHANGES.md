@@ -1,5 +1,8 @@
 ## Changelog ##
 
+# 1.0.7 # 
+* Woocommerce 3.x compatibility fixes
+
 # 1.0.6 # 
 * Iframe responsive design fix
 
