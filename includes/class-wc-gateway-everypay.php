@@ -766,19 +766,19 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			'account_id'        => $this->account_id,
 			'amount'            => number_format( $order->get_total(), 2, '.', '' ),
 			'api_username'      => $this->api_username,
-			'billing_address'   => $order->billing_address_1,
-			'billing_city'      => $order->billing_city,
-			'billing_country'   => $order->billing_country,
-			'billing_postcode'  => $order->billing_postcode,
+			'billing_address'   => $order->get_billing_address_1(),
+			'billing_city'      => $order->get_billing_city(),
+			'billing_country'   => $order->get_billing_country(),
+			'billing_postcode'  => $order->get_billing_postcode(),
 			'callback_url'      => WC()->api_request_url( 'WC_Gateway_Everypay' ),
 			'customer_url'      => WC()->api_request_url( 'WC_Gateway_Everypay' ),
-			'delivery_address'  => $order->shipping_address_1,
-			'delivery_city'     => $order->shipping_city,
-			'delivery_country'  => $order->shipping_country,
-			'delivery_postcode' => $order->shipping_postcode,
-			'email'             => $order->billing_email,
+			'delivery_address'  => $order->get_shipping_address_1(),
+			'delivery_city'     => $order->get_shipping_city(),
+			'delivery_country'  => $order->get_shipping_country(),
+			'delivery_postcode' => $order->get_shipping_postcode(),
+			'email'             => $order->get_billing_email(),
 			'nonce'             => uniqid( '', true ),
-			'order_reference'   => $order->id . '_' . date( DATE_W3C ),
+			'order_reference'   => $order->get_id() . '_' . date( DATE_W3C ),
 			'request_cc_token'  => '0',
 			'timestamp'         => time(),
 			'transaction_type'  => $this->transaction_type,
@@ -792,11 +792,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		// handle request / provide token
 		if ( $this->token_enabled ) {
-			$token = get_post_meta( $order->id, '_wc_everypay_token', true );
+			$token = get_post_meta( $order->get_id(), '_wc_everypay_token', true );
 
 			if ( empty ( $token ) || ( $token === 'add_new' ) ) {
 				if ( true === $this->token_ask ) {
-					$args['request_cc_token'] = (bool) get_post_meta( $order->id, '_wc_everypay_tokenize_payment', true ) ? '1' : '0';
+					$args['request_cc_token'] = (bool) get_post_meta( $order->get_id(), '_wc_everypay_tokenize_payment', true ) ? '1' : '0';
 				} else {
 					$args['request_cc_token'] = '1';
 				}
@@ -895,7 +895,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			$this->log->add( $this->id, 'Order ' . var_export( $order, true ) );
 		}
 
-		$this->change_language( $order->id );
+		$this->change_language( $order->get_id() );
 
 		$order_complete = $this->process_order_status( $order );
 
@@ -912,7 +912,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 					$redirect_url = $woocommerce->cart->get_checkout_url();
 					break;
 				case self::_VERIFY_CANCEL:
-					$order->cancel_order( __( 'Payment cancelled.', 'everypay' ) );
+					$order->update_status( 'cancelled', __( 'Payment cancelled.', 'everypay' ) );
 					$this->log->add( $this->id, 'Payment was cancelled by user.' );
 					$redirect_url = $order->get_cancel_order_url();
 					break;
@@ -970,7 +970,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			// Add order note
 			$order->add_order_note( sprintf( __( 'Card payment was successfully processed by EveryPay (Reference: %s, Timestamp: %s)', 'everypay' ), $_REQUEST['payment_reference'], $_REQUEST['timestamp'] ) );
 			// Store the transaction ID for WC 2.2 or later.
-			add_post_meta( $order->id, '_transaction_id', $_REQUEST['payment_reference'], true );
+			add_post_meta( $order->get_id(), '_transaction_id', $_REQUEST['payment_reference'], true );
 
 			$this->maybe_add_token( $order );
 
