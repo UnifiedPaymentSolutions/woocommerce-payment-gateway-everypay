@@ -1,5 +1,8 @@
 ## Changelog ##
 
+# 1.0.8 # 
+* New iframe design fixes
+
 # 1.0.7 # 
 * Woocommerce 3.x compatibility fixes
 
