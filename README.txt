@@ -46,6 +46,10 @@ With EveryPay your customers can make purchases in many currencies. We support  
 * easy payment page customization - payment page is hosted on secure EveryPay servers, but can be easily cusomized in Merchant Portal to include your logo etc
 * payments can be taken as 'Charge' where payment authorisation is followed by immediate transaction and 'Authorisation' where required sum is reserved on cardholder account and actual transaction takes place either automatically after preset time or on manual action in Merchant Portal (for example after stock level has been checked or product is ready for shipping)
 
+= Requirements =
+
+WooCommerce 3.0.0 or later.
+
 == Screenshots ==
 
 1. Configuration options
