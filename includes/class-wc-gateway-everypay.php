@@ -1096,7 +1096,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			$cancel_style = 'style="display: none;"';
 		}
 
-		$html .= '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="460" height="410" style="border: 0;"></iframe>' . PHP_EOL;
+		$html .= '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="358" height="409" style="border: 0;"></iframe>' . PHP_EOL;
 		$html .= '</div>' . PHP_EOL;
 		$html .= '<form action="' . $this->api_endpoint . '" id="wc_everypay_iframe_form" method="post" style="display: none" target="wc_everypay_iframe">' . PHP_EOL;
 		$args_array = array( );
