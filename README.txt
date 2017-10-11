@@ -67,6 +67,10 @@ EveryPay has support for English and Estonian included, additional translations 
 
 == Changelog ==
 
+= 1.0.9 =
+* Iframe design adjustments
+* Cards logos update
+
 = 1.0.8 =
 * New iframe design fixes
 
