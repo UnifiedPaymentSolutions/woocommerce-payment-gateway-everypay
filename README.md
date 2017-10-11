@@ -1,9 +1,9 @@
 ### EveryPay WooCommerce Payment Gateway ###
 Contributors: petskratt, aedes
 Tags: everypay, woocommerce, payment, payment gateway, credit card, debit card
-Requires at least: 4.2
+Requires at least: 4.4
 Tested up to: 4.8.1
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 

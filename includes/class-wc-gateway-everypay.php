@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @class   WC_Gateway_Everypay
  * @extends WC_Payment_Gateway
- * @version 1.0.8
+ * @version 1.0.9
  * @package WooCommerce Payment Gateway Everypay/Includes
  * @author  EveryPay
  */
