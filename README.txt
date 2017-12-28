@@ -2,8 +2,8 @@
 Contributors: petskratt, aedes
 Tags: everypay, woocommerce, payment, payment gateway, credit card, debit card
 Requires at least: 4.4
-Tested up to: 4.8.1
-Stable tag: 1.0.9
+Tested up to: 4.9.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -66,6 +66,9 @@ WooCommerce 3.0.0 or later.
 EveryPay has support for English and Estonian included, additional translations can be added by translating .pot file found in `langugages` directory or with WPML's String Translation.
 
 == Changelog ==
+
+= 1.1.0 =
+* Replace deprecated woocommerce functions
 
 = 1.0.9 =
 * Iframe design adjustments

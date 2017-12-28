@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @class   WC_Gateway_Everypay
  * @extends WC_Payment_Gateway
- * @version 1.0.9
+ * @version 1.1.0
  * @package WooCommerce Payment Gateway Everypay/Includes
  * @author  EveryPay
  */
@@ -909,7 +909,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				case self::_VERIFY_FAIL:
 					$order->update_status( 'failed', __( 'Payment was declined. Please verify the card data and try again with the same or different card.', 'everypay' ) );
 					$this->log->add( $this->id, 'Payment was declined by payment processor.' );
-					$redirect_url = $woocommerce->cart->get_checkout_url();
+					$redirect_url = wc_get_checkout_url();
 					break;
 				case self::_VERIFY_CANCEL:
 					$order->update_status( 'cancelled', __( 'Payment cancelled.', 'everypay' ) );
@@ -919,7 +919,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				default:
 					$order->update_status( 'failed', __( 'An error occurred while processing the payment response, please notify merchant!', 'everypay' ) );
 					$this->log->add( $this->id, 'An error occurred while processing the payment response.' );
-					$redirect_url = $woocommerce->cart->get_checkout_url();
+					$redirect_url = wc_get_checkout_url();
 					break;
 			}
 		}
@@ -1114,7 +1114,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		// cancel is hidden for token payments, retry for all payments - enabling happens on payment fail
 		$html .= '<a href="' . esc_url( $order->get_cancel_order_url() ) . '" id="wc_everypay_iframe_cancel" class="button cancel" ' . $cancel_style . '>'
 		         . apply_filters( 'wc_everypay_iframe_cancel', __( 'Cancel order', 'everypay' ) ) . '</a> ';
-		$html .= '<a href="' . esc_url( $woocommerce->cart->get_checkout_url() ) . '" id="wc_everypay_iframe_retry" class="button alt" style="display: none;">'
+		$html .= '<a href="' . esc_url( wc_get_checkout_url() ) . '" id="wc_everypay_iframe_retry" class="button alt" style="display: none;">'
 		         . apply_filters( 'wc_everypay_iframe_retry', __( 'Try paying again', 'everypay' ) ) . '</a>' . PHP_EOL;
 		$html .= '</div>' . PHP_EOL;
 
