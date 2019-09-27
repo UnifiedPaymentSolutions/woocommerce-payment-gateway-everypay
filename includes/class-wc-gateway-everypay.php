@@ -65,8 +65,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$this->enabled = $this->get_option( 'enabled' );
 
 		// Title/description for payment method selection page
-		$this->title       = $this->get_option( 'title' );
-		$this->description = $this->get_option( 'description' );
+		$this->title       = $this->get_option( 'title_card' );
+		// $this->description = $this->get_option( 'description' );
 
 		$this->account_id = $this->get_option( 'account_id' );
 		// implemented initially, but removed in favor of 'capture delay' that can be confed in merchant portal
@@ -75,8 +75,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$this->payment_form     = $this->get_option( 'payment_form' );
 		$this->skin_name        = $this->get_option( 'skin_name' );
 		$this->token_enabled    = $this->get_option( 'token_enabled' ) === 'yes' ? true : false;
-		// asking for permission is not optional for regulatory reasons
-		// $this->token_ask        = $this->get_option( 'token_ask' ) === 'yes' ? true : false;
 		$this->token_ask    = true;
 		$this->sandbox      = $this->get_option( 'sandbox' ) === 'yes' ? true : false;
 		$this->api_endpoint = $this->sandbox === false ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
@@ -152,36 +150,47 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		<table class="form-table">
 			<?php $this->generate_settings_html(); ?>
 			<script type="text/javascript">
-				jQuery('#woocommerce_everypay_sandbox').change(function () {
-					var sandbox = jQuery('#woocommerce_everypay_sandbox_api_username, #woocommerce_everypay_sandbox_api_secret').closest('tr');
+				jQuery(function($) {
+					var $sandbox = $('#woocommerce_everypay_sandbox'),
+						$paymentForm = $('#woocommerce_everypay_payment_form'),
+						$sandboxApiFields = $('#woocommerce_everypay_sandbox_api_username, #woocommerce_everypay_sandbox_api_secret').closest('tr'),
+						$liveApiFields = $('#woocommerce_everypay_api_username, #woocommerce_everypay_api_secret').closest('tr'),
+						$skinname = $('#woocommerce_everypay_skin_name').closest('tr');
 
-					if (jQuery(this).is(':checked')) {
-						sandbox.show("slow");
+					if($sandbox.val() == 'yes') {
+						$sandboxApiFields.show();
+						$liveApiFields.hide();
 					} else {
-						sandbox.hide("slow");
+						$sandboxApiFields.hide();
+						$liveApiFields.show();
 					}
-				}).change();
 
-				jQuery('#woocommerce_everypay_payment_form').change(function () {
-					var skinname = jQuery('#woocommerce_everypay_skin_name').closest('tr');
-
-					if (jQuery(this).val() == 'iframe') {
-						skinname.show("slow");
+					if($paymentForm.val() == 'iframe') {
+						$skinname.show();
 					} else {
-						skinname.hide("slow");
+						$skinname.hide();
 					}
-				}).change();
 
-				jQuery('#woocommerce_everypay_token_enabled').change(function () {
-					var tokenask = jQuery('#woocommerce_everypay_token_ask').closest('tr');
+					$sandbox.change(function () {
+						if ($(this).val() == 'yes') {
+							$liveApiFields.hide("slow", function() {
+								$sandboxApiFields.show("slow");
+							});
+						} else {
+							$sandboxApiFields.hide("slow", function() {
+								$liveApiFields.show("slow");
+							});
+						}
+					});
 
-					if (jQuery(this).is(':checked')) {
-						tokenask.show("slow");
-					} else {
-						tokenask.hide("slow");
-					}
-				}).change();
-
+					$paymentForm.change(function () {
+						if($(this).val() == 'iframe') {
+							$skinname.show("slow");
+						} else {
+							$skinname.hide("slow");
+						}
+					});
+				});
 			</script>
 		</table>
 
@@ -244,6 +253,49 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	}
 
 	/**
+	 * Generate update button
+	 *
+	 * @param string $key
+	 * @param array $data
+	 * @return string
+	 */
+	public function generate_update_payment_methods_html($key, $data)
+	{
+		$field_key = $this->get_field_key( $key );
+		$defaults  = array(
+			'title'             => '',
+			'disabled'          => false,
+			'class'             => '',
+			'css'               => '',
+			'placeholder'       => '',
+			'type'              => 'text',
+			'desc_tip'          => false,
+			'description'       => '',
+			'custom_attributes' => array(),
+		);
+
+		$data = wp_parse_args( $data, $defaults );
+
+		ob_start();
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label for="<?php echo esc_attr( $field_key ); ?>"><?php echo wp_kses_post( $data['title'] ); ?> <?php echo $this->get_tooltip_html( $data ); // WPCS: XSS ok. ?></label>
+			</th>
+			<td class="forminp">
+				<fieldset>
+					<legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
+					<a href="javascript:void(0);" id="<?php echo esc_attr( $field_key ); ?>" class="button <?php echo esc_attr( $data['class'] ); ?>" style="<?php echo esc_attr( $data['css'] ); ?>" <?php disabled( $data['disabled'], true ); ?>><?php echo wp_kses_post( $data['label'] ); ?></a>
+					<?php echo $this->get_description_html( $data ); // WPCS: XSS ok. ?>
+				</fieldset>
+			</td>
+		</tr>
+		<?php
+
+		return ob_get_clean();
+	}
+
+	/**
 	 * Initialise Gateway Settings Form Fields
 	 *
 	 * @access public
@@ -264,8 +316,78 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				'description' => '',
 				'default'     => 'no'
 			),
+			'sandbox'         => array(
+				'title'       => __( 'Gateway URL', 'everypay' ),
+				'type'        => 'select',
+				'options'     => array(
+					'no' => __( 'LIVE', 'everypay' ),
+					'yes'   => __( 'TEST', 'everypay' ),
+				),
+				'description' => __( "With TEST Gateway Url use the payment gateway in test mode using test API credentials (real payments will not be taken).", 'everypay' ),
+				'default'     => 'no',
+				'desc_tip'    => false,
+			),
+			'api_username'         => array(
+				'title'       => __( 'API username', 'everypay' ),
+				'type'        => 'text',
+				'description' => __( "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'General settings' section (looks like: 49bcdd6fed983c12).", 'everypay' ),
+				'default'     => '',
+				'desc_tip'    => false
+			),
+			'api_secret'           => array(
+				'title'       => __( 'API secret', 'everypay' ),
+				'type'        => 'text',
+				'description' => __( "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'General settings' section (looks like: e7ed4e55d5f73158f6cf2890fb1c950e).", 'everypay' ),
+				'default'     => '',
+				'desc_tip'    => false
+			),
+			'sandbox_api_username' => array(
+				'title'       => __( 'Test API username', 'everypay' ),
+				'type'        => 'text',
+				'description' => __( 'Optional: API username for testing payments.', 'everypay' ),
+				'default'     => '',
+				'desc_tip'    => false
+			),
+			'sandbox_api_secret'   => array(
+				'title'       => __( 'Test API secret', 'everypay' ),
+				'type'        => 'text',
+				'description' => __( 'Optional: API secret for testing payments.', 'everypay' ),
+				'default'     => '',
+				'desc_tip'    => false
+			),
+			'account_id'           => array(
+				'title'       => __( 'API Account Name', 'everypay' ),
+				'type'        => 'text',
+				'description' => __( "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'Processing accounts' section (looks like: EUR1).", 'everypay' ),
+				'default'     => '',
+				'desc_tip'    => false,
+			),
+			'update_methods'  => array(
+				'title'       => __( 'Update Payment Methods', 'everypay' ),
+				'label'       => __( 'Update', 'everypay' ),
+				'type'        => 'update_payment_methods',
+				'desc_tip'    => false,
+			),
+			'title_card'      => array(
+				'title'       => __( 'Title of Card Payment', 'everypay' ),
+				'type'        => 'text',
+				'description' => __( 'This controls the title which the user sees on card payments.', 'everypay' ),
+				'default'     => __( 'Card payment', 'everypay' )
+			),
+			'title_bank'      => array(
+				'title'       => __( 'Title of Bank Payment', 'everypay' ),
+				'type'        => 'text',
+				'description' => __( 'This controls the title which the user sees on bank payments.', 'everypay' ),
+				'default'     => __( 'Bank payment', 'everypay' )
+			),
+			'title_alternative'      => array(
+				'title'       => __( 'Title of Alternative Payment', 'everypay' ),
+				'type'        => 'text',
+				'description' => __( 'This controls the title which the user sees on alternative payments.', 'everypay' ),
+				'default'     => __( 'Alternative payment', 'everypay' )
+			),
 			'payment_form'         => array(
-				'title'       => __( 'Payment form type', 'everypay' ),
+				'title'       => __( 'Payment Integration Variants ', 'everypay' ),
 				'type'        => 'select',
 				'options'     => array(
 					'redirect' => __( 'Redirect to hosted form on EveryPay server', 'everypay' ),
@@ -289,86 +411,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				'description' => __( "When card token payments are enabled users get an option to store reference to credit card and can make future purchases without need to enter card details.", 'everypay' ),
 				'default'     => 'no'
 			),
-			// for regulatory reasons asking is currently mandatory
-			/*			'token_ask'            => array(
-							'title'       => __( 'Ask when storing cards', 'everypay' ),
-							'label'       => __( 'Storing cards is user-selectable', 'everypay' ),
-							'type'        => 'checkbox',
-							'description' => __( "When this option is cleared all purchases store card token on user's account.", 'everypay' ),
-							'default'     => 'yes'
-						),*/
-			'title'                => array(
-				'title'       => __( 'Title', 'everypay' ),
-				'type'        => 'text',
-				'description' => __( 'This controls the title which the user sees during checkout.', 'everypay' ) . $translation_notice,
-				'default'     => __( 'Card payment', 'everypay' )
-			),
-			'description'          => array(
-				'title'       => __( 'Description', 'everypay' ),
-				'type'        => 'textarea',
-				'description' => __( 'This controls the description which the user sees during checkout.', 'everypay' ) . $translation_notice,
-				'default'     => __( "Card payments are provided by EveryPay", 'everypay' )
-			),
-			'account_id'           => array(
-				'title'       => __( 'Processing Account', 'everypay' ),
-				'type'        => 'text',
-				'description' => __( "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'Processing accounts' section (looks like: EUR1).", 'everypay' ),
-				'default'     => '',
-				'desc_tip'    => false,
-			),
-			// implemented initially, but removed in favor of 'capture delay' that can be confed in merchant portal
-			/*			'transaction_type'     => array(
-							'title'       => __( 'Transaction Type', 'everypay' ),
-							'type'        => 'select',
-							'options'     => array(
-								'charge'        => __( 'Charge', 'everypay' ),
-								'authorisation' => __( 'Authorisation', 'everypay' ),
-							),
-							'description' => __( "Authorisation: A process of getting approval for the current payment. Funds are reserved on cardholder's account. Charge: An authorisation followed by immediate automatic capture.", 'everypay' ),
-							'default'     => 'charge',
-							'desc_tip'    => false,
-						),*/
-			'api_username'         => array(
-				'title'       => __( 'API username', 'everypay' ),
-				'type'        => 'text',
-				'description' => __( "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'General settings' section (looks like: 49bcdd6fed983c12).", 'everypay' ),
-				'default'     => '',
-				'desc_tip'    => false
-			),
-			'api_secret'           => array(
-				'title'       => __( 'API secret', 'everypay' ),
-				'type'        => 'text',
-				'description' => __( "You'll find this in EveryPay Merchant Portal, under 'Settings' > 'General settings' section (looks like: e7ed4e55d5f73158f6cf2890fb1c950e).", 'everypay' ),
-				'default'     => '',
-				'desc_tip'    => false
-			),
 			'debug'                => array(
 				'title'       => __( 'Debug Log', 'everypay' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable logging', 'everypay' ),
 				'default'     => 'no',
 				'description' => sprintf( __( 'Log EveryPay events inside <code>%s</code>', 'everypay' ), wc_get_log_file_path( $this->id ) )
-			),
-			'sandbox'              => array(
-				'title'       => __( 'Test', 'everypay' ),
-				'label'       => __( 'Enable Test Mode', 'everypay' ),
-				'type'        => 'checkbox',
-				'description' => __( 'Place the payment gateway in test mode using test API credentials (real payments will not be taken).', 'everypay' ),
-				'default'     => 'no'
-			),
-			'sandbox_api_username' => array(
-				'title'       => __( 'Test API username', 'everypay' ),
-				'type'        => 'text',
-				'description' => __( 'Optional: API username for testing payments.', 'everypay' ),
-				'default'     => '',
-				'desc_tip'    => false
-			),
-			'sandbox_api_secret'   => array(
-				'title'       => __( 'Test API secret', 'everypay' ),
-				'type'        => 'text',
-				'description' => __( 'Optional: API secret for testing payments.', 'everypay' ),
-				'default'     => '',
-				'desc_tip'    => false
 			),
 		);
 	}

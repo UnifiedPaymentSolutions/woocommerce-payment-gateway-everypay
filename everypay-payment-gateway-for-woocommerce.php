@@ -10,6 +10,8 @@
  * Tested up to:      4.9.1
  * Text Domain:       everypay
  * Domain Path:       languages
+ * WC requires at least: 3.0.0
+ * WC tested up to:   3.7.0
  * Network:           false
  * GitHub Plugin URI: https://github.com/UnifiedPaymentSolutions/woocommerce-payment-gateway-everypay
  *

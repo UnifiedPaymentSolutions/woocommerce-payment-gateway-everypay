@@ -1,14 +1,9 @@
 <wpml-config>
-    <custom-types>
-        <custom-type translate="1">film</custom-type>
-    </custom-types>
-    <taxonomies>
-        <taxonomy translate="1">genre</taxonomy>
-    </taxonomies>
     <admin-texts>
         <key name="woocommerce_everypay_settings">
-          <key name="title" />
-          <key name="description" />
+          <key name="title_card" />
+          <key name="title_bank" />
+          <key name="title_alternative" />
         </key>
     </admin-texts>
 </wpml-config>
