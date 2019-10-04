@@ -134,7 +134,8 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @access public
 		 * @return void
 		 */
-		public function __clone() {
+		public function __clone()
+		{
 			// Cloning instances of the class is forbidden
 			_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'everypay' ), $this->version );
 		}
@@ -146,7 +147,8 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @access public
 		 * @return void
 		 */
-		public function __wakeup() {
+		public function __wakeup()
+		{
 			// Unserializing instances of the class is forbidden
 			_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'everypay' ), $this->version );
 		}
@@ -156,7 +158,8 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 *
 		 * @access private
 		 */
-		private function __construct() {
+		private function __construct()
+		{
 			// Hooks.
 			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'action_links' ) );
 			add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
@@ -174,6 +177,9 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 
 						$this->includes();
 
+						// Update payment methods ajax
+						add_action('wp_ajax_update_payment_methods', array($this, 'update_payment_methods'));
+
 						add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateway' ) );
 						/*
 									add_filter( 'woocommerce_currencies', array( $this, 'add_currency' ) );
@@ -189,12 +195,50 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		}
 
 		/**
+		 * Update payment methods via Ajax.
+		 *
+		 * @return void
+		 */
+		public function update_payment_methods()
+		{
+			$gateway = $this->get_gateway();
+			$api = $gateway->get_api();
+
+			if(!$api->is_configured()) {
+				$type = 'error';
+				$message = esc_html__('API not configured!', 'everypay');
+			} elseif(empty($gateway->get_account_id())) {
+				$type = 'error';
+				$message = esc_html__('Processing account not defined!', 'everypay');
+			} else {
+				$response = $api->processingAccount($gateway->get_account_id());
+
+				if(empty($response)) {
+					$type = 'error';
+					$message = esc_html__('API request failed!', 'everypay');
+				} elseif(!empty($response->error)) {
+					$type = 'error';
+					$message = esc_html($response->error);
+				} else {
+					$gateway->update_payment_methods($response->payment_methods);
+					$type = 'success';
+					$message = esc_html__('Payment methods updated!', 'everypay');
+				}
+			}
+
+			echo json_encode(array(
+				'type' => $type,
+				'message' => $message
+			));
+			exit;
+		}
+
+		/**
 		 * Plugin action links.
 		 *
 		 * @access public
 		 *
 		 * @param  mixed $links
-		 *
 		 * @return mixed $links
 		 */
 		public function action_links( $links ) {
@@ -274,15 +318,9 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @return void
 		 */
 		private function includes() {
+			require_once( 'includes/class-everypay-api.php' );
 			require_once( 'includes/class-wc-gateway-everypay.php' );
 			require_once( 'includes/class-wc-gateway-everypay-account.php' );
-
-			// This supports the plugin extensions 'WooCommerce Subscriptions' and 'WooCommerce Pre-orders'.
-			/*
-				  if( class_exists( 'WC_Subscriptions_Order' ) || class_exists( 'WC_Pre_Orders_Order' ) ) {
-					include_once( 'includes/class-wc-gateway-' . str_replace( '_', '-', $this->gateway_slug ) . '-add-ons.php' );
-				  }
-			*/
 		}
 
 		/**
@@ -302,10 +340,10 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @access public
 		 *
 		 * @param  array $methods WooCommerce payment methods.
-		 *
 		 * @return array WooCommerce gateway.
 		 */
-		public function add_gateway( $methods ) {
+		public function add_gateway($methods)
+		{
 			$methods[] = 'WC_' . str_replace( ' ', '_', $this->name );
 
 			return $methods;
@@ -331,6 +369,17 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 			echo '<div class="updated woocommerce-message wc-connect"><p>' . sprintf( __( 'WooCommerce %s depends on version 2.2 and up of WooCommerce for this gateway to work! Please upgrade before activating.', 'payment-gateway-everypay' ), $this->name ) . '</p></div>';
 		}
 
+
+		/**
+		 * Get gateway instance.
+		 *
+		 * @return WC_Gateway_Everypay
+		 */
+		protected function get_gateway()
+		{
+			return WC()->payment_gateways->payment_gateways()[$this->gateway_slug];
+		}
+
 		/** Helper functions ******************************************************/
 
 		/**
@@ -352,7 +401,6 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		public function plugin_path() {
 			return untrailingslashit( plugin_dir_path( __FILE__ ) );
 		}
-
 	} // end if class
 
 	add_action( 'plugins_loaded', array( 'WC_Everypay', 'get_instance' ), 0 );

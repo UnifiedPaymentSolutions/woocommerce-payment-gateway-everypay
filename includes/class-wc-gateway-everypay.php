@@ -12,12 +12,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @package WooCommerce Payment Gateway Everypay/Includes
  * @author  EveryPay
  */
-class WC_Gateway_Everypay extends WC_Payment_Gateway {
+class WC_Gateway_Everypay extends WC_Payment_Gateway
+{
 
+	/**
+	 * @var int
+	 */
 	const _VERIFY_ERROR = 0;    // HMAC mismatch or other error
 	const _VERIFY_SUCCESS = 1;  // payment successful
 	const _VERIFY_FAIL = 2;     // payment failed
 	const _VERIFY_CANCEL = 3;   // payment cancelled by user
+
 
 	protected $account_id;
 	protected $transaction_type;
@@ -32,6 +37,22 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	protected $debug;
 	protected $notify_url;
 	protected $log;
+	protected $payment_methods;
+
+	/**
+	 * @var string
+	 */
+	protected $live_endpoint = 'https://pay.every-pay.eu/api/v3';
+
+	/**
+	 * @var string
+	 */
+	protected $test_endpoint = 'https://igw-demo.every-pay.com/api/v3';
+
+	/**
+	 * @var WC_Everypay_Api
+	 */
+	protected $api;
 
 	/**
 	 * Constructor for the gateway.
@@ -39,7 +60,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * @access public
 	 * @return mixed
 	 */
-	public function __construct() {
+	public function __construct()
+	{
 		$this->id         = 'everypay';
 		$this->icon       = apply_filters( 'woocommerce_gateway_everypay_icon', plugins_url( '/assets/images/mastercard_visa.png', dirname( __FILE__ ) ) );
 		$this->has_fields = true;
@@ -55,6 +77,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		$this->supports = array( 'products' );
 
+		$this->sandbox      = $this->get_option( 'sandbox' ) === 'yes' ? true : false;
+
+		$this->api_endpoint = $this->sandbox === false ? $this->live_endpoint : $this->test_endpoint;
+		$this->api_username = $this->sandbox === false ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
+		$this->api_secret   = $this->sandbox === false ? $this->get_option( 'api_secret' ) : $this->get_option( 'sandbox_api_secret' );
+		$this->account_id = $this->get_option( 'account_id' );
+
 		// Load the form fields.
 		$this->init_form_fields();
 
@@ -68,7 +97,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$this->title       = $this->get_option( 'title_card' );
 		// $this->description = $this->get_option( 'description' );
 
-		$this->account_id = $this->get_option( 'account_id' );
 		// implemented initially, but removed in favor of 'capture delay' that can be confed in merchant portal
 		// $this->transaction_type = $this->get_option( 'transaction_type' );
 		$this->transaction_type = 'charge';
@@ -76,15 +104,16 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		$this->skin_name        = $this->get_option( 'skin_name' );
 		$this->token_enabled    = $this->get_option( 'token_enabled' ) === 'yes' ? true : false;
 		$this->token_ask    = true;
-		$this->sandbox      = $this->get_option( 'sandbox' ) === 'yes' ? true : false;
-		$this->api_endpoint = $this->sandbox === false ? 'https://pay.every­-pay.eu/transactions/' : 'https://igw-demo.every-pay.com/transactions/';
-		$this->api_username = $this->sandbox === false ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
-		$this->api_secret   = $this->sandbox === false ? $this->get_option( 'api_secret' ) : $this->get_option( 'sandbox_api_secret' );
+
+		// Initialize API
+		$this->api = new WC_Everypay_Api($this->api_endpoint, $this->api_username, $this->api_secret);
+
+		// Payment methods to display in payment method
+		$this->payment_methods = $this->get_option('payment_methods', array());
 
 		// Log is created always for main transaction points - debug option adds more logging points during transaction
 		$this->debug = $this->get_option( 'debug' );
 		$this->log   = new WC_Logger();
-
 
 		// Hooks
 		if ( is_admin() ) {
@@ -112,7 +141,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 		// Add token management to user's account page
 		add_action( 'woocommerce_after_my_account', array( $this, 'generate_account_page_html' ) );
-
 	}
 
 	/**
@@ -121,15 +149,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * @access public
 	 * @return void
 	 */
-
 	public function script_manager() {
-
 		// wp_register_script template ( $handle, $src, $deps, $ver, $in_footer );
 		wp_register_script( 'wc-everypay-iframe', plugins_url( '/assets/js/everypay-iframe-handler.js', dirname( __FILE__ ) ), array( 'jquery' ), false, true );
 		wp_enqueue_script( 'wc-everypay-iframe' );
-
 	}
-
 
 	/**
 	 * Admin Panel Options
@@ -138,7 +162,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * @return void
 	 */
 	public function admin_options() {
-
 		?>
 		<h3><?php _e( 'EveryPay', 'everypay' ); ?></h3>
 		<p><?php _e( 'EveryPay is a card payment gateway service provider, enabling e-commerce merchants to collect credit and debit card online payments from their customers.', 'everypay' ); ?></p>
@@ -191,9 +214,38 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 						}
 					});
 				});
+
+				/**
+				 * Make ajax request on button click.
+				 *
+				 * @param string action
+				 * @return void
+				 */
+				function updateButton(element, action) {
+					var $button = jQuery(element),
+						$loader = $button.siblings('.spinner'),
+						$message = $button.siblings('.update-result');
+
+					$button.prop('disabled', true);
+					$loader.addClass('is-active');
+
+					jQuery.post(ajaxurl, {
+						action: action
+					}, null, 'json').always(function(response) {
+						if(response.message) {
+							$message.text(response.message);
+							$message.addClass(response.success ? 'success' : 'error');
+							setTimeout(function() {
+								$message.removeClass('success error');
+								$message.text('');
+							}, 5000);
+						}
+						$button.prop('disabled', false);
+						$loader.removeClass('is-active');
+					});
+				}
 			</script>
 		</table>
-
 		<?php
 	}
 
@@ -202,7 +254,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 *
 	 * @access public
 	 */
-	public function checks() {
+	public function checks()
+	{
 		if ( $this->enabled == 'no' ) {
 			return;
 		}
@@ -231,7 +284,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		if ( ( $this->payment_form === 'iframe' ) && ( get_option( 'woocommerce_force_ssl_checkout' ) === 'no' ) && ! class_exists( 'WordPressHTTPS' ) ) {
 			echo '<div class="error" id="wc_everypay_notice_ssl"><p>' . sprintf( __( 'EveryPay iFrame mode is enabled, but your checkout is not forced to use HTTPS. While EveryPay iFrame remains secure users may feel insecure due to missing confirmation in browser address bar. Please <a href="%s">enforce SSL</a> and ensure your server has a valid SSL certificate!', 'everypay' ), admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ) . '</p></div>';
 		}
-
 	}
 
 
@@ -240,12 +292,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 *
 	 * @access public
 	 */
-	public function is_available() {
-		if ( $this->enabled == 'no' ) {
+	public function is_available()
+	{
+		if ($this->enabled == 'no') {
 			return false;
 		}
 
-		if ( ! $this->api_username || ! $this->api_secret ) {
+		if (!$this->api_username || !$this->api_secret) {
 			return false;
 		}
 
@@ -259,7 +312,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	 * @param array $data
 	 * @return string
 	 */
-	public function generate_update_payment_methods_html($key, $data)
+	public function generate_update_button_html($key, $data)
 	{
 		$field_key = $this->get_field_key( $key );
 		$defaults  = array(
@@ -285,7 +338,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			<td class="forminp">
 				<fieldset>
 					<legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
-					<a href="javascript:void(0);" id="<?php echo esc_attr( $field_key ); ?>" class="button <?php echo esc_attr( $data['class'] ); ?>" style="<?php echo esc_attr( $data['css'] ); ?>" <?php disabled( $data['disabled'], true ); ?>><?php echo wp_kses_post( $data['label'] ); ?></a>
+					<button id="<?php echo esc_attr( $field_key ); ?>" class="button <?php echo esc_attr( $data['class'] ); ?>" onclick="updateButton(this, '<?php echo wp_kses_post( $data['action'] ); ?>'); return false;" style="<?php echo esc_attr( $data['css'] ); ?>" <?php disabled( $data['disabled'], true ); ?>><?php echo wp_kses_post( $data['label'] ); ?></button>
+					<span class="update-result"></span>
+					<span class="spinner" style="float: none;"></span>
 					<?php echo $this->get_description_html( $data ); // WPCS: XSS ok. ?>
 				</fieldset>
 			</td>
@@ -365,7 +420,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			'update_methods'  => array(
 				'title'       => __( 'Update Payment Methods', 'everypay' ),
 				'label'       => __( 'Update', 'everypay' ),
-				'type'        => 'update_payment_methods',
+				'type'        => 'update_button',
+				'disabled'    => !$this->api_username || !$this->api_secret || !$this->account_id,
+				'action'	  => 'update_payment_methods',
 				'desc_tip'    => false,
 			),
 			'title_card'      => array(
@@ -433,8 +490,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		}
 	}
 
-	public function payment_fields() {
-
+	public function payment_fields()
+	{
 		if ( ! empty( $this->description ) ) {
 			echo wpautop( wptexturize( $this->description ) );
 		}
@@ -446,11 +503,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		if ( $this->token_enabled ) {
 			$this->credit_card_form();
 		}
-
 	}
 
-	public function credit_card_form( $args = array(), $fields = array() ) {
-
+	public function credit_card_form($args = array(), $fields = array())
+	{
 		?>
 		<fieldset id="<?php echo $this->id; ?>-cc-form">
 			<?php
@@ -488,8 +544,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 	}
 
 
-	protected function generate_tokenize_checkbox_html( $has_tokens = false ) {
-
+	protected function generate_tokenize_checkbox_html( $has_tokens = false )
+	{
 		$html = '';
 
 		if ( $this->token_enabled ) {
@@ -513,14 +569,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		return $html;
 	}
 
-	protected function generate_tokenized_cards_html() {
-
+	protected function generate_tokenized_cards_html()
+	{
 		$html = '';
 
 		if ( $this->token_enabled ) {
 
 			$tokens = $this->get_user_tokens();
-
 
 			if ( ! empty( $tokens ) ) {
 				$html .= '<p class="form-row form-row-wide">';
@@ -547,25 +602,18 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 							$html .= ' (' . __( 'expires', 'everypay' ) . ' ' . str_pad($token['cc_month'], 2, '0', STR_PAD_LEFT) . '/' . $token['cc_year'] . ')';
 						}
 
-
 						$html .= '</label><br />';
 					}
-
 				}
-
 				$html .= $this->generate_add_or_manage_cards_html();
 				$html .= '</p>';
-
 			}
-
-
 		}
-
 		return $html;
 	}
 
-	public function get_user_tokens() {
-
+	public function get_user_tokens()
+	{
 		if ( ( true === $this->token_enabled ) && is_user_logged_in() ) {
 			$tokens = maybe_unserialize( get_user_meta( get_current_user_id(), '_wc_everypay_tokens', true ) );
 		}
@@ -573,7 +621,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 		if ( empty( $tokens ) ) {
 			$tokens = array( );
 		}
-
 
 		/*		$tokens = array(
 					array(
@@ -611,19 +658,17 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 				$tokens[ $key ]['active'] = true;
 			}
 		}
-
 		return $tokens;
 	}
 
 
-	public function remove_user_token( $token = '' ) {
-
+	public function remove_user_token($token = '')
+	{
 		$tokens = $this->get_user_tokens();
 
 		if ( ! empty( $tokens[ $token ] ) ) {
 
 			// handle removal of default card by possibly assigning one added before that
-
 			if ( isset( $tokens[ $token ]['default'] ) && true === $tokens[ $token ]['default'] ) {
 
 				unset( $tokens[ $token ] );
@@ -650,9 +695,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 			return (bool) update_user_meta( get_current_user_id(), '_wc_everypay_tokens', $tokens );
 
 		}
-
 		return false;
-
 	}
 
 	public function set_user_token_default( $token = '' ) {
@@ -1283,6 +1326,58 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway {
 
 	public function generate_account_page_html() {
 		// unused
+	}
+
+	/**
+	 * Update payment methods for gateway.
+	 *
+	 * @param array $methods
+	 * @return boolean
+	 */
+	public function update_payment_methods($methods)
+	{
+		$formated = $this->format_payment_methods($methods);
+		$this->update_option('payment_methods', $formated);
+	}
+
+	/**
+	 * Format payment methods form api.
+	 *
+	 * @param array $methods
+	 * @return array
+	 */
+	protected function format_payment_methods($methods)
+	{
+		$formated = array();
+		foreach ($methods as $method) {
+			$formated_method = new stdClass;
+			$formated_method->slug = $method->source;
+			$formated_method->name = $method->display_name;
+			$formated_method->country = $method->country_code;
+			$formated_method->logo = $method->logo_url;
+			$formated[] = $formated_method;
+		}
+		return $formated;
+	}
+
+	/**
+	 * Get account Id.
+	 *
+	 * @return string
+	 */
+	public function get_account_id()
+	{
+		return $this->account_id;
+	}
+
+	/**
+	 * Get API instance.
+	 *
+	 * @return WC_Everypay_Api
+	 */
+	public function get_api()
+	{
+		return $this->api;
 	}
 
 
