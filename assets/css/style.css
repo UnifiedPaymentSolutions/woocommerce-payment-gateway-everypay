@@ -1,0 +1,6 @@
+label.payment-method-option.hidden {
+    display: none;
+}
+label.payment-method-option.selected {
+    border: 1px green solid;
+}

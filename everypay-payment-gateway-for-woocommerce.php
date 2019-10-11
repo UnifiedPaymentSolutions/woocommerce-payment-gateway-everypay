@@ -204,12 +204,26 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 						// Payment methods schedule update action
 						add_action(self::$schedule_hook, array($this, 'update_payment_methods'));
 						$this->schedule_payment_methods_update();
+
+						add_action('wp_enqueue_scripts', array($this, 'scripts'));
 					}
 				} else {
 					add_action( 'admin_notices', array( $this, 'upgrade_notice' ) );
 
 					return false;
 				}
+			}
+		}
+
+		/**
+		 * Load required assets.
+		 *
+		 * @return void
+		 */
+		public function scripts()
+		{
+			if(is_checkout()) {
+				wp_enqueue_style($this->gateway_slug . '-style', $this->plugin_url() . '/assets/css/style.css', array(), '20191011');
 			}
 		}
 
@@ -441,6 +455,16 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		protected function get_gateway()
 		{
 			return WC()->payment_gateways->payment_gateways()[$this->gateway_slug];
+		}
+
+		/**
+		 * Get gateway instance.
+		 *
+		 * @return string
+		 */
+		public function get_gateway_slug()
+		{
+			return $this->gateway_slug;
 		}
 
 		/**
