@@ -95,6 +95,13 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		public $version = '0.9.6';
 
 		/**
+		 * Required woocommerce version.
+		 *
+		 * @var string
+		 */
+		protected $woocommerce_version = '3.0.0';
+
+		/**
 		 * The Gateway URL.
 		 *
 		 * @access public
@@ -109,6 +116,13 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @var    string
 		 */
 		public $doc_url = "https://every-pay.com/documentation-overview/";
+
+		/**
+		 * Wordpress schedule hook for automatic payment method updates.
+		 *
+		 * @var string
+		 */
+		protected static $schedule_hook = 'everypay_update_methods';
 
 		/**
 		 * Return an instance of this class.
@@ -172,19 +186,24 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 				return false;
 			} else {
 				// Check we have the minimum version of WooCommerce required before loading the gateway.
-				if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.2', '>=' ) ) {
-					if ( class_exists( 'WC_Payment_Gateway' ) ) {
+				if (defined('WC_VERSION') && version_compare(WC_VERSION, $this->woocommerce_version, '>=')) {
+					if (class_exists('WC_Payment_Gateway')) {
 
 						$this->includes();
+
+						add_filter('woocommerce_payment_gateways', array($this, 'add_gateway'));
+
+						/*
+						add_filter( 'woocommerce_currencies', array( $this, 'add_currency' ) );
+						add_filter( 'woocommerce_currency_symbol', array( $this, 'add_currency_symbol' ), 10, 2 );
+						*/
 
 						// Update payment methods ajax
 						add_action('wp_ajax_update_payment_methods', array($this, 'update_payment_methods'));
 
-						add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateway' ) );
-						/*
-									add_filter( 'woocommerce_currencies', array( $this, 'add_currency' ) );
-									add_filter( 'woocommerce_currency_symbol', array( $this, 'add_currency_symbol' ), 10, 2 );
-						*/
+						// Payment methods schedule update action
+						add_action(self::$schedule_hook, array($this, 'update_payment_methods'));
+						$this->schedule_payment_methods_update();
 					}
 				} else {
 					add_action( 'admin_notices', array( $this, 'upgrade_notice' ) );
@@ -195,7 +214,27 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		}
 
 		/**
-		 * Update payment methods via Ajax.
+		 * Maybe schedule payment methods update with wordpress schedule.
+		 *
+		 * @return void
+		 */
+		protected function schedule_payment_methods_update($value='')
+		{
+			if(!wp_next_scheduled(self::$schedule_hook)) {
+
+				$today = new DateTime();
+				$zone = new DateTimeZone('+0300');
+				$today->setTimezone($zone);
+				$today->setTime(17, 00);
+				$schedule_time = $today->getTimestamp();
+
+				wp_schedule_event($schedule_time, 'daily', self::$schedule_hook);
+			}
+		}
+
+		/**
+		 * Update payment methods.
+		 * Executed manually by ajax or by cron.
 		 *
 		 * @return void
 		 */
@@ -369,6 +408,30 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 			echo '<div class="updated woocommerce-message wc-connect"><p>' . sprintf( __( 'WooCommerce %s depends on version 2.2 and up of WooCommerce for this gateway to work! Please upgrade before activating.', 'payment-gateway-everypay' ), $this->name ) . '</p></div>';
 		}
 
+		/**
+		 * Plugin activation.
+		 *
+		 * @return void
+		 */
+		public static function activate()
+		{
+
+		}
+
+		/**
+		 * Plugin deactivation.
+		 *
+		 * @return void
+		 */
+		public static function deactivate()
+		{
+			$timestamp = wp_next_scheduled(self::$schedule_hook);
+			if($timestamp) {
+   				wp_unschedule_event($timestamp, self::$schedule_hook);
+			}
+		}
+
+		/** Helper functions ******************************************************/
 
 		/**
 		 * Get gateway instance.
@@ -379,8 +442,6 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		{
 			return WC()->payment_gateways->payment_gateways()[$this->gateway_slug];
 		}
-
-		/** Helper functions ******************************************************/
 
 		/**
 		 * Get the plugin url.
@@ -403,7 +464,10 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		}
 	} // end if class
 
-	add_action( 'plugins_loaded', array( 'WC_Everypay', 'get_instance' ), 0 );
+	add_action('plugins_loaded', array(WC_Everypay::class, 'get_instance'), 0);
+
+	register_activation_hook(__FILE__, array(WC_Everypay::class, 'activate'));
+	register_deactivation_hook(__FILE__, array(WC_Everypay::class, 'deactivate'));
 
 } // end if class exists.
 
@@ -415,3 +479,5 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 function WC_Everypay() {
 	return WC_Everypay::get_instance();
 }
+
+
