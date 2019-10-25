@@ -1,6 +1,7 @@
 <wpml-config>
     <admin-texts>
         <key name="woocommerce_everypay_settings">
+          <key name="title" />
           <key name="title_card" />
           <key name="title_bank" />
           <key name="title_alternative" />

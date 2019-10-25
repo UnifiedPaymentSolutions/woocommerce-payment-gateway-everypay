@@ -223,7 +223,16 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		public function scripts()
 		{
 			if(is_checkout()) {
-				wp_enqueue_style($this->gateway_slug . '-style', $this->plugin_url() . '/assets/css/style.css', array(), '20191011');
+				$style_handle = $this->gateway_slug . '-style';
+				$script_handle = $this->gateway_slug . '-script';
+
+				wp_enqueue_style($style_handle, $this->plugin_url() . '/assets/css/style.css', array(), '20191011');
+
+				wp_register_script($script_handle, $this->plugin_url() . '/assets/js/script.js', array('jquery'), '20191011', true);
+				wp_localize_script($script_handle, 'payment_method_settings', array(
+					'name' => $this->gateway_slug
+				));
+				wp_enqueue_script($script_handle);
 			}
 		}
 
@@ -483,8 +492,8 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @access public
 		 * @return string
 		 */
-		public function plugin_path() {
-			return untrailingslashit( plugin_dir_path( __FILE__ ) );
+		public function plugin_path($append = '') {
+			return untrailingslashit( plugin_dir_path( __FILE__ ) ) . ($append ? '/' . $append : '');
 		}
 	} // end if class
 

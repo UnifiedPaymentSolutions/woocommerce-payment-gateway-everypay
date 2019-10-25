@@ -24,6 +24,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	const _VERIFY_CANCEL = 3;   // payment cancelled by user
 
 	/**
+	 * @var int
+	 */
+	const TYPE_CARD = 1;
+	const TYPE_BANK = 2;
+	const TYPE_ALTER = 3;
+
+	/**
 	 * @var string
 	 */
 	protected $gateway_slug;
@@ -42,6 +49,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	protected $notify_url;
 	protected $log;
 	protected $payment_methods;
+
+	/**
+	 * @var string
+	 */
+	protected $card_title;
 
 	/**
 	 * @var string
@@ -119,7 +131,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		$this->enabled = $this->get_option( 'enabled' );
 
 		// Title/description for payment method selection page
-		$this->title = $this->get_option('title_card');
+		$this->title = $this->get_option('title');
 		$this->card_title = $this->get_option('title_card');
 		$this->bank_title = $this->get_option('title_bank');
 		$this->alternative_title = $this->get_option('title_alternative');
@@ -182,9 +194,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 */
 	public function script_manager()
 	{
-		// wp_register_script template ( $handle, $src, $deps, $ver, $in_footer );
-		wp_register_script( 'wc-everypay-iframe', plugins_url( '/assets/js/everypay-iframe-handler.js', dirname( __FILE__ ) ), array( 'jquery' ), false, true );
-		wp_enqueue_script( 'wc-everypay-iframe' );
+		wp_register_script('wc-everypay-iframe', plugins_url( '/assets/js/everypay-iframe-handler.js', dirname(__FILE__)), array('jquery'), '1.0', true);
+		wp_enqueue_script('wc-everypay-iframe');
 	}
 
 	/**
@@ -458,6 +469,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 				'action'	  => 'update_payment_methods',
 				'desc_tip'    => false,
 			),
+			'title'      => array(
+				'title'       => __( 'Title of Payment method', 'everypay' ),
+				'type'        => 'text',
+				'description' => __( 'This controls the title which the user sees on payment method.', 'everypay' ),
+				'default'     => __( 'Everypay', 'everypay' )
+			),
 			'title_card'      => array(
 				'title'       => __( 'Title of Card Payment', 'everypay' ),
 				'type'        => 'text',
@@ -539,26 +556,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		$method_languages = $this->get_method_languages();
 		
 		$args = array(
-			'method_id' => $this->id,
-			'token_hint' => !is_user_logged_in() && $this->token_enabled,
-			'token_enabled' => $this->token_enabled,
-			'token_ask' => $this->token_ask,
-			'tokens' => $this->get_user_tokens(),
 			'myaccount_page_id' => get_option('woocommerce_myaccount_page_id'),
-			'card_title' => $this->card_title,
-			'has_card' => $this->has_card_method(),
-			'bank_title' => $this->bank_title,
-			'bank_methods' => $this->get_bank_methods(),
-			'alternative_title' => $this->alternative_title,
-			'alternative_methods' => $this->get_alternative_methods(),
-
-			'method_languages' => $method_languages,
-			'default_language' => 'EE',
-
-			'methods' => $this->payment_methods,
+			'gateway' => $this
 		);
 
-		wc_get_template('payment-method.php', $args, '', WC_Everypay::get_instance()->plugin_path() . '/templates/');
+		wc_get_template('payment-methods.php', $args, '', WC_Everypay::get_instance()->plugin_path() . '/templates/');
 	}
 
 	/**
@@ -768,7 +770,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 
 		// iFrame should be used IF configured in settings OR doing payment with existing token
 		// (logic currently implemented in get_everypay_args)
-		if ( isset( $args['skin_name'] ) ) {
+		if (isset($args['skin_name'])) {
 			$this->script_manager();
 			echo $this->generate_iframe_form_html( $args, $order );
 		} else {
@@ -1281,48 +1283,29 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	}
 
 	/**
-	 * If credit card method exists
+	 * Get methods by type.
 	 *
-	 * @return boolean
+	 * @param int $type
+	 * @return object[]
 	 */
-	protected function has_card_method()
+	public function get_methods($type)
 	{
-		foreach ($this->payment_methods as $payment_method) {
-			if($payment_method->source == 'card') {
-				return true;
+		return array_filter($this->payment_methods, function($payment_method) use ($type) {
+
+			$card = strpos($payment_method->source, 'card') !== false;
+			$bank = strpos($payment_method->source, '_ob_') !== false;
+
+			switch ($type) {
+				case self::TYPE_CARD:
+					return $card;
+				case self::TYPE_BANK:
+					return $bank;
+				case self::TYPE_ALTER:
+					return !$card && !$bank;
+				default:
+					return true;
 			}
-		}
-		return false;
-	}
-
-	/**
-	 * Get list of banking methods.
-	 *
-	 * @return object[]
-	 */
-	protected function get_bank_methods()
-	{
-		return array_filter($this->payment_methods, function($payment_method) {
-			return strpos($payment_method->source, '_ob_') !== false;
 		});
-	}
-
-	/**
-	 * Get list of alternative methods.
-	 *
-	 * @return object[]
-	 */
-	protected function get_alternative_methods()
-	{
-		# TEST
-		$method = new stdClass;
-		$method->source = 'alternative';
-		$method->name = 'Alternative';
-		$method->country = '';
-		$method->logo = '';
-		return array($method);
-		# TODO
-		return array();
 	}
 
 	/**
@@ -1330,7 +1313,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 *
 	 * @return string[]
 	 */
-	protected function get_method_languages()
+	public function get_method_languages()
 	{
 		$languages = array();
 		$countries = WC()->countries->get_countries();
@@ -1379,7 +1362,26 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			$formated_method->logo = $method->logo_url;
 			$formated[] = $formated_method;
 		}
+
+		# TEST
+		$method = new stdClass;
+		$method->source = 'alternative';
+		$method->name = 'Alternative';
+		$method->country = '';
+		$method->logo = '';
+		$formated[] = $method;
+
 		return $formated;
+	}
+
+	/**
+	 * Get identificator.
+	 *
+	 * @return string
+	 */
+	public function get_id()
+	{
+		return $this->id;
 	}
 
 	/**
@@ -1402,5 +1404,63 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		return $this->api;
 	}
 
+	/**
+	 * Get card methods title.
+	 *
+	 * @return string
+	 */
+	public function get_card_title()
+	{
+		return $this->card_title;
+	}
 
+	/**
+	 * Get bank methods title.
+	 *
+	 * @return string
+	 */
+	public function get_bank_title()
+	{
+		return $this->bank_title;
+	}
+
+	/**
+	 * Get alternative methods title.
+	 *
+	 * @return string
+	 */
+	public function get_alternative_title()
+	{
+		return $this->alternative_title;
+	}
+
+	/**
+	 * Get default language.
+	 *
+	 * @return string
+	 */
+	public function get_default_language()
+	{
+		return 'EE';
+	}
+
+	/**
+	 * If token hint should be displayed.
+	 *
+	 * @return boolean
+	 */
+	public function get_token_hint()
+	{
+		return !is_user_logged_in() && $this->token_enabled;
+	}
+
+	/**
+	 * If tokens are enabled.
+	 *
+	 * @return boolean
+	 */
+	public function get_token_enabled()
+	{
+		return $this->token_enabled;
+	}
 } // end class.
