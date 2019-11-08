@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @class   WC_Gateway_Everypay
  * @extends WC_Payment_Gateway
- * @version 1.1.0
+ * @version 1.2.0
  * @package WooCommerce Payment Gateway Everypay/Includes
  * @author  EveryPay
  */
@@ -46,9 +46,17 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	protected $api_username;
 	protected $api_secret;
 	protected $debug;
-	protected $notify_url;
-	protected $log;
 	protected $payment_methods;
+
+	/**
+	 * @var string
+	 */
+	protected $notify_url;
+
+	/**
+	 * @var WC_Logger
+	 */
+	protected $log;
 
 	/**
 	 * @var string
@@ -96,21 +104,21 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 */
 	public function __construct()
 	{
-		$this->id         = 'everypay';
+		$this->id = 'everypay';
 
 		$this->gateway_slug = WC_Everypay()->get_gateway_slug();
 
 		$this->icon       = apply_filters( 'woocommerce_gateway_everypay_icon', plugins_url( '/assets/images/mastercard_visa.png', dirname( __FILE__ ) ) );
 		$this->has_fields = true;
 
-		$this->order_button_text = __( 'Pay by card', 'everypay' );
+		$this->order_button_text = __( 'Proceed to payment', 'everypay' );
 
 		// Title/description for WooCommerce admin
 		$this->method_title       = __( 'EveryPay', 'everypay' );
 		$this->method_description = __( 'Card payments are provided by EveryPay', 'everypay' );
 
 		// URL for callback / user redirect from gateway
-		$this->notify_url = WC()->api_request_url( 'WC_Gateway_Everypay' );
+		$this->notify_url = WC()->api_request_url('WC_Gateway_Everypay');
 
 		$this->supports = array( 'products' );
 
@@ -146,15 +154,16 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		$this->token_enabled    = $this->get_option( 'token_enabled' ) === 'yes' ? true : false;
 		$this->token_ask    = true;
 
+		// Log is created always for main transaction points - debug option adds more logging points during transaction
+		$this->debug = $this->get_option('debug');
+		$this->log = new WC_Everypay_Logger();
+		$this->log->set_debug($this->debug == 'yes');
+
 		// Initialize API
-		$this->api = new WC_Everypay_Api($this->api_endpoint, $this->api_username, $this->api_secret);
+		$this->api = new WC_Everypay_Api($this->api_endpoint, $this->api_username, $this->api_secret, WC_Everypay()->get_version(), $this->debug == 'yes');
 
 		// Payment methods to display in payment method
 		$this->payment_methods = $this->get_option('payment_methods', array());
-
-		// Log is created always for main transaction points - debug option adds more logging points during transaction
-		$this->debug = $this->get_option( 'debug' );
-		$this->log   = new WC_Logger();
 
 		// Hooks
 		if ( is_admin() ) {
@@ -646,6 +655,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		return isset($this->cc_types[$type]) ? $this->cc_types[ $type ] : '';
 	}
 
+	/**
+	 * @param string $token
+	 * @return boolean
+	 */
 	public function remove_user_token($token = '')
 	{
 		$tokens = $this->get_user_tokens();
@@ -682,6 +695,10 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		return false;
 	}
 
+	/**
+	 * @param string $token
+	 * @return boolean
+	 */
 	public function set_user_token_default( $token = '' ) {
 
 		$tokens = $this->get_user_tokens();
@@ -708,53 +725,62 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 * @access public
 	 *
 	 * @param  int $order_id
-	 *
 	 * @return array
 	 */
-	public function process_payment( $order_id ) {
-
+	public function process_payment($order_id)
+	{
 		$order = new WC_Order( $order_id );
 
-		if ( true === $this->token_enabled ) {
+		// Selected payment method
+		$method = $this->get_input_value('method');
+
+		$is_token = false;
+
+		if($is_token && true === $this->token_enabled) {
 
 			// expected in POST:
 			// 'wc_everypay_token' => '123456789abc123456789def',
 			// 'wc_everypay_tokenize_payment' => 'true',
 
-			if ( isset($_POST['wc_everypay_token']) && trim( $_POST['wc_everypay_token'] ) !== false ) {
-				update_post_meta( $order_id, '_wc_everypay_token', trim( $_POST['wc_everypay_token'] ) );
-			} else {
-				delete_post_meta( $order_id, '_wc_everypay_token' );
-			}
+			// if ( isset($_POST['wc_everypay_token']) && trim( $_POST['wc_everypay_token'] ) !== false ) {
+			// 	update_post_meta( $order_id, '_wc_everypay_token', trim( $_POST['wc_everypay_token'] ) );
+			// } else {
+			// 	delete_post_meta( $order_id, '_wc_everypay_token' );
+			// }
 
-			if ( true === $this->token_ask ) {
+			// if ( true === $this->token_ask ) {
 
-				if ( isset( $_POST['wc_everypay_tokenize_payment'] ) && trim( $_POST['wc_everypay_tokenize_payment'] ) !== false ) {
-					$tokenize = trim( $_POST['wc_everypay_tokenize_payment'] ) === 'true' ? true : false;
-					update_post_meta( $order_id, '_wc_everypay_tokenize_payment', $tokenize );
-				} else {
-					update_post_meta( $order_id, '_wc_everypay_tokenize_payment', false );
-				}
+			// 	if ( isset( $_POST['wc_everypay_tokenize_payment'] ) && trim( $_POST['wc_everypay_tokenize_payment'] ) !== false ) {
+			// 		$tokenize = trim( $_POST['wc_everypay_tokenize_payment'] ) === 'true' ? true : false;
+			// 		update_post_meta( $order_id, '_wc_everypay_tokenize_payment', $tokenize );
+			// 	} else {
+			// 		update_post_meta( $order_id, '_wc_everypay_tokenize_payment', false );
+			// 	}
 
-			} else {
-				update_post_meta( $order_id, '_wc_everypay_tokenize_payment', true );
-			}
-
+			// } else {
+			// 	update_post_meta( $order_id, '_wc_everypay_tokenize_payment', true );
+			// }
+		} else {
+			error_log('data: ' . print_r($_POST,true));
+			error_log('language: ' . $this->get_input_value('language'));
+			$response = $this->get_api()->payment_oneoff($order);
 		}
+
+		// API request failed, return error
+		if(isset($response->error)) {
+			wc_add_notice(__('Payment error:', 'everypay') . ' ' . $response->error, 'error');
+			return;
+		}
+
+		$this->log->debug(ucfirst($this->gateway_slug) . ' selected for order #' . $order_id);
+		die('TEST');
 
 		// Redirect to receipt page for automatic post to external gateway
-
-		if ( $this->debug == 'yes' ) {
-			$this->log->add( $this->id, 'EveryPay selected for order #' . $order_id );
-		}
-
 		return array(
 			'result'   => 'success',
 			'redirect' => $order->get_checkout_payment_url( true )
 		);
-
 	}
-
 
 	/**
 	 * Output redirect or iFrame form on receipt page
@@ -1462,5 +1488,49 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	public function get_token_enabled()
 	{
 		return $this->token_enabled;
+	}
+
+	/**
+	 * Get name for input in payment method form.
+	 *
+	 * @param string $name
+	 * @return string
+	 */
+	public function get_input_name($name)
+	{
+		return $this->id . '[' . $name . ']';
+	}
+
+	/**
+	 * Get value from post.
+	 * Scopes values only for payment method options unless directed otherwise.
+	 *
+	 * @param string $name
+	 * @param boolean $scope - get values from payment method options
+	 * @return mixed
+	 */
+	public function get_input_value($name, $scope = true)
+	{
+		return isset($_POST[$this->id][$name]) ? trim($_POST[$this->id][$name]) : null;
+	}
+
+	/**
+	 * Get notify url.
+	 *
+	 * @return string
+	 */
+	public function get_notify_url()
+	{
+		return $this->notify_url;
+	}
+
+	/**
+	 * Get locale used for gateway.
+	 *
+	 * @return string
+	 */
+	public function get_locale()
+	{
+		return $this->locale;
 	}
 } // end class.

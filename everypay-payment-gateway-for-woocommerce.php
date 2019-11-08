@@ -3,7 +3,7 @@
  * Plugin Name:       EveryPay payment gateway for WooCommerce
  * Plugin URI:        https://every-pay.com/documentation-overview/
  * Description:       Payment gateway for adding EveryPay (https://every-pay.com/) credit card payments support to WooCommerce.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Author:            EveryPay AS
  * Author URI:        https://every-pay.com/documentation-overview/
  * Requires at least: 4.4
@@ -92,7 +92,7 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @access public
 		 * @var    string
 		 */
-		public $version = '0.9.6';
+		public $version = '1.2.0';
 
 		/**
 		 * Required woocommerce version.
@@ -273,7 +273,7 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 				$type = 'error';
 				$message = esc_html__('Processing account not defined!', 'everypay');
 			} else {
-				$response = $api->processingAccount($gateway->get_account_id());
+				$response = $api->processing_account($gateway);
 
 				if(empty($response)) {
 					$type = 'error';
@@ -379,10 +379,12 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @access private
 		 * @return void
 		 */
-		private function includes() {
-			require_once( 'includes/class-everypay-api.php' );
-			require_once( 'includes/class-wc-gateway-everypay.php' );
-			require_once( 'includes/class-wc-gateway-everypay-account.php' );
+		private function includes()
+		{
+			require_once('includes/class-wc-everypay-logger.php');
+			require_once('includes/class-wc-everypay-api.php');
+			require_once('includes/class-wc-gateway-everypay.php');
+			require_once('includes/class-wc-gateway-everypay-account.php');
 		}
 
 		/**
@@ -474,6 +476,16 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		public function get_gateway_slug()
 		{
 			return $this->gateway_slug;
+		}
+
+		/**
+		 * Get plugin version.
+		 *
+		 * @return string
+		 */
+		public function get_version()
+		{
+			return $this->version;
 		}
 
 		/**
