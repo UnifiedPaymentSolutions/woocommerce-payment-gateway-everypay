@@ -57,7 +57,6 @@ var expandIframe = function () {
 var shrinked_iframe_data;
 
 var iframe = jQuery('#wc_everypay_iframe');
-
 window.addEventListener('message', function (event) {
 
     if (event.origin !== wc_everypay_params.uri) {
@@ -115,8 +114,6 @@ window.addEventListener('message', function (event) {
 }, false);
 
 window.onload = function () {
-    document.getElementById("wc_everypay_iframe_form").submit();
-    
     everypay_iframe_default_width = jQuery('#wc_everypay_iframe').width();
     everypay_iframe_default_height = jQuery('#wc_everypay_iframe').height();
     everypay_iframe_size_check();

@@ -1,6 +1,9 @@
 label.payment-method-option.hidden {
     display: none;
 }
-label.payment-method-option.selected {
+label.payment-method-option input, label.payment-token-option input {
+    display: none;
+}
+label.payment-method-option.selected, label.payment-token-option.selected {
     border: 1px green solid;
 }

@@ -8,13 +8,15 @@ function PaymentMethodsSelect(method_name)
 {
     var _selectors = {
         wrapper: 'li.payment_method_' + method_name,
-        method_labels: 'label.payment-method-option',
+        labels: 'label.payment-method-option, label.payment-token-option',
         method_inputs: 'label.payment-method-option input',
+        token_inputs: 'label.payment-token-option input',
         language_inputs: '.method-languages input'
     };
 
     var _listeners = {
         method_inputs: undefined,
+        token_inputs: undefined,
         language_inputs: undefined
     };
 
@@ -29,12 +31,13 @@ function PaymentMethodsSelect(method_name)
             country = radio.value;
 
         this.unselect();
+        jQuery(_selectors.token_inputs, _selectors.wrapper).prop('checked', false);
         jQuery(_selectors.method_inputs, _selectors.wrapper).prop('checked', false).each(function() {
             var language = jQuery(this).data('language');
             if(!language || language == country) {
-                jQuery(this).parents(_selectors.method_labels).removeClass('hidden');
+                jQuery(this).parents(_selectors.labels).removeClass('hidden');
             } else {
-                jQuery(this).parents(_selectors.method_labels).addClass('hidden');
+                jQuery(this).parents(_selectors.labels).addClass('hidden');
             }
         });
     };
@@ -48,7 +51,7 @@ function PaymentMethodsSelect(method_name)
     this.select = function(radio) {
         this.unselect();
         if(radio.checked) {
-            jQuery(radio).parents(_selectors.method_labels).addClass('selected');
+            jQuery(radio).parents(_selectors.labels).addClass('selected');
         }
     };
 
@@ -58,7 +61,7 @@ function PaymentMethodsSelect(method_name)
      * @return void
      */
     this.unselect = function() {
-        jQuery(_selectors.method_labels, _selectors.wrapper).removeClass('selected');
+        jQuery(_selectors.labels, _selectors.wrapper).removeClass('selected');
     };
 
     /**
@@ -80,6 +83,9 @@ function PaymentMethodsSelect(method_name)
         if(_listeners.method_inputs) {
             _listeners.method_inputs.unbind('change');
         }
+        if(_listeners.token_inputs) {
+            _listeners.token_inputs.unbind('change');
+        }
         if(_listeners.language_inputs) {
             _listeners.language_inputs.unbind('change');
         }
@@ -92,8 +98,14 @@ function PaymentMethodsSelect(method_name)
      */
     this.listeners = function() {
         var self = this;
-
+ 
         _listeners.method_inputs = jQuery(_selectors.method_inputs, _selectors.wrapper).on('change', function(event) {
+            jQuery(_selectors.token_inputs, _selectors.wrapper).prop('checked', false);
+            self.select.call(self, this);
+        });
+
+        _listeners.token_inputs = jQuery(_selectors.token_inputs, _selectors.wrapper).on('change', function(event) {
+            jQuery(_selectors.method_inputs, _selectors.wrapper).prop('checked', false);
             self.select.call(self, this);
         });
 

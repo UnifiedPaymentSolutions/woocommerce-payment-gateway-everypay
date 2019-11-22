@@ -12,6 +12,11 @@ class WC_Everypay_Api
     const GET = 'get';
 
     /**
+     * @var string
+     */
+    const AGREEMENT_UNSCHEDULED = 'unscheduled';
+
+    /**
      * @var int
      */
     const DECIMALS = 2;
@@ -70,32 +75,25 @@ class WC_Everypay_Api
             'api_username' => $this->api_username,
             'account_name' => $gateway->get_account_id(),
             'amount' => number_format($order->get_total(), self::DECIMALS, '.', ''),
-            'token_agreement' => 'unscheduled', # with token
             'order_reference' => $order->get_order_number(),
-            'nonce' => 'TODO', # chatis midagi
+            'token_agreement' => self::AGREEMENT_UNSCHEDULED,
+            'nonce' => $this->nonce(),
             'email' => $order->get_billing_email(),
             'customer_ip' => $order->get_customer_ip_address(),
-            'customer_url' => $gateway->get_notify_url(),
-            'billing_city' => $order->get_billing_city(),
-            'billing_country' => $order->get_billing_country(),
-            'billing_line1' => $order->get_billing_address_1(),
-            'billing_line2' => $order->get_billing_address_2(),
-            'billing_line3' => '',
-            'billing_code' => wc_format_postcode($order->get_billing_postcode(), $order->get_billing_country()),
-            'billing_state' => $order->get_billing_state(),
-            'shipping_city' => $order->get_shipping_city(),
-            'shipping_country' => $order->get_shipping_country(),
-            'shipping_line1' => $order->get_shipping_address_1(),
-            'shipping_line2' => $order->get_shipping_address_2(),
-            'shipping_line3' => '',
-            'shipping_code' => wc_format_postcode($order->get_shipping_postcode(), $order->get_shipping_country()),
-            'shipping_state' => $order->get_shipping_state(),
+            'customer_url' => $gateway->get_notify_url(array('order_reference' => $order->get_id(), 'redirect' => 1)),
+            'preferred_country' => $order->get_meta(WC_Gateway_Everypay::META_COUNTRY),
             'locale' => $gateway->get_locale(),
-            'request_token' => 'TODO',
-            'timestamp' => 'TODO',
-            'skin_name' => 'TODO',
+            'request_token' => $gateway->get_token_enabled(),
+            'timestamp' => get_date_from_gmt(current_time('mysql', true), 'c'),
             'integration_details' => $this->get_integration()
         );
+
+        $data = array_merge($data, $this->get_billing_fields($order));
+        $data = array_merge($data, $this->get_shipping_fields($order));
+
+        if($gateway->get_payment_form() == WC_Gateway_Everypay::FORM_IFRAME) {
+            $data['skin_name'] = $gateway->get_skin_name();
+        }
 
         return $this->request('payments', 'oneoff', $data, self::POST);
     }
@@ -103,17 +101,43 @@ class WC_Everypay_Api
     /**
      * Initiate CIT payment.
      *
+     * @param Order $order
+     * @param WC_Gateway_Everypay $gateway
      * @return array
      */
-    public function payment_cit()
+    public function payment_cit($order, $gateway)
     {
         $data = array(
             'api_username' => $this->api_username,
-            /* ... */
+            'account_name' => $gateway->get_account_id(),
+            'amount' => number_format($order->get_total(), self::DECIMALS, '.', ''),
+            'token_agreement' => self::AGREEMENT_UNSCHEDULED,
+            'order_reference' => $order->get_order_number(),
+            'nonce' => $this->nonce(),
+            'email' => $order->get_billing_email(),
+            'customer_ip' => $order->get_customer_ip_address(),
+            'customer_url' => $gateway->get_notify_url(array('order_reference' => $order->get_id(), 'redirect' => 1)),
+            'timestamp' => get_date_from_gmt(current_time('mysql', true), 'c'),
+            'token' => $order->get_meta(WC_Gateway_Everypay::META_TOKEN),
             'integration_details' => $this->get_integration()
         );
 
+        $data = array_merge($data, $this->get_billing_fields($order));
+
         return $this->request('payments', 'cit', $data, self::POST);
+    }
+
+    /**
+     * Get order status.
+     *
+     * @param Order $order
+     * @return array
+     */
+    public function payment_status($order)
+    {
+        return $this->request('payments', $order->get_meta(WC_Gateway_Everypay::META_REFERENCE), array(
+            'api_username' => $this->api_username
+        ), self::GET);
     }
 
     /**
@@ -142,15 +166,15 @@ class WC_Everypay_Api
     {
         $url = $this->api_url . '/' . $endpoint;
 
+        if($parameter) {
+            $url .= '/' . $parameter;
+        }
+        
         $this->log->debug('API request: ' . wc_print_r(array(
             'url' => $url,
             'method' => $method,
             'data' => $this->mask_data($data)
         ), true));
-
-        if($parameter) {
-            $url .= '/' . $parameter;
-        }
 
         if($method == self::GET) {
             $url .= '?' . http_build_query($data);
@@ -172,7 +196,7 @@ class WC_Everypay_Api
         );
 
         if($method == self::POST) {
-            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
+            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
         }
 
         $result = curl_exec($curl);
@@ -183,6 +207,48 @@ class WC_Everypay_Api
         $this->log->debug('API response: ' . wc_print_r($decoded, true));
 
         return $decoded;
+    }
+
+    /**
+     * Get billing fields.
+     *
+     * @param Order $order
+     * @return array
+     */
+    protected function get_billing_fields($order)
+    {
+        $fields = array(
+            'billing_city' => $order->get_billing_city(),
+            'billing_country' => $order->get_billing_country(),
+            'billing_line1' => $order->get_billing_address_1(),
+            'billing_line2' => $order->get_billing_address_2(),
+            'billing_line3' => '',
+            'billing_code' => wc_format_postcode($order->get_billing_postcode(), $order->get_billing_country()),
+            'billing_state' => $order->get_billing_state(),
+        );
+
+        return array_filter($fields);
+    }
+
+    /**
+     * Get shipping fields.
+     *
+     * @param Order $order
+     * @return array
+     */
+    protected function get_shipping_fields($order)
+    {
+        $fields = array(
+            'shipping_city' => $order->get_shipping_city(),
+            'shipping_country' => $order->get_shipping_country(),
+            'shipping_line1' => $order->get_shipping_address_1(),
+            'shipping_line2' => $order->get_shipping_address_2(),
+            'shipping_line3' => '',
+            'shipping_code' => wc_format_postcode($order->get_shipping_postcode(), $order->get_shipping_country()),
+            'shipping_state' => $order->get_shipping_state(),
+        );
+
+        return array_filter($fields);
     }
 
     /**
@@ -218,7 +284,7 @@ class WC_Everypay_Api
     protected function mask_data($data)
     {
         $mask = array(
-            'email' => '***',
+            'email' => '***@***',
             'billing_city' => '***',
             'billing_country' => '***',
             'billing_line1' => '***',
@@ -236,5 +302,19 @@ class WC_Everypay_Api
         );
 
         return array_merge($data, array_intersect_key($mask, $data));
+    }
+
+    /**
+     * Generate nonce.
+     *
+     * @return string
+     */
+    protected function nonce()
+    {
+        $random = '';
+        for ($i = 0; $i < 32; $i++) {
+            $random .= chr(mt_rand(0, 255));
+        }
+        return hash('sha512', $random);
     }
 }

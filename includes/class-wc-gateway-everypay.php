@@ -33,12 +33,28 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	/**
 	 * @var string
 	 */
+	const FORM_IFRAME = 'iframe';
+	const FORM_REDIRECT = 'redirect';
+
+	/**
+	 * @var string
+	 */
+	const META_METHOD = '_wc_everypay_payment_method';
+	const META_TOKEN = '_wc_everypay_token';
+	const META_COUNTRY = '_wc_everypay_preferred_country';
+	const META_LINK = '_wc_everypay_payment_link';
+	const META_REFERENCE = '_wc_everypay_payment_reference';
+	const META_STATUS = '_wc_everypay_payment_status';
+	const META_TOKENS = '_wc_everypay_tokens';
+
+	/**
+	 * @var string
+	 */
 	protected $gateway_slug;
 
 	protected $account_id;
 	protected $transaction_type;
 	protected $payment_form;
-	protected $skin_name;
 	protected $token_enabled;
 	protected $token_ask;
 	protected $sandbox;
@@ -47,6 +63,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	protected $api_secret;
 	protected $debug;
 	protected $payment_methods;
+
+	/**
+	 * @var string
+	 */
+	protected $skin_name;
 
 	/**
 	 * @var string
@@ -175,24 +196,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		}
 
 		// Receipt page creates POST to gateway or hosts iFrame
-		add_action( 'woocommerce_receipt_' . $this->id, array( $this, 'receipt_page' ) );
-
-		// If receipt page hosts iFrame and is being shown enqueue required JS
-
-		// moving registering scripts to iFrame receipt_page so they can be easily loaded for redirect mode's hidden iframe
-		/*	
-		if ( is_wc_endpoint_url( 'order-pay' ) ) {
-			if ( $this->payment_form === 'iframe' ) {
-				add_action( 'wp_enqueue_scripts', array( $this, 'script_manager' ) );
-			}
-		}
-		*/
+		add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
 
 		// Add returning user / callback handler to WC API
-		add_action( 'woocommerce_api_wc_gateway_' . $this->id, array( $this, 'everypay_return_handler' ) );
+		add_action('woocommerce_api_wc_gateway_' . $this->id, array($this, 'everypay_callback_handler'));
 
 		// Add token management to user's account page
-		add_action( 'woocommerce_after_my_account', array( $this, 'generate_account_page_html' ) );
+		add_action('woocommerce_after_my_account', array($this, 'generate_account_page_html'));
 	}
 
 	/**
@@ -339,7 +349,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		}
 	}
 
-
 	/**
 	 * Check if this gateway is enabled.
 	 *
@@ -404,6 +413,48 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	}
 
 	/**
+	 * Generate Text Input HTML.
+	 *
+	 * @param string $key Field key.
+	 * @param array  $data Field data.
+	 * @since  1.0.0
+	 * @return string
+	 */
+	public function generate_info_html($key, $data) {
+		$field_key = $this->get_field_key( $key );
+		$defaults  = array(
+			'title'             => '',
+			'info'             => '',
+			'class'             => '',
+			'css'               => '',
+			'type'              => 'text',
+			'desc_tip'          => false,
+			'description'       => '',
+			'custom_attributes' => array(),
+		);
+
+		$data = wp_parse_args($data, $defaults);
+
+		ob_start();
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label><?php echo wp_kses_post( $data['title'] ); ?> <?php echo $this->get_tooltip_html( $data ); // WPCS: XSS ok. ?></label>
+			</th>
+			<td class="forminp">
+				<fieldset>
+					<legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
+					<span class="input-text regular-input <?php echo esc_attr( $data['class'] ); ?>" id="<?php echo esc_attr( $field_key ); ?>" style="<?php echo esc_attr( $data['css'] ); ?>"><?php echo wp_kses_post( $data['info'] ); ?></span>
+					<?php echo $this->get_description_html( $data ); // WPCS: XSS ok. ?>
+				</fieldset>
+			</td>
+		</tr>
+		<?php
+
+		return ob_get_clean();
+	}
+
+	/**
 	 * Initialise Gateway Settings Form Fields
 	 *
 	 * @access public
@@ -417,7 +468,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		}
 
 		$this->form_fields = array(
-			'enabled'              => array(
+			'enabled'         => array(
 				'title'       => __( 'Enable/Disable', 'everypay' ),
 				'label'       => __( 'Enable EveryPay', 'everypay' ),
 				'type'        => 'checkbox',
@@ -434,6 +485,14 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 				'description' => __( "With TEST Gateway Url use the payment gateway in test mode using test API credentials (real payments will not be taken).", 'everypay' ),
 				'default'     => 'no',
 				'desc_tip'    => false,
+			),
+			'callback_info'  => array(
+				'title'       => __('Callback Notification URL', 'everypay'),
+				'info' 	   	  => $this->notify_url,
+				'type'        => 'info',
+				'disabled'    => true,
+				'desc_tip'    => false,
+				'description' => __('Add this URL to Callback Notification URL in EveryPay merchant portal.', 'everypay')
 			),
 			'api_username'         => array(
 				'title'       => __( 'API username', 'everypay' ),
@@ -506,8 +565,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 				'title'       => __( 'Payment Integration Variants ', 'everypay' ),
 				'type'        => 'select',
 				'options'     => array(
-					'redirect' => __( 'Redirect to hosted form on EveryPay server', 'everypay' ),
-					'iframe'   => __( 'iFrame payment form integrated into checkout', 'everypay' ),
+					self::FORM_REDIRECT => __( 'Redirect to hosted form on EveryPay server', 'everypay' ),
+					self::FORM_IFRAME => __( 'iFrame payment form integrated into checkout', 'everypay' ),
 				),
 				'description' => __( "Hosted form on EveryPay server is the secure solution of choice, while iFrame provides better customer experience (https strongly advised)", 'everypay' ),
 				'default'     => 'redirect',
@@ -729,57 +788,119 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 */
 	public function process_payment($order_id)
 	{
-		$order = new WC_Order( $order_id );
+		$order = wc_get_order($order_id);
 
-		// Selected payment method
-		$method = $this->get_input_value('method');
+		if(!$this->valid_method()) {
+			wc_add_notice(__('Payment method not selected!', 'everypay'), 'error');
+			return;
+		}
 
-		$is_token = false;
+		$this->order_add_payment_data($order);
+
+		$is_token = !$order->get_meta(self::META_METHOD) && $order->get_meta(self::META_TOKEN);
 
 		if($is_token && true === $this->token_enabled) {
-
-			// expected in POST:
-			// 'wc_everypay_token' => '123456789abc123456789def',
-			// 'wc_everypay_tokenize_payment' => 'true',
-
-			// if ( isset($_POST['wc_everypay_token']) && trim( $_POST['wc_everypay_token'] ) !== false ) {
-			// 	update_post_meta( $order_id, '_wc_everypay_token', trim( $_POST['wc_everypay_token'] ) );
-			// } else {
-			// 	delete_post_meta( $order_id, '_wc_everypay_token' );
-			// }
-
-			// if ( true === $this->token_ask ) {
-
-			// 	if ( isset( $_POST['wc_everypay_tokenize_payment'] ) && trim( $_POST['wc_everypay_tokenize_payment'] ) !== false ) {
-			// 		$tokenize = trim( $_POST['wc_everypay_tokenize_payment'] ) === 'true' ? true : false;
-			// 		update_post_meta( $order_id, '_wc_everypay_tokenize_payment', $tokenize );
-			// 	} else {
-			// 		update_post_meta( $order_id, '_wc_everypay_tokenize_payment', false );
-			// 	}
-
-			// } else {
-			// 	update_post_meta( $order_id, '_wc_everypay_tokenize_payment', true );
-			// }
+			$response = $this->get_api()->payment_cit($order, $this);
 		} else {
-			error_log('data: ' . print_r($_POST,true));
-			error_log('language: ' . $this->get_input_value('language'));
-			$response = $this->get_api()->payment_oneoff($order);
+			$response = $this->get_api()->payment_oneoff($order, $this);
 		}
 
 		// API request failed, return error
 		if(isset($response->error)) {
-			wc_add_notice(__('Payment error:', 'everypay') . ' ' . $response->error, 'error');
+			wc_add_notice(__('Payment error:', 'everypay') . ' ' . $response->error->message, 'error');
 			return;
 		}
 
-		$this->log->debug(ucfirst($this->gateway_slug) . ' selected for order #' . $order_id);
-		die('TEST');
+		$this->order_add_respone_data($order, $response);
+		$order->save();
 
-		// Redirect to receipt page for automatic post to external gateway
+		$this->log->debug(ucfirst($this->gateway_slug) . ' selected for order #' . $order->get_id());
+
+		$redirect = $this->use_iframe($order) ? $order->get_checkout_payment_url(true) : $order->get_meta(self::META_LINK);
+		$this->log->debug('Redirect to: ' . $redirect);
+
+		// Redirect to receipt page for iframe payment
 		return array(
-			'result'   => 'success',
-			'redirect' => $order->get_checkout_payment_url( true )
+			'result' => 'success',
+			'redirect' => $redirect
 		);
+	}
+
+	/**
+	 * Validate method selection.
+	 *
+	 * @return boolean
+	 */
+	protected function valid_method()
+	{
+		return $this->get_input_value('method', false) || $this->get_input_value('token', false);
+	}
+
+	/**
+	 * Save payment method selection data to order.
+	 *
+	 * @param WC_Order $order
+	 * @return
+	 */
+	protected function order_add_payment_data($order)
+	{
+		$method = $this->get_input_value('method');
+		$token = $this->get_input_value('token');
+		$preferred_country = $this->get_input_value('preferred_country');
+
+		$order->update_meta_data(self::META_METHOD, $method);
+		$order->update_meta_data(self::META_TOKEN, $token);
+		$order->update_meta_data(self::META_COUNTRY, $preferred_country);
+	}
+
+	/**
+	 * Save response data to order.
+	 *
+	 * @param WC_Order $order
+	 * @param object $respone
+	 * @return
+	 */
+	protected function order_add_respone_data($order, $response)
+	{
+		$payment_link = $this->extract_payment_link($response, $order->get_meta(self::META_METHOD));
+
+		$order->update_meta_data(self::META_LINK, $payment_link);
+		$order->update_meta_data(self::META_REFERENCE, $response->payment_reference);
+	}
+
+	/**
+	 * Extract payment link from response.
+	 *
+	 * @param array $respone
+	 * @param string|null $method
+	 * @return string
+	 */
+	protected function extract_payment_link($response, $method = null)
+	{
+		if(isset($response->payment_link)) {
+			if($method) {
+				foreach ($response->payment_methods as $payment_method) {
+					if($payment_method->source == $method) {
+						return $payment_method->payment_link;
+					}
+				}
+			}
+			return $response->payment_link;
+		}
+		return null;
+	}
+
+	/**
+	 * Whether to use iframe to payment.
+	 *
+	 * @param WC_Order $order
+	 * @return boolean
+	 */
+	protected function use_iframe($order)
+	{
+		$method = $order->get_meta(self::META_METHOD);
+		return $this->get_payment_form() == self::FORM_IFRAME &&
+			(in_array($method, $this->get_methods_sources(self::TYPE_CARD)) || $order->get_meta(self::META_TOKEN));
 	}
 
 	/**
@@ -789,228 +910,103 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 *
 	 * @param $order_id
 	 */
-	public function receipt_page( $order_id ) {
+	public function receipt_page($order_id) 
+	{
+		$order = new WC_Order($order_id);
 
-		$order = wc_get_order( $order_id );
-		$args  = $this->get_everypay_args( $order );
+		$this->script_manager();
 
-		// iFrame should be used IF configured in settings OR doing payment with existing token
-		// (logic currently implemented in get_everypay_args)
-		if (isset($args['skin_name'])) {
-			$this->script_manager();
-			echo $this->generate_iframe_form_html( $args, $order );
-		} else {
-			// defaults to redirect
-			echo $this->generate_redirect_form_html( $args, $order );
-		}
-	}
-
-
-	/**
-	 * Prepare data package for signing
-	 *
-	 * @param WC_Order $order
-	 *
-	 * @return array
-	 */
-	protected function get_everypay_args( $order ) {
-
-		if ( defined( 'ICL_LANGUAGE_CODE' ) ) {
-			$language = ICL_LANGUAGE_CODE;
-		} else {
-			switch ( get_locale() ) {
-				case 'et_EE':
-				case 'et':
-					$language = 'et';
-					break;
-				case 'ru_RU':
-				case 'ru':
-					$language = 'ru';
-					break;
-				default:
-					$language = 'en';
-					break;
-			}
-		}
-
-		$args = array(
-			'account_id'        => $this->account_id,
-			'amount'            => number_format( $order->get_total(), 2, '.', '' ),
-			'api_username'      => $this->api_username,
-			'billing_address'   => $order->get_billing_address_1(),
-			'billing_city'      => $order->get_billing_city(),
-			'billing_country'   => $order->get_billing_country(),
-			'billing_postcode'  => $order->get_billing_postcode(),
-			'callback_url'      => WC()->api_request_url( 'WC_Gateway_Everypay' ),
-			'customer_url'      => WC()->api_request_url( 'WC_Gateway_Everypay' ),
-			'delivery_address'  => $order->get_shipping_address_1(),
-			'delivery_city'     => $order->get_shipping_city(),
-			'delivery_country'  => $order->get_shipping_country(),
-			'delivery_postcode' => $order->get_shipping_postcode(),
-			'email'             => $order->get_billing_email(),
-			'nonce'             => uniqid( '', true ),
-			'order_reference'   => $order->get_id() . '_' . date( DATE_W3C ),
-			'request_cc_token'  => '0',
-			'timestamp'         => time(),
-			'transaction_type'  => $this->transaction_type,
-			'user_ip'           => $_SERVER['REMOTE_ADDR'],
+		$params = array(
+			'uri'       => 'https://' . parse_url($this->api_endpoint, PHP_URL_HOST),
+			'completed' => $this->get_return_url($order),
+			'sandbox'   => $this->sandbox,
 		);
+		wp_localize_script('wc-everypay-iframe', 'wc_everypay_params', $params);
 
-		// handle iFrame skin
-		if ( $this->payment_form === 'iframe' ) {
-			$args['skin_name'] = $this->skin_name;
-		}
+		$payment_link = $order->get_meta(self::META_LINK);
+		echo '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="358" height="409" style="border: 0;" sandbox="allow-top-navigation allow-scripts allow-forms" src="' . $payment_link . '"></iframe>';
 
-		// handle request / provide token
-		if ( $this->token_enabled ) {
-			$token = get_post_meta( $order->get_id(), '_wc_everypay_token', true );
-
-			if ( empty ( $token ) || ( $token === 'add_new' ) ) {
-				if ( true === $this->token_ask ) {
-					$args['request_cc_token'] = (bool) get_post_meta( $order->get_id(), '_wc_everypay_tokenize_payment', true ) ? '1' : '0';
-				} else {
-					$args['request_cc_token'] = '1';
-				}
-			} else {
-				$args['cc_token'] = $token;
-				// payments with existing token are always (hidden) iFrame payments
-				$args['skin_name'] = $this->skin_name;
-			}
-		}
-
-		// prepare and sign fields string
-		$args['hmac_fields'] = '';
-
-		ksort( $args );
-
-		$args['hmac_fields'] = implode( ',', array_keys( $args ) );
-
-		$args['hmac'] = $this->sign_everypay_request( $this->prepare_everypay_string( $args ) );
-
-		$args['locale'] = $language;
-
-		if ( $this->debug == 'yes' ) {
-			$this->log->add( $this->id, 'EveryPay payment request prepared and signed. ' . print_r( $args, true ) );
-		}
-
-		return $args;
 	}
 
 	/**
-	 * Prepare EveryPay data package for signing
+	 * Process automatic callback from everypay
 	 *
-	 * @param array $args
-	 *
-	 * @return string
+	 * @return void
 	 */
-	protected function prepare_everypay_string( array $args ) {
-		$arr = array( );
-		ksort( $args );
-		foreach ( $args as $k => $v ) {
-			$arr[] = $k . '=' . $v;
-		}
-
-		$str = implode( '&', $arr );
-
-		return $str;
-	}
-
-	/**
-	 * Sign EveryPay payment request
-	 *
-	 * @param string $request
-	 *
-	 * @return string
-	 */
-
-	protected function sign_everypay_request( $request ) {
-		return hash_hmac( 'sha1', $request, $this->api_secret );
-	}
-
-	/**
-	 * Process returning user or automatic callback
-	 *
-	 */
-
-	public function everypay_return_handler() {
-
-		global $woocommerce;
+	public function everypay_callback_handler()
+	{
 		@ob_clean();
 
 		header( 'HTTP/1.1 200 OK' );
 
-		$_REQUEST = stripslashes_deep( $_REQUEST );
-
-		if ( ! isset( $_REQUEST['api_username'] ) ||
-		     ! isset( $_REQUEST['nonce'] ) ||
-		     ! isset( $_REQUEST['order_reference'] ) ||
-		     ! isset( $_REQUEST['payment_state'] ) ||
-		     ! isset( $_REQUEST['timestamp'] ) ||
-		     ! isset( $_REQUEST['transaction_result'] )
-		) {
-			die();
-		}
-
-		$order_explosive = explode( '_', $_REQUEST['order_reference'] );
-
-		$order_id = absint( $order_explosive[0] );
-		$order    = wc_get_order( $order_id );
-
-		if ( ! $order ) {
-			$this->log->add( $this->id, 'Invalid order ID received: ' . print_r( $order_id, true ) );
-			die( "Order was lost during payment attempt - please inform merchant about WooCommerce EveryPay gateway problem." );
-		}
-
-		if ( $this->debug == 'yes' ) {
-			$this->log->add( $this->id, 'EveryPay return handler started. ' . print_r( $_REQUEST, true ) );
-			$this->log->add( $this->id, 'Order ' . var_export( $order, true ) );
-		}
-
-		$this->change_language( $order->get_id() );
-
-		$order_complete = $this->process_order_status( $order );
-
-		if ( self::_VERIFY_SUCCESS === $order_complete ) {
-			$this->log->add( $this->id, 'Order complete' );
-			$redirect_url = $this->get_return_url( $order );
-
+		$input = file_get_contents('php://input');
+		if($input) {
+			parse_str($input, $data);
+			$order_id = $data['order_reference'];
 		} else {
+			$order_id = $_GET['order_reference'];
+		}
 
-			switch ( $order_complete ) {
+		$redirect = isset($_GET['redirect']) ? true : false;
+
+		$this->log->debug('Callback handler started: order id = ' . print_r($order_id, true));
+
+		$order = wc_get_order($order_id);
+
+		if(!$order) {
+			$this->log->debug('Invalid order ID received: ' . print_r($order_id, true));
+			wc_add_notice(__('Invalid order received!', 'everypay'), 'error');
+			wp_redirect(wc_get_checkout_url());
+			exit;
+		}
+
+		// $this->log->debug('Order ' . var_export($order, true));
+
+		if($order->has_status(wc_get_is_pending_statuses())) {
+			$this->log->debug('Process order status');
+			$this->process_order_status($order);
+		}
+
+		if($redirect) {
+			$this->change_language($order->get_id());
+			$payment_status = $order->get_meta(self::META_STATUS);
+
+			$this->log->debug('Do redirect, payment status = ' . print_r($payment_status, true));
+
+			switch($payment_status) {
+				case self::_VERIFY_SUCCESS:
+					$redirect_url = $this->get_return_url($order);
+					break;
 				case self::_VERIFY_FAIL:
-					$order->update_status( 'failed', __( 'Payment was declined. Please verify the card data and try again with the same or different card.', 'everypay' ) );
-					$this->log->add( $this->id, 'Payment was declined by payment processor.' );
 					$redirect_url = wc_get_checkout_url();
 					break;
 				case self::_VERIFY_CANCEL:
-					$order->update_status( 'cancelled', __( 'Payment cancelled.', 'everypay' ) );
-					$this->log->add( $this->id, 'Payment was cancelled by user.' );
 					$redirect_url = $order->get_cancel_order_url();
 					break;
 				default:
-					$order->update_status( 'failed', __( 'An error occurred while processing the payment response, please notify merchant!', 'everypay' ) );
-					$this->log->add( $this->id, 'An error occurred while processing the payment response.' );
 					$redirect_url = wc_get_checkout_url();
 					break;
 			}
-		}
 
-		if ( $this->debug == 'yes' ) {
-			$this->log->add( $this->id, 'Redirected to ' . $redirect_url );
+			wp_redirect($redirect_url);
 		}
-		
-		wp_redirect( $redirect_url );
-
+		exit;
 	}
 
-	public function change_language( $order_id ) {
-
-		if ( function_exists( 'icl_object_id' ) ) {
+	/**
+	 * Change active language.
+	 *
+	 * @param int $order_id
+	 * @return void
+	 */
+	public function change_language($order_id)
+	{
+		if(function_exists('icl_object_id')) {
 
 			// adapted from WooCommerce Multilingual /inc/emails.class.php
-			$lang = get_post_meta( $order_id, 'wpml_language', true );
+			$lang = get_post_meta($order_id, 'wpml_language', true);
 
-			if ( ! empty( $lang ) ) {
+			if (!empty($lang)) {
 				global $sitepress, $woocommerce;
 				$sitepress->switch_lang( $lang, true );
 				unload_textdomain( 'woocommerce' );
@@ -1023,33 +1019,45 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		}
 	}
 
-
 	/**
 	 * Process the order status
 	 *
 	 * @param  WC_Order $order
-	 *
 	 * @return bool
 	 */
-	public function process_order_status( $order ) {
+	public function process_order_status($order)
+	{
+		$response = $this->get_api()->payment_status($order);
+		$status = $this->verify_everypay_response($response);
 
-		$result = $this->verify_everypay_response( $_REQUEST );
-
-		if ( self::_VERIFY_SUCCESS === $result ) {
+		if(self::_VERIFY_SUCCESS === $status) {
 			// Payment complete
-			$order->payment_complete( $_REQUEST['payment_reference'] );
-			// Add order note
-			$order->add_order_note( sprintf( __( 'Card payment was successfully processed by EveryPay (Reference: %s, Timestamp: %s)', 'everypay' ), $_REQUEST['payment_reference'], $_REQUEST['timestamp'] ) );
-			// Store the transaction ID for WC 2.2 or later.
-			add_post_meta( $order->get_id(), '_transaction_id', $_REQUEST['payment_reference'], true );
+			$order->payment_complete($order->get_meta(self::META_REFERENCE));
 
-			$this->maybe_add_token( $order );
+			// Add order note
+			$order->add_order_note(sprintf(__('Card payment was successfully processed by EveryPay (Reference: %s, Timestamp: %s)', 'everypay'), $order->get_meta(self::META_REFERENCE), $response->payment_created_at));
+
+			// Store the transaction ID for WC 2.2 or later.
+			$order->update_meta_data('_transaction_id', $order->get_meta(self::META_REFERENCE));
+
+			$this->maybe_add_token($order, $response);
 
 			// Remove cart
 			WC()->cart->empty_cart();
+
+		} elseif(self::_VERIFY_FAIL === $status) {
+			$order->update_status('failed', __('Payment was declined. Please verify the card data and try again with the same or different card.', 'everypay'));
+			$this->log->debug('Payment was declined by payment processor.');
+		} elseif(self::_VERIFY_CANCEL === $status) {
+			$order->update_status('cancelled', __('Payment cancelled.', 'everypay'));
+			$this->log->debug('Payment was cancelled by user.');
+		} else {
+			$order->update_status('failed', __('An error occurred while processing the payment response, please notify merchant!', 'everypay'));
+			$this->log->debug('An error occurred while processing the payment response.');
 		}
 
-		return $result;
+		$order->update_meta_data(self::META_STATUS, $status);
+		$order->save();
 	}
 
 	/**
@@ -1060,14 +1068,14 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 * for successful and failed payments:
 	 *
 	 * array(
-	 * 'account_id' => account id in EveryPay system
-	 * 'amount' => amount to pay,
 	 * 'api_username' => api username,
-	 * 'nonce' => return nonce
+	 * 'account_name' => account name in EveryPay system
+	 * 'amount' => amount to pay,
 	 * 'order_reference' => order reference number,
+	 * 'nonce' => return nonce
 	 * 'payment_reference' => payment reference number,
 	 * 'payment_state' => payment state,
-	 * 'timestamp' => timestamp,
+	 * 'payment_created_at' => timestamp,
 	 * 'transaction_result' => transaction result
 	 * );
 	 *
@@ -1082,13 +1090,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 * 'transaction_result' => transaction result
 	 * );
 	 *
-	 * @param $data array
+	 * @param object $response
 	 *
 	 * @return int 1 - verified successful payment, 2 - verified failed payment, 3 - user cancelled, 0 - error
 	 * @throws Exception
 	 */
-	public function verify_everypay_response( array $data ) {
-
+	public function verify_everypay_response($response)
+	{
 		$statuses = array(
 			'settled' => self::_VERIFY_SUCCESS,
 			'authorised' => self::_VERIFY_SUCCESS,
@@ -1097,215 +1105,70 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			'waiting_for_3ds_response' => self::_VERIFY_CANCEL,
 		);
 
-
-		if ( $data['api_username'] !== $this->api_username ) {
-			if ( $this->debug == 'yes' ) {
-				$this->log->add( $this->id, 'EveryPay error: API username in response does not match, order not completed!' );
-			}
-
+		if($response->api_username !== $this->api_username) {
+			$this->log->debug('EveryPay error: API username in response does not match, order not completed!');
 			return self::_VERIFY_ERROR;
 		}
 
-		$now = time()+60;
-		if ( ( $data['timestamp'] > $now ) || ( $data['timestamp'] < ( $now - 600 ) ) ) {
-			if ( $this->debug == 'yes' ) {
-				$this->log->add( $this->id, 'EveryPay error: response is older than 10 minutes, order not completed!' );
-			}
-
+		$created_at = strtotime($response->payment_created_at);
+		$now = time() + 60;
+		if (($created_at > $now) || ($created_at < ($now - 600))) {
+			$this->log->debug('EveryPay error: response is older than 10 minutes, order not completed!');
 			return self::_VERIFY_ERROR;
 		}
 
-		$status = $statuses[ $data['payment_state'] ];
-
-		$verify      = array();
-		$hmac_fields = explode( ',', $data["hmac_fields"] );
-
-		foreach ( $hmac_fields as $value ) {
-			$verify[ $value ] = isset( $data[ $value ] ) ? $data[ $value ] : '';
-		}
-
-		if ( $this->debug == 'yes' ) {
-			$this->log->add( $this->id, '$verify array: ' . var_export( $verify, true ) );
-		}
-
-		$hmac = $this->sign_everypay_request( $this->prepare_everypay_string( $verify ) );
-
-		if ( $data['hmac'] != $hmac ) {
-			if ( $this->debug == 'yes' ) {
-				$this->log->add( $this->id, 'EveryPay error: signature does not match data! ' . print_r( $data, true ) . print_r( $hmac, true ) . print_r( $this->prepare_everypay_string( $verify ), true ) );
-			}
-
-			return self::_VERIFY_ERROR;
-		}
+		$status = $statuses[$response->payment_state];
 
 		return $status;
-	}
-
-	/**
-	 * Build iFrame form for receipt page
-	 *
-	 * @param array $args
-	 * @param WC_Order $order
-	 *
-	 * @return string
-	 */
-	protected function generate_iframe_form_html( $args, $order ) {
-
-		global $woocommerce;
-
-		$html         = '';
-		$cancel_style = '';
-
-		// if doing a token payment hide the iFrame (and commnunicate through messages) until there is a direct api solution
-		if ( empty( $args['cc_token'] ) ) {
-			$html .= '<div class="wc_everypay_iframe_form_detail" id="wc_everypay_iframe_payment_container" style="border: 0; min-width: 460px; min-height: 325px;">' . PHP_EOL;
-		} else {
-			$html .= '<div class="wc_everypay_iframe_messager" id="wc_everypay_iframe_messager">';
-			$html .= apply_filters( 'wc_everypay_iframe_processing', __( 'Processing payment with saved card...', 'everypay' ) );
-			$html .= '</div>' . PHP_EOL;
-			$html .= '<div class="wc_everypay_iframe_form_detail" id="wc_everypay_iframe_payment_container" style="display: none;">' . PHP_EOL;
-			$cancel_style = 'style="display: none;"';
-		}
-
-		$html .= '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="358" height="409" style="border: 0;"></iframe>' . PHP_EOL;
-		$html .= '</div>' . PHP_EOL;
-		$html .= '<form action="' . $this->api_endpoint . '" id="wc_everypay_iframe_form" method="post" style="display: none" target="wc_everypay_iframe">' . PHP_EOL;
-		$args_array = array( );
-
-		foreach ( $args as $key => $value ) {
-			$args_array[] = '<input name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
-		}
-		$html .= implode( PHP_EOL, $args_array ) . PHP_EOL;
-		$html .= '<input type="submit" value="submit">' . PHP_EOL;
-		$html .= '</form>' . PHP_EOL;
-
-
-		$html .= '<div id="wc_everypay_iframe_buttons">' . PHP_EOL;
-
-		// cancel is hidden for token payments, retry for all payments - enabling happens on payment fail
-		$html .= '<a href="' . esc_url( $order->get_cancel_order_url() ) . '" id="wc_everypay_iframe_cancel" class="button cancel" ' . $cancel_style . '>'
-		         . apply_filters( 'wc_everypay_iframe_cancel', __( 'Cancel order', 'everypay' ) ) . '</a> ';
-		$html .= '<a href="' . esc_url( wc_get_checkout_url() ) . '" id="wc_everypay_iframe_retry" class="button alt" style="display: none;">'
-		         . apply_filters( 'wc_everypay_iframe_retry', __( 'Try paying again', 'everypay' ) ) . '</a>' . PHP_EOL;
-		$html .= '</div>' . PHP_EOL;
-
-
-		// used during testing to display iFrame message:
-		// echo '<div class="transaction_result"></div>' . PHP_EOL;
-
-		$params = array(
-			'uri'       => 'https://' . parse_url( $this->api_endpoint, PHP_URL_HOST ),
-			'completed' => $this->get_return_url( $order ),
-			// 'failed' => $order->get_cancel_order_url(),
-			'sandbox'   => $this->sandbox,
-		);
-
-		wp_localize_script( 'wc-everypay-iframe', 'wc_everypay_params', $params );
-
-		return $html;
-	}
-
-	/**
-	 * Build redirect form & autosubmit for receipt page
-	 *
-	 * @param array $args
-	 * @param WC_Order $order
-	 *
-	 * @return string
-	 */
-	protected function generate_redirect_form_html( $args, $order ) {
-
-		$html = '';
-
-		$args_array = array( );
-
-		foreach ( $args as $key => $value ) {
-			$args_array[] = '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" />';
-		}
-
-		$html .= '<p id="wc_everypay_redirect_explanation">' . apply_filters( 'wc_everypay_redirect_explanation', __( 'Thank you for your order. Please click the button below to complete the card payment.', 'everypay' ) ) . '</p>';
-
-		$html .= '<form action="' . esc_url( $this->api_endpoint ) . '" method="post" id="payment_form" target="_top">';
-
-		$html .= implode( '', $args_array );
-		$html .= '<input type="submit" class="button alt" id="wc_everypay_redirect_pay" value="'
-		         . apply_filters( 'wc_everypay_redirect_pay', __( 'Pay by card', 'everypay' ) ) . '">
-  		      <a class="button cancel" id="wc_everypay_redirect_cancel" href="' . esc_url( $order->get_cancel_order_url() ) . '">'
-		         . apply_filters( 'wc_everypay_redirect_cancel', __( 'Cancel order &amp; restore cart', 'everypay' ) ) . '</a>';
-
-		$html .= '</form>';
-
-		wc_enqueue_js( '
-				$.blockUI({
-						message: "' . esc_js( apply_filters( 'wc_everypay_redirect_message', __( 'Thank you for your order. We are now redirecting you to payment gateway.', 'everypay' ) ) ) . '",
-						baseZ: 99999,
-						overlayCSS:
-						{
-							background: "#fff",
-							opacity: 0.6
-						},
-						css: {
-							padding:        "20px",
-							zindex:         "9999999",
-							textAlign:      "center",
-							color:          "#555",
-							border:         "3px solid #aaa",
-							backgroundColor:"#fff",
-							cursor:         "wait",
-							lineHeight:		"24px",
-						}
-					});
-				$("#wc_everypay_redirect_pay").click();
-			' );
-
-		return $html;
 	}
 
 	/**
 	 * Maybe add new token to user - when processing callback
 	 *
 	 * @param WC_order $order
+	 * @param object $response
+	 * @return void
 	 */
-	protected function maybe_add_token( $order ) {
-
-		if ( $this->token_enabled && ! empty( $_REQUEST['cc_token'] ) && ! empty( $_REQUEST['cc_last_four_digits'] ) && ! empty( $_REQUEST['cc_year'] ) && ! empty( $_REQUEST['cc_month'] ) && ! empty( $_REQUEST['cc_type'] ) ) {
+	protected function maybe_add_token($order, $response)
+	{
+		if($this->token_enabled &&
+			!empty($response->cc_details->token) &&
+			!empty($response->cc_details->last_four_digits) &&
+			!empty($response->cc_details->year) &&
+			!empty($response->cc_details->month) &&
+			!empty($response->cc_details->type)
+		) {
 			// 'return to merchant' may have token, but does not carry rest of the information needed to build card selector on next purchase
 			$user = $order->get_user();
 
-			if ( isset( $user->ID ) ) {
-				$tokens = maybe_unserialize( get_user_meta( $user->ID, '_wc_everypay_tokens', true ) );
+			if(isset($user->ID)) {
+				$tokens = maybe_unserialize(get_user_meta($user->ID, self::META_TOKENS, true));
 
-				if ( empty( $tokens ) ) {
-					$tokens = array( );
+				if(empty($tokens)) {
+					$tokens = array();
 				}
 
-				if ( ! isset( $tokens[ $_REQUEST['cc_token'] ] ) ) {
+				if(!isset($tokens[$response->cc_details->token])) {
 
 					$new_token = array(
-						'cc_token'            => $_REQUEST['cc_token'],
-						'cc_last_four_digits' => $_REQUEST['cc_last_four_digits'],
-						'cc_year'             => $_REQUEST['cc_year'],
-						'cc_month'            => $_REQUEST['cc_month'],
-						'cc_type'             => $_REQUEST['cc_type'],
+						'cc_token'            => $response->cc_details->token,
+						'cc_last_four_digits' => $response->cc_details->last_four_digits,
+						'cc_year'             => $response->cc_details->year,
+						'cc_month'            => $response->cc_details->month,
+						'cc_type'             => $response->cc_details->type,
 						'default'             => false,
 						'added'               => time(),
 					);
 
-					if ( 0 === count( $tokens ) ) {
+					if(0 === count($tokens)) {
 						$new_token['default'] = true;
 					}
 
-					$tokens[ $_REQUEST['cc_token'] ] = $new_token;
-					update_user_meta( $user->ID, '_wc_everypay_tokens', $tokens );
+					$tokens[$response->cc_details->token] = $new_token;
+					update_user_meta($user->ID, self::META_TOKENS, $tokens);
 				}
 			}
-
 		}
-	}
-
-
-	public function generate_account_page_html() {
-		// unused
 	}
 
 	/**
@@ -1332,6 +1195,19 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 					return true;
 			}
 		});
+	}
+
+	/**
+	 * Get method sources by type.
+	 *
+	 * @param string $type
+	 * @return string[]
+	 */
+	public function get_methods_sources($type)
+	{
+		return array_map(function($method) {
+			return $method->source;
+		}, $this->get_methods($type));
 	}
 
 	/**
@@ -1506,22 +1382,28 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 * Scopes values only for payment method options unless directed otherwise.
 	 *
 	 * @param string $name
-	 * @param boolean $scope - get values from payment method options
+	 * @param mixed|null $default
 	 * @return mixed
 	 */
-	public function get_input_value($name, $scope = true)
+	public function get_input_value($name, $default = null)
 	{
-		return isset($_POST[$this->id][$name]) ? trim($_POST[$this->id][$name]) : null;
+		return isset($_POST[$this->id][$name]) && $_POST[$this->id][$name] ? trim($_POST[$this->id][$name]) : $default;
 	}
 
 	/**
 	 * Get notify url.
 	 *
+	 * @param array $params
 	 * @return string
 	 */
-	public function get_notify_url()
+	public function get_notify_url($params = null)
 	{
-		return $this->notify_url;
+		if($params) {
+			$url = add_query_arg($params, $this->notify_url);
+		} else {
+			$url = $this->notify_url;
+		}
+		return $url;
 	}
 
 	/**
@@ -1531,6 +1413,43 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 */
 	public function get_locale()
 	{
-		return $this->locale;
+		if(defined('ICL_LANGUAGE_CODE')) {
+			$language = ICL_LANGUAGE_CODE;
+		} else {
+			switch(get_locale()) {
+				case 'et_EE':
+				case 'et':
+					$language = 'et';
+					break;
+				case 'ru_RU':
+				case 'ru':
+					$language = 'ru';
+					break;
+				default:
+					$language = 'en';
+					break;
+			}
+		}
+		return $language;
+	}
+
+	/**
+	 * Get skin name used for iframe.
+	 *
+	 * @return string
+	 */
+	public function get_skin_name()
+	{
+		return $this->skin_name;
+	}
+
+	/**
+	 * Return payment form type.
+	 *
+	 * @return string
+	 */
+	public function get_payment_form()
+	{
+		return $this->payment_form;
 	}
 } // end class.
