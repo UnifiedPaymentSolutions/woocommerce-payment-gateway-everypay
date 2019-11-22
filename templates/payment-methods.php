@@ -15,7 +15,7 @@
         <?php foreach ($langauges as $lang): ?>
             <label>
                 <?php echo esc_html($lang->name); ?>
-                <input type="radio" name="<?php echo esc_attr($gateway->get_input_name('language')); ?>" value="<?php echo esc_html($lang->code); ?>" <?php if($language == $lang->code) echo 'checked'; ?>>
+                <input type="radio" name="<?php echo esc_attr($gateway->get_input_name('preferred_country')); ?>" value="<?php echo esc_html($lang->code); ?>" <?php if($language == $lang->code) echo 'checked'; ?>>
             </label>
         <?php endforeach ?>
     </div>

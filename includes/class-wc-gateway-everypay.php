@@ -18,10 +18,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	/**
 	 * @var int
 	 */
-	const _VERIFY_ERROR = 0;    // HMAC mismatch or other error
+	const _VERIFY_ERROR = 0;    // Other error
 	const _VERIFY_SUCCESS = 1;  // payment successful
 	const _VERIFY_FAIL = 2;     // payment failed
 	const _VERIFY_CANCEL = 3;   // payment cancelled by user
+
+	/**
+	 * @var string[]
+	 */
+	protected $status_messages = array();
 
 	/**
 	 * @var int
@@ -39,13 +44,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	/**
 	 * @var string
 	 */
+	const META_COUNTRY = '_wc_everypay_preferred_country';
 	const META_METHOD = '_wc_everypay_payment_method';
 	const META_TOKEN = '_wc_everypay_token';
-	const META_COUNTRY = '_wc_everypay_preferred_country';
 	const META_LINK = '_wc_everypay_payment_link';
 	const META_REFERENCE = '_wc_everypay_payment_reference';
-	const META_STATUS = '_wc_everypay_payment_status';
 	const META_TOKENS = '_wc_everypay_tokens';
+	const META_STATUS = '_wc_everypay_payment_status';
 
 	/**
 	 * @var string
@@ -203,6 +208,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 
 		// Add token management to user's account page
 		add_action('woocommerce_after_my_account', array($this, 'generate_account_page_html'));
+
+		$this->status_messages = array(
+			self::_VERIFY_FAIL => __('Payment was declined. Please verify the card data and try again with the same or different card.', 'everypay'),
+			self::_VERIFY_CANCEL => __('Payment cancelled.', 'everypay'),
+			self::_VERIFY_ERROR => __('An error occurred while processing the payment response, please notify merchant!', 'everypay')
+		);
 	}
 
 	/**
@@ -722,34 +733,33 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	{
 		$tokens = $this->get_user_tokens();
 
-		if ( ! empty( $tokens[ $token ] ) ) {
+		if(!empty($tokens[$token])) {
 
 			// handle removal of default card by possibly assigning one added before that
-			if ( isset( $tokens[ $token ]['default'] ) && true === $tokens[ $token ]['default'] ) {
+			if(isset($tokens[$token]['default']) && true === $tokens[$token]['default']) {
 
-				unset( $tokens[ $token ] );
+				unset($tokens[$token]);
 
 				// try finding new default
-				$latest      = 0;
+				$latest = 0;
 				$new_default = null;
 
-				foreach ( $tokens as $key => $token ) {
-					if ( true === $token['active'] && $token['added'] > $latest ) {
-						$latest      = $token['added'];
+				foreach($tokens as $key => $token) {
+					if(true === $token['active'] && $token['added'] > $latest) {
+						$latest = $token['added'];
 						$new_default = $key;
 					}
 				}
 
-				if ( ! is_null( $new_default ) ) {
+				if(!is_null($new_default)) {
 					$tokens[ $new_default ]['default'] = true;
 				}
 
 			} else {
-				unset( $tokens[ $token ] );
+				unset($tokens[$token]);
 			}
 
-			return (bool) update_user_meta( get_current_user_id(), '_wc_everypay_tokens', $tokens );
-
+			return (bool) update_user_meta(get_current_user_id(), '_wc_everypay_tokens', $tokens);
 		}
 		return false;
 	}
@@ -924,7 +934,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		wp_localize_script('wc-everypay-iframe', 'wc_everypay_params', $params);
 
 		$payment_link = $order->get_meta(self::META_LINK);
-		echo '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="358" height="409" style="border: 0;" sandbox="allow-top-navigation allow-scripts allow-forms" src="' . $payment_link . '"></iframe>';
+		echo '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="358" height="409" style="border: 0;" src="' . $payment_link . '"></iframe>';
 
 	}
 
@@ -947,8 +957,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			$order_id = $_GET['order_reference'];
 		}
 
-		$redirect = isset($_GET['redirect']) ? true : false;
-
 		$this->log->debug('Callback handler started: order id = ' . print_r($order_id, true));
 
 		$order = wc_get_order($order_id);
@@ -967,31 +975,46 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			$this->process_order_status($order);
 		}
 
-		if($redirect) {
-			$this->change_language($order->get_id());
-			$payment_status = $order->get_meta(self::META_STATUS);
-
-			$this->log->debug('Do redirect, payment status = ' . print_r($payment_status, true));
-
-			switch($payment_status) {
-				case self::_VERIFY_SUCCESS:
-					$redirect_url = $this->get_return_url($order);
-					break;
-				case self::_VERIFY_FAIL:
-					$redirect_url = wc_get_checkout_url();
-					break;
-				case self::_VERIFY_CANCEL:
-					$redirect_url = $order->get_cancel_order_url();
-					break;
-				default:
-					$redirect_url = wc_get_checkout_url();
-					break;
-			}
-
-			wp_redirect($redirect_url);
+		if(isset($_GET['redirect'])) {
+			$this->redirect_callback($order);
 		}
 		exit;
 	}
+
+	/**
+	 * Redirect 
+	 *
+	 * @param WC_Order $order
+	 * @return void
+	 */
+	protected function redirect_callback($order)
+	{
+		$this->change_language($order->get_id());
+
+		$payment_status = $order->get_meta(self::META_STATUS);
+
+		$this->log->debug('Do redirect, payment status = ' . print_r($payment_status, true));
+
+		switch($payment_status) {
+			case self::_VERIFY_SUCCESS:
+				$redirect_url = $this->get_return_url($order);
+				break;
+			case self::_VERIFY_FAIL:
+				wc_add_notice($this->status_messages[self::_VERIFY_FAIL], 'error');
+				$redirect_url = wc_get_checkout_url();
+				break;
+			case self::_VERIFY_CANCEL:
+				wc_add_notice($this->status_messages[self::_VERIFY_CANCEL], 'error');
+				$redirect_url = $order->get_cancel_order_url();
+				break;
+			case self::_VERIFY_ERROR:
+				wc_add_notice($this->status_messages[self::_VERIFY_ERROR], 'error');
+			default:
+				$redirect_url = wc_get_checkout_url();
+				break;
+		}
+
+		wp_redirect($redirect_url);	}
 
 	/**
 	 * Change active language.
@@ -1027,8 +1050,20 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 */
 	public function process_order_status($order)
 	{
+		// No payment reference, don't do antything
+		if(!$order->get_meta(WC_Gateway_Everypay::META_REFERENCE)) {
+			return;
+		}
+
 		$response = $this->get_api()->payment_status($order);
 		$status = $this->verify_everypay_response($response);
+
+		// Unknown status, don't do anything
+		if($status === null) {
+			return;
+		}
+
+		$message = false;
 
 		if(self::_VERIFY_SUCCESS === $status) {
 			// Payment complete
@@ -1046,13 +1081,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			WC()->cart->empty_cart();
 
 		} elseif(self::_VERIFY_FAIL === $status) {
-			$order->update_status('failed', __('Payment was declined. Please verify the card data and try again with the same or different card.', 'everypay'));
+			$order->update_status('failed', $this->status_messages[self::_VERIFY_FAIL]);
 			$this->log->debug('Payment was declined by payment processor.');
+
 		} elseif(self::_VERIFY_CANCEL === $status) {
-			$order->update_status('cancelled', __('Payment cancelled.', 'everypay'));
+			$order->update_status('cancelled', $this->status_messages[self::_VERIFY_CANCEL]);
 			$this->log->debug('Payment was cancelled by user.');
+
 		} else {
-			$order->update_status('failed', __('An error occurred while processing the payment response, please notify merchant!', 'everypay'));
+			$order->update_status('failed', $this->status_messages[self::_VERIFY_ERROR]);
 			$this->log->debug('An error occurred while processing the payment response.');
 		}
 
@@ -1117,7 +1154,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			return self::_VERIFY_ERROR;
 		}
 
-		$status = $statuses[$response->payment_state];
+		$status = isset($statuses[$response->payment_state]) ? $statuses[$response->payment_state] : null;
 
 		return $status;
 	}
