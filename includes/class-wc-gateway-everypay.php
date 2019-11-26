@@ -189,7 +189,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		$this->api = new WC_Everypay_Api($this->api_endpoint, $this->api_username, $this->api_secret, WC_Everypay()->get_version(), $this->debug == 'yes');
 
 		// Payment methods to display in payment method
-		$this->payment_methods = $this->get_option('payment_methods', array());
+		$payment_methods = $this->get_option('payment_methods', false);
+		$this->payment_methods = $payment_methods ? json_decode($payment_methods) : array();
 
 		// Hooks
 		if ( is_admin() ) {
@@ -354,9 +355,9 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			echo '<div class="update-nag" id="wc_everypay_notice_sandbox"><p>' . esc_html__("EveryPay payment gateway is in test mode, real payments not processed!", 'everypay') . '</p></div>';
 		}
 
-		// warn about unsecure use if: iFrame in use and either WC force SSL or plugin with same effect is not active (borrowing logics from Stripe)
-		if (($this->payment_form === 'iframe') && (get_option('woocommerce_force_ssl_checkout') === 'no') && !class_exists('WordPressHTTPS')) {
-			echo '<div class="error" id="wc_everypay_notice_ssl"><p>' . esc_html(sprintf(__('EveryPay iFrame mode is enabled, but your checkout is not forced to use HTTPS. While EveryPay iFrame remains secure users may feel insecure due to missing confirmation in browser address bar. Please <a href="%s">enforce SSL</a> and ensure your server has a valid SSL certificate!', 'everypay'), admin_url('admin.php?page=wc-settings&tab=checkout'))) . '</p></div>';
+		// warn about unsecure use if: iFrame in use and wordpress is not using ssl
+		if (($this->payment_form === self::FORM_IFRAME) && !is_ssl()) {
+			echo '<div class="error" id="wc_everypay_notice_ssl"><p>' . esc_html__('EveryPay iFrame mode is enabled, but your site is not using HTTPS. While EveryPay iFrame remains secure users may feel insecure due to missing confirmation in browser address bar. Please ensure your server has a valid SSL certificate!', 'everypay') . '</p></div>';
 		}
 	}
 
@@ -816,8 +817,13 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		}
 
 		// API request failed, return error
-		if(isset($response->error)) {
-			wc_add_notice(__('Payment error:', 'everypay') . ' ' . $response->error->message, 'error');
+		if(isset($response->error) || $response == false) {
+			if(isset($response->error)) {
+				$message = ': ' . $response->error->message;
+			} else {
+				$message = '';
+			}
+			wc_add_notice(__('Payment error', 'everypay') . ' ' . $message, 'error');
 			return;
 		}
 
@@ -826,7 +832,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 
 		$this->log->debug(ucfirst($this->gateway_slug) . ' selected for order #' . $order->get_id());
 
-		$redirect = $this->use_iframe($order) ? $order->get_checkout_payment_url(true) : $order->get_meta(self::META_LINK);
+		$redirect = $this->get_payment_form() == self::FORM_IFRAME ? $order->get_checkout_payment_url(true) : $order->get_meta(self::META_LINK);
 		$this->log->debug('Redirect to: ' . $redirect);
 
 		// Redirect to receipt page for iframe payment
@@ -898,19 +904,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			return $response->payment_link;
 		}
 		return null;
-	}
-
-	/**
-	 * Whether to use iframe to payment.
-	 *
-	 * @param WC_Order $order
-	 * @return boolean
-	 */
-	protected function use_iframe($order)
-	{
-		$method = $order->get_meta(self::META_METHOD);
-		return $this->get_payment_form() == self::FORM_IFRAME &&
-			(in_array($method, $this->get_methods_sources(self::TYPE_CARD)) || $order->get_meta(self::META_TOKEN));
 	}
 
 	/**
@@ -1278,7 +1271,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	{
 		$formated = $this->format_payment_methods($methods);
 		if($this->update_option('payment_methods', $formated)) {
-			$this->payment_methods = $formated;
+			$this->payment_methods = json_decode($formated);
 			return true;
 		}
 		return false;
@@ -1301,16 +1294,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			$formated_method->logo = $method->logo_url;
 			$formated[] = $formated_method;
 		}
-
-		# TEST
-		$method = new stdClass;
-		$method->source = 'alternative';
-		$method->name = 'Alternative';
-		$method->country = '';
-		$method->logo = '';
-		$formated[] = $method;
-
-		return $formated;
+		return json_encode($formated);
 	}
 
 	/**

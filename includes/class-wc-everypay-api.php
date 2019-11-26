@@ -119,6 +119,7 @@ class WC_Everypay_Api
             'customer_url' => $gateway->get_notify_url(array('order_reference' => $order->get_id(), 'redirect' => 1)),
             'timestamp' => get_date_from_gmt(current_time('mysql', true), 'c'),
             'token' => $order->get_meta(WC_Gateway_Everypay::META_TOKEN),
+            'token_security' => 'none',
             'integration_details' => $this->get_integration()
         );
 
@@ -170,7 +171,7 @@ class WC_Everypay_Api
             $url .= '/' . $parameter;
         }
         
-        $this->log->debug('API request: ' . wc_print_r(array(
+        $this->log->info('API request: ' . wc_print_r(array(
             'url' => $url,
             'method' => $method,
             'data' => $this->mask_data($data)
@@ -200,11 +201,17 @@ class WC_Everypay_Api
         }
 
         $result = curl_exec($curl);
+
+        if($result === false || empty($result)) {
+            $decoded = false;
+            $code = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+            $this->log->info('API error: ' . wc_print_r('code - ' . $code, true));
+        } else {
+            $decoded = json_decode($result);
+            $this->log->info('API response: ' . wc_print_r($decoded, true));
+        }
+
         curl_close($curl);
-
-        $decoded = json_decode($result);
-
-        $this->log->debug('API response: ' . wc_print_r($decoded, true));
 
         return $decoded;
     }
