@@ -14,7 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WC_Gateway_Everypay extends WC_Payment_Gateway
 {
-
 	/**
 	 * @var int
 	 */
@@ -29,11 +28,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	protected $status_messages = array();
 
 	/**
-	 * @var int
+	 * @var string
 	 */
-	const TYPE_CARD = 1;
-	const TYPE_BANK = 2;
-	const TYPE_ALTER = 3;
+	const TYPE_CARD = 'card';
+	const TYPE_BANK = 'bank';
+	const TYPE_ALTER = 'alternative';
 
 	/**
 	 * @var string
@@ -53,21 +52,68 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	const META_STATUS = '_wc_everypay_payment_status';
 
 	/**
+	 * Base id without type slug.
+	 *
+	 * @var string
+	 */
+	protected $base_id = 'everypay';
+
+	/**
+	 * Frontend gateway type.
+	 *
+	 * @var string
+	 */
+	protected $type;
+
+	/**
 	 * @var string
 	 */
 	protected $gateway_slug;
 
+	/**
+	 * @var string
+	 */
 	protected $account_id;
-	protected $transaction_type;
+
+	/**
+	 * @var string
+	 */
 	protected $payment_form;
-	protected $token_enabled;
-	protected $token_ask;
+
+	/**
+	 * @var boolean
+	 */
 	protected $sandbox;
-	protected $api_endpoint;
-	protected $api_username;
-	protected $api_secret;
+
+	/**
+	 * @var boolean
+	 */
 	protected $debug;
+	
+	/**
+	 * @var object[]
+	 */
 	protected $payment_methods;
+
+	/**
+	 * @var string
+	 */
+	protected $api_endpoint;
+
+	/**
+	 * @var string
+	 */
+	protected $api_username;
+
+	/**
+	 * @var string
+	 */
+	protected $api_secret;
+
+	/**
+	 * @var boolean
+	 */
+	protected $token_enabled;
 
 	/**
 	 * @var string
@@ -125,16 +171,22 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	/**
 	 * Constructor for the gateway.
 	 *
+	 * @param string|null $type - typed gateway has no backend functionality
 	 * @access public
 	 * @return mixed
 	 */
-	public function __construct()
+	public function __construct($type = null)
 	{
-		$this->id = 'everypay';
+		$this->id = $this->base_id;
+
+		$this->type = $type;
+		if($this->type) {
+			$this->id = $this->typed_id($this->type);
+		}
 
 		$this->gateway_slug = WC_Everypay()->get_gateway_slug();
 
-		$this->icon       = apply_filters( 'woocommerce_gateway_everypay_icon', plugins_url( '/assets/images/mastercard_visa.png', dirname( __FILE__ ) ) );
+		// $this->icon = apply_filters('woocommerce_gateway_everypay_icon', plugins_url('/assets/images/mastercard_visa.png', dirname(__FILE__)));
 		$this->has_fields = true;
 
 		$this->order_button_text = __( 'Proceed to payment', 'everypay' );
@@ -148,7 +200,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 
 		$this->supports = array( 'products' );
 
-		$this->sandbox      = $this->get_option( 'sandbox' ) === 'yes' ? true : false;
+		$this->sandbox = $this->get_option('sandbox') === 'yes' ? true : false;
 
 		$this->api_endpoint = $this->sandbox === false ? $this->live_endpoint : $this->test_endpoint;
 		$this->api_username = $this->sandbox === false ? $this->get_option( 'api_username' ) : $this->get_option( 'sandbox_api_username' );
@@ -165,56 +217,197 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		$this->enabled = $this->get_option( 'enabled' );
 
 		// Title/description for payment method selection page
-		$this->title = $this->get_option('title');
-		$this->card_title = $this->get_option('title_card');
-		$this->bank_title = $this->get_option('title_bank');
-		$this->alternative_title = $this->get_option('title_alternative');
+		switch ($this->type) {
+			case self::TYPE_CARD:
+				$this->title = $this->get_option('title_card');
+				break;
+			case self::TYPE_BANK:
+				$this->title = $this->get_option('title_bank');
+				break;
+			case self::TYPE_ALTER:
+				$this->title = $this->get_option('title_alternative');
+				break;
+			default:
+				$this->title = __('Everypay', 'everypay');
+				break;
+		}
 		// Disable description
 		$this->description = '';
 
-		// implemented initially, but removed in favor of 'capture delay' that can be confed in merchant portal
-		// $this->transaction_type = $this->get_option( 'transaction_type' );
-		$this->transaction_type = 'charge';
-		$this->payment_form     = $this->get_option( 'payment_form' );
-		$this->skin_name        = $this->get_option( 'skin_name' );
-		$this->token_enabled    = $this->get_option( 'token_enabled' ) === 'yes' ? true : false;
-		$this->token_ask    = true;
+		$this->payment_form = $this->get_option('payment_form');
+		$this->skin_name = $this->get_option('skin_name');
+		$this->token_enabled = $this->get_option('token_enabled') === 'yes' ? true : false;
 
 		// Log is created always for main transaction points - debug option adds more logging points during transaction
-		$this->debug = $this->get_option('debug');
+		$this->debug = $this->get_option('debug') === 'yes' ? true : false;
 		$this->log = new WC_Everypay_Logger();
-		$this->log->set_debug($this->debug == 'yes');
+		$this->log->set_debug($this->debug);
 
 		// Initialize API
-		$this->api = new WC_Everypay_Api($this->api_endpoint, $this->api_username, $this->api_secret, WC_Everypay()->get_version(), $this->debug == 'yes');
+		$this->api = new WC_Everypay_Api($this->api_endpoint, $this->api_username, $this->api_secret, WC_Everypay()->get_version(), $this->debug);
 
 		// Payment methods to display in payment method
 		$payment_methods = $this->get_option('payment_methods', false);
 		$this->payment_methods = $payment_methods ? json_decode($payment_methods) : array();
 
-		// Hooks
-		if ( is_admin() ) {
-			add_action( 'admin_notices', array( $this, 'checks' ) );
-			add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array(
-				$this,
-				'process_admin_options'
-			) );
+		// Only initiate actions/filters on the original base gateway
+		if(!$this->type) {
+			// Hooks
+			if ( is_admin() ) {
+				add_action( 'admin_notices', array( $this, 'checks' ) );
+				add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array(
+					$this,
+					'process_admin_options'
+				) );
+			}
+
+			// Receipt page creates POST to gateway or hosts iFrame
+			add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
+
+			// Add returning user / callback handler to WC API
+			add_action('woocommerce_api_wc_gateway_' . $this->id, array($this, 'everypay_callback_handler'));
+
+			// Add token management to user's account page
+			add_action('woocommerce_after_my_account', array($this, 'generate_account_page_html'));
+
+			// Divide gateway into multiple frontend payment methods
+			add_filter('woocommerce_available_payment_gateways', array($this, 'multiply_methods'));
+
+		} else {
+
+			add_action('woocommerce_everypay_fieldset_start', array($this, 'country_selector_html'), 10, 1);
+
+			if($this->id == $this->typed_id(self::TYPE_CARD)) {
+
+				add_action('woocommerce_everypay_fieldset_start', array($this, 'token_hint_html'), 20, 1);
+
+				if($this->token_enabled && !empty($this->get_user_tokens())) {
+					add_action('woocommerce_everypay_form_end', array($this, 'tokens_html'), 10, 1);
+				}
+			}
 		}
-
-		// Receipt page creates POST to gateway or hosts iFrame
-		add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
-
-		// Add returning user / callback handler to WC API
-		add_action('woocommerce_api_wc_gateway_' . $this->id, array($this, 'everypay_callback_handler'));
-
-		// Add token management to user's account page
-		add_action('woocommerce_after_my_account', array($this, 'generate_account_page_html'));
 
 		$this->status_messages = array(
 			self::_VERIFY_FAIL => __('Payment was declined. Please verify the card data and try again with the same or different card.', 'everypay'),
 			self::_VERIFY_CANCEL => __('Payment cancelled.', 'everypay'),
 			self::_VERIFY_ERROR => __('An error occurred while processing the payment response, please notify merchant!', 'everypay')
 		);
+	}
+
+	/**
+	 * Display token hint html.
+	 *
+	 * @param string $id
+	 * @return void
+	 */
+	public function country_selector_html($id)
+	{
+		if($id == $this->id) {
+			$languages = $this->get_method_languages();
+			if(!empty($languages)): ?>
+			    <div class="preferred-country">
+			    	<select name="<?php echo esc_attr($this->get_input_name('preferred_country')); ?>">
+				        <?php foreach ($languages as $language): ?>
+							<option value="<?php echo esc_attr($language->code); ?>" <?php selected($this->get_default_language(), $language->code); ?>>
+								<?php echo esc_html($language->name); ?>
+							</option>
+				        <?php endforeach ?>
+			    	</select>
+			    </div>
+			<?php endif;
+		}
+	}
+
+	/**
+	 * Get id with type slug.
+	 *
+	 * @param string $type
+	 * @return string
+	 */
+	protected function typed_id($type)
+	{
+		return $this->base_id . '_' . $type;
+	}
+
+	/**
+	 * Display token hint html.
+	 *
+	 * @param string $id
+	 * @return void
+	 */
+	public function token_hint_html($id)
+	{
+		if($id == $this->typed_id(self::TYPE_CARD) && !is_user_logged_in() && $this->token_enabled) {
+			?><p><?php esc_html_e('To save your card securely for easier future payments, sign up for an account or log in to your existing account.', 'everypay'); ?></p><?php
+		}
+	}
+
+	/**
+	 * Display tokens list html.
+	 *
+	 * @return void
+	 */
+	public function tokens_html($id)
+	{
+		if($id == $this->typed_id(self::TYPE_CARD)) {
+			$args = array(
+				'gateway_id' => $this->id,
+				'tokens' => $this->get_user_tokens(),
+				'myaccount_page_id' => get_option('woocommerce_myaccount_page_id')
+			);
+
+			wc_get_template('tokens.php', $args, '', WC_Everypay()->template_path());
+		}
+	}
+
+	/**
+	 * Remove base gateway and add frontend oriented gateways based on availible methods.
+	 *
+	 * @param WC_Payment_Gateway[] $_available_gateways
+	 * @return array
+	 */
+	public function multiply_methods($_available_gateways)
+	{
+		$methods = array();
+
+		$methods_card = $this->get_methods(self::TYPE_CARD);
+		if(count($methods_card)) {
+			$methods[$this->id . '_card'] = new self(self::TYPE_CARD);
+		}
+
+		$methods_bank = $this->get_methods(self::TYPE_BANK);
+		if(count($methods_bank)) {
+			$methods[$this->id . '_bank'] = new self(self::TYPE_BANK);
+		}
+
+		$methods_alternative = $this->get_methods(self::TYPE_ALTER);
+		if(count($methods_alternative)) {
+			$methods[$this->id . '_alter'] = new self(self::TYPE_ALTER);
+		}
+
+		$offset = array_search($this->id, array_keys($_available_gateways));
+
+		// Replace everypay method with typed gateways or remove it
+		if($offset !== false) {
+			$start = array_slice($_available_gateways, 0, $offset, true);
+			$end = array_slice($_available_gateways, $offset + 1, null, true);
+
+			$_available_gateways = $start + $methods + $end;
+		} else {
+			unset($_available_gateways[$this->id]);
+		}
+
+		return $_available_gateways;
+	}
+
+	/**
+	 * Returns base gateway settings.
+	 *
+	 * @return string
+	 */
+	public function get_option_key()
+	{
+		return $this->plugin_id . $this->base_id . '_settings';
 	}
 
 	/**
@@ -432,7 +625,8 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	 * @since  1.0.0
 	 * @return string
 	 */
-	public function generate_info_html($key, $data) {
+	public function generate_info_html($key, $data)
+	{
 		$field_key = $this->get_field_key( $key );
 		$defaults  = array(
 			'title'             => '',
@@ -636,11 +830,12 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		$method_languages = $this->get_method_languages();
 		
 		$args = array(
-			'myaccount_page_id' => get_option('woocommerce_myaccount_page_id'),
-			'gateway' => $this
+			'gateway_id' => $this->id,
+			'methods' => $this->get_methods($this->type),
+			'preferred_country' => $this->get_default_language()
 		);
 
-		wc_get_template('payment-methods.php', $args, '', WC_Everypay::get_instance()->plugin_path() . '/templates/');
+		wc_get_template('payment-methods.php', $args, '', WC_Everypay()->template_path());
 	}
 
 	/**
@@ -1378,16 +1573,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	}
 
 	/**
-	 * If tokens are enabled.
-	 *
-	 * @return boolean
-	 */
-	public function get_token_enabled()
-	{
-		return $this->token_enabled;
-	}
-
-	/**
 	 * Get name for input in payment method form.
 	 *
 	 * @param string $name
@@ -1472,5 +1657,15 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	public function get_payment_form()
 	{
 		return $this->payment_form;
+	}
+
+	/**
+	 * Get gateway type.
+	 *
+	 * @return string
+	 */
+	public function get_type()
+	{
+		return $this->type;
 	}
 } // end class.

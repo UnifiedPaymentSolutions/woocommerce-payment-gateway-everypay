@@ -494,8 +494,9 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @access public
 		 * @return string
 		 */
-		public function plugin_url() {
-			return untrailingslashit( plugins_url( '/', __FILE__ ) );
+		public function plugin_url()
+		{
+			return untrailingslashit(plugins_url('/', __FILE__));
 		}
 
 		/**
@@ -504,8 +505,20 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 * @access public
 		 * @return string
 		 */
-		public function plugin_path($append = '') {
-			return untrailingslashit( plugin_dir_path( __FILE__ ) ) . ($append ? '/' . $append : '');
+		public function plugin_path($append = '')
+		{
+			return untrailingslashit(plugin_dir_path(__FILE__)) . ($append ? '/' . $append : '');
+		}
+
+		/**
+		 * Get the templates path.
+		 *
+		 * @access public
+		 * @return string
+		 */
+		public function template_path($append = '')
+		{
+			return untrailingslashit(plugin_dir_path(__FILE__)) . '/templates/' . ($append ? trim($append, '/') : '');
 		}
 	} // end if class
 
