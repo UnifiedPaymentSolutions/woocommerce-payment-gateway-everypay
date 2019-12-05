@@ -125,6 +125,11 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		protected static $schedule_hook = 'everypay_update_methods';
 
 		/**
+		 * @var boolean
+		 */
+		protected $sub_methods_enabled = false;
+
+		/**
 		 * Return an instance of this class.
 		 *
 		 * @return object A single instance of this class.
@@ -206,6 +211,16 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 						$this->schedule_payment_methods_update();
 
 						add_action('wp_enqueue_scripts', array($this, 'scripts'));
+
+						add_action('woocommerce_checkout_update_order_review', array($this, 'enable_sub_methods'), 10);
+						add_action('woocommerce_checkout_order_review', array($this, 'enable_sub_methods'), 19);
+						add_action('woocommerce_checkout_order_review', array($this, 'disable_sub_methods'), 21);
+						
+						// Process checkout posted data
+						add_filter('woocommerce_checkout_posted_data', array($this, 'process_checkout_posted_data'));
+						add_action('woocommerce_checkout_update_order_meta', array($this, 'update_order_checkout_meta'), 10, 2);
+
+						add_filter('woocommerce_available_payment_gateways', array($this, 'multiply_methods'));
 					}
 				} else {
 					add_action( 'admin_notices', array( $this, 'upgrade_notice' ) );
@@ -213,6 +228,120 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 					return false;
 				}
 			}
+		}
+
+		/**
+		 * Enable sub payment methods.
+		 *
+		 * @return void
+		 */
+		public function enable_sub_methods()
+		{
+			$this->sub_methods_enabled = true;
+		}
+
+		/**
+		 * Disable sub payment methods.
+		 *
+		 * @return void
+		 */
+		public function disable_sub_methods()
+		{
+			$this->sub_methods_enabled = false;
+		}
+
+		/**
+		 * Remove base gateway and add frontend oriented gateways based on availible methods.
+		 *
+		 * @param WC_Payment_Gateway[] $_available_gateways
+		 * @return array
+		 */
+		public function multiply_methods($_available_gateways)
+		{
+			if($this->sub_methods_enabled) {
+				$methods = array();
+				$gateway = $this->get_gateway();
+				$payment_methods = $gateway->get_payment_methods();
+
+				if(WC_Everypay_Helper::has_payment_methods($payment_methods, WC_Gateway_Everypay::TYPE_CARD)) {
+					$methods[$this->gateway_slug . '_card'] = new WC_Gateway_Everypay_Card();
+				}
+
+				if(WC_Everypay_Helper::has_payment_methods($payment_methods, WC_Gateway_Everypay::TYPE_BANK)) {
+					$methods[$this->gateway_slug . '_bank'] = new WC_Gateway_Everypay_Bank();
+				}
+
+				if(WC_Everypay_Helper::has_payment_methods($payment_methods, WC_Gateway_Everypay::TYPE_ALTER)) {
+					$methods[$this->gateway_slug . '_alter'] = new WC_Gateway_Everypay_Alternative();
+				}
+
+				$offset = array_search($this->gateway_slug, array_keys($_available_gateways));
+
+				// Replace everypay method with multiple payment methods
+				if($offset !== false) {
+					$start = array_slice($_available_gateways, 0, $offset, true);
+					$end = array_slice($_available_gateways, $offset + 1, null, true);
+
+					$_available_gateways = $start + $methods + $end;
+				}
+			}
+			return $_available_gateways;
+		}
+
+		/**
+		 * Process checkout posted data.
+		 *
+		 * @param array $data
+		 * @return array
+		 */
+		public function process_checkout_posted_data($data)
+		{
+			$payment_method = $data['payment_method'];
+			if(strpos($payment_method, $this->gateway_slug) === 0) {
+
+				if(isset($_POST[$payment_method])) {
+					$options = $_POST[$payment_method];
+					foreach ($options as $key => $value) {
+						$options[$key] = wc_clean(wp_unslash($value));
+					}
+					$data[$this->gateway_slug . '_options'] = $options;
+				}
+
+				$data['payment_method'] = $this->gateway_slug;
+
+			}
+			return $data;
+		}
+
+		/**
+		 * Save checkout special meta to order.
+		 *
+		 * @param int $order_id
+		 * @param array $data
+		 * @return void
+		 */
+		public function update_order_checkout_meta($order_id, $data)
+		{
+			if($data['payment_method'] != $this->gateway_slug || !isset($data[$this->gateway_slug . '_options'])) {
+				return;
+			}
+
+			$order = wc_get_order($order_id);
+
+			$options = $data[$this->gateway_slug . '_options'];
+
+			$method = $options['method'];
+			$token = isset($options['token']) ? $options['token'] : null;
+			$preferred_country = isset($options['preferred_country']) ? $options['preferred_country'] : null;
+
+			$order->update_meta_data(WC_Gateway_Everypay::META_METHOD, $method);
+			if($token) {
+				$order->update_meta_data(WC_Gateway_Everypay::META_TOKEN, $token);
+			}
+			if($preferred_country) {
+				$order->update_meta_data(WC_Gateway_Everypay::META_COUNTRY, $preferred_country);
+			}
+			$order->save();
 		}
 
 		/**
@@ -230,7 +359,12 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 
 				wp_register_script($script_handle, $this->plugin_url() . '/assets/js/script.js', array('jquery'), '20191011', true);
 				wp_localize_script($script_handle, 'payment_method_settings', array(
-					'name' => $this->gateway_slug
+					'name' => $this->gateway_slug,
+					'names' => array(
+						$this->gateway_slug . '_' . WC_Gateway_Everypay::TYPE_CARD,
+						$this->gateway_slug . '_' . WC_Gateway_Everypay::TYPE_BANK,
+						$this->gateway_slug . '_' . WC_Gateway_Everypay::TYPE_ALTER
+					)
 				));
 				wp_enqueue_script($script_handle);
 			}
@@ -382,9 +516,13 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		private function includes()
 		{
 			require_once('includes/class-wc-everypay-logger.php');
+			require_once('includes/class-wc-everypay-helper.php');
 			require_once('includes/class-wc-everypay-api.php');
 			require_once('includes/class-wc-gateway-everypay.php');
 			require_once('includes/class-wc-gateway-everypay-account.php');
+			require_once('includes/sub-methods/class-wc-gateway-everypay-card.php');
+			require_once('includes/sub-methods/class-wc-gateway-everypay-bank.php');
+			require_once('includes/sub-methods/class-wc-gateway-everypay-alternative.php');
 		}
 
 		/**
@@ -466,16 +604,6 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		protected function get_gateway()
 		{
 			return WC()->payment_gateways->payment_gateways()[$this->gateway_slug];
-		}
-
-		/**
-		 * Get gateway instance.
-		 *
-		 * @return string
-		 */
-		public function get_gateway_slug()
-		{
-			return $this->gateway_slug;
 		}
 
 		/**

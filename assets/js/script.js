@@ -11,30 +11,28 @@ function PaymentMethodsSelect(method_name)
         labels: 'label.payment-method-option, label.payment-token-option',
         method_inputs: 'label.payment-method-option input',
         token_inputs: 'label.payment-token-option input',
-        language_inputs: '.method-languages input'
+        preferred_country: '.preferred-country select'
     };
 
     var _listeners = {
         method_inputs: undefined,
         token_inputs: undefined,
-        language_inputs: undefined
+        preferred_country: undefined
     };
 
     /**
-     * Change language event.
+     * Change preferred country event.
      *
      * @param DOM radio
      * @return void
      */
-    this.change_language = function(radio) {
-        var self = this,
-            country = radio.value;
-
+    this.change_country = function(radio) {
+        var country = radio.value;
         this.unselect();
         jQuery(_selectors.token_inputs, _selectors.wrapper).prop('checked', false);
         jQuery(_selectors.method_inputs, _selectors.wrapper).prop('checked', false).each(function() {
-            var language = jQuery(this).data('language');
-            if(!language || language == country) {
+            var method_country = jQuery(this).data('country');
+            if(!method_country || country == method_country) {
                 jQuery(this).parents(_selectors.labels).removeClass('hidden');
             } else {
                 jQuery(this).parents(_selectors.labels).addClass('hidden');
@@ -86,8 +84,8 @@ function PaymentMethodsSelect(method_name)
         if(_listeners.token_inputs) {
             _listeners.token_inputs.unbind('change');
         }
-        if(_listeners.language_inputs) {
-            _listeners.language_inputs.unbind('change');
+        if(_listeners.preferred_country) {
+            _listeners.preferred_country.unbind('change');
         }
     };
 
@@ -109,17 +107,18 @@ function PaymentMethodsSelect(method_name)
             self.select.call(self, this);
         });
 
-        _listeners.language_inputs = jQuery(_selectors.language_inputs, _selectors.wrapper).on('change', function(event) {
-            self.change_language.call(self, this);
+        _listeners.preferred_country = jQuery(_selectors.preferred_country, _selectors.wrapper).on('change', function(event) {
+            self.change_country.call(self, this);
         });
     };
 }
 
 
 jQuery(function($) {
-    var payment_methods_select = new PaymentMethodsSelect(payment_method_settings.name);
-
-    $('body').on('updated_checkout', function() {
-        payment_methods_select.update();
+    $.each(payment_method_settings.names, function(key, name) {
+        var payment_methods_select = new PaymentMethodsSelect(name);
+        $('body').on('updated_checkout', function() {
+            payment_methods_select.update();
+        });
     });
 });

@@ -1,5 +1,5 @@
 <p class="form-row form-row-wide">
-
+    <p><?php esc_html_e('Saved cards', 'everypay');?></p>
     <?php foreach($tokens as $token): ?>
         <?php if(true === $token['active']): ?>
             <label class="payment-token-option">
