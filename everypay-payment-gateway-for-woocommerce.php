@@ -322,25 +322,25 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 */
 		public function update_order_checkout_meta($order_id, $data)
 		{
-			if($data['payment_method'] != $this->gateway_slug || !isset($data[$this->gateway_slug . '_options'])) {
-				return;
-			}
-
 			$order = wc_get_order($order_id);
+			$options_key = $this->gateway_slug . '_options';
+			
+			if($data['payment_method'] != $this->gateway_slug || !isset($data[$options_key])) {
+				$order->update_meta_data(WC_Gateway_Everypay::META_METHOD, null);
+				$order->update_meta_data(WC_Gateway_Everypay::META_TOKEN, null);
+				$order->update_meta_data(WC_Gateway_Everypay::META_COUNTRY, null);
+			} else {
+				$options = isset($data[$options_key]) ? $data[$options_key] : null;
 
-			$options = $data[$this->gateway_slug . '_options'];
+				$method = isset($options['method']) ? $options['method'] : null;
+				$token = isset($options['token']) ? $options['token'] : null;
+				$preferred_country = isset($options['preferred_country']) ? $options['preferred_country'] : null;
 
-			$method = $options['method'];
-			$token = isset($options['token']) ? $options['token'] : null;
-			$preferred_country = isset($options['preferred_country']) ? $options['preferred_country'] : null;
-
-			$order->update_meta_data(WC_Gateway_Everypay::META_METHOD, $method);
-			if($token) {
+				$order->update_meta_data(WC_Gateway_Everypay::META_METHOD, $method);
 				$order->update_meta_data(WC_Gateway_Everypay::META_TOKEN, $token);
-			}
-			if($preferred_country) {
 				$order->update_meta_data(WC_Gateway_Everypay::META_COUNTRY, $preferred_country);
 			}
+
 			$order->save();
 		}
 

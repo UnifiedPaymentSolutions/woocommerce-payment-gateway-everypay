@@ -891,7 +891,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 
 		$this->log->debug(ucfirst($this->id) . ' selected for order #' . $order->get_id());
 
-		$redirect = $this->get_payment_form() == self::FORM_IFRAME ? $order->get_checkout_payment_url(true) : $order->get_meta(self::META_LINK);
+		$redirect = $this->get_payment_form() == self::FORM_IFRAME && $this->iframe_availible($order) ? $order->get_checkout_payment_url(true) : $order->get_meta(self::META_LINK);
 		$this->log->debug('Redirect to: ' . $redirect);
 
 		// Redirect to receipt page for iframe payment
@@ -899,6 +899,22 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			'result' => 'success',
 			'redirect' => $redirect
 		);
+	}
+
+	/**
+	 * 
+	 *
+	 * @param WC_Order $order
+	 * @return boolean
+	 */
+	protected function iframe_availible(WC_Order $order)
+	{
+		$method = $order->get_meta(self::META_METHOD);
+		$card_methods = WC_Everypay_Helper::filter_payment_methods($this->get_payment_methods(), self::TYPE_CARD);
+
+		return count(array_filter($card_methods, function($card_method) use ($method) {
+			return $card_method->source === $method;
+		})) || $order->get_meta(self::META_TOKEN);
 	}
 
 	/**
