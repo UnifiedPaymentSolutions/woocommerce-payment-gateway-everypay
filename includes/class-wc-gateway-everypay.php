@@ -306,7 +306,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	{
 		?>
 		<h3><?php _e( 'EveryPay', 'everypay' ); ?></h3>
-		<p><?php _e( 'EveryPay is a card payment gateway service provider, enabling e-commerce merchants to collect credit and debit card online payments from their customers.', 'everypay' ); ?></p>
+		<p><?php _e( 'EveryPay is a payment gateway service provider, enabling e-commerce merchants to online payments from their customers.', 'everypay' ); ?></p>
 		<p><a href="https://portal.every-pay.eu/"><?= __( 'Merchant Portal', 'everypay' ); ?></a> | <a
 				href="https://every-pay.com/contact/"><?= __( 'Contacts', 'everypay' ); ?></a> | <a
 				href="https://every-pay.com/documentation-overview/"><?= __( 'Documentation', 'everypay' ); ?></a>
@@ -616,12 +616,6 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 				'disabled'    => !$this->api_username || !$this->api_secret || !$this->account_id,
 				'action'	  => 'update_payment_methods',
 				'desc_tip'    => false,
-			),
-			'title'      => array(
-				'title'       => __( 'Title of Payment method', 'everypay' ),
-				'type'        => 'text',
-				'description' => __( 'This controls the title which the user sees on payment method.', 'everypay' ),
-				'default'     => __( 'Everypay', 'everypay' )
 			),
 			'title_card'      => array(
 				'title'       => __( 'Title of Card Payment', 'everypay' ),
