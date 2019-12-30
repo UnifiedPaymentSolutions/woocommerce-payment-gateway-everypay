@@ -81,8 +81,7 @@ class WC_Everypay_Api
             'email' => $order->get_billing_email(),
             'customer_ip' => $order->get_customer_ip_address(),
             'customer_url' => $gateway->get_notify_url(array('order_reference' => $order->get_id(), 'redirect' => 1)),
-            'preferred_country' => $order->get_meta(WC_Gateway_Everypay::META_COUNTRY),
-            'locale' => $gateway->get_locale(),
+            'locale' => WC_Everypay_Helper::get_locale(),
             'request_token' => $gateway->get_token_enabled(),
             'timestamp' => get_date_from_gmt(current_time('mysql', true), 'c'),
             'integration_details' => $this->get_integration()
@@ -90,6 +89,10 @@ class WC_Everypay_Api
 
         $data = array_merge($data, $this->get_billing_fields($order));
         $data = array_merge($data, $this->get_shipping_fields($order));
+
+        if($preferred_country = WC_Everypay_Helper::get_order_preferred_country($order)) {
+            $data['preferred_country'] = $preferred_country;
+        }
 
         if($gateway->get_payment_form() == WC_Gateway_Everypay::FORM_IFRAME) {
             $data['skin_name'] = $gateway->get_skin_name();
