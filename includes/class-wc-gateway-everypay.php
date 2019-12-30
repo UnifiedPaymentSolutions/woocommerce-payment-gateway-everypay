@@ -213,7 +213,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		$this->payment_methods = $payment_methods ? json_decode($payment_methods) : array();
 
 		$this->status_messages = array(
-			self::_VERIFY_FAIL => __('Payment was declined. Please verify the card data and try again with the same or different card.', 'everypay'),
+			self::_VERIFY_FAIL => __('Payment was declined. Please try again.', 'everypay'),
 			self::_VERIFY_CANCEL => __('Payment cancelled.', 'everypay'),
 			self::_VERIFY_ERROR => __('An error occurred while processing the payment response, please notify merchant!', 'everypay')
 		);
