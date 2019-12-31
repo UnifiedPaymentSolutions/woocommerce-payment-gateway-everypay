@@ -1,18 +1,24 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
+
+namespace Everypay;
+
+if(!defined('ABSPATH')) {
     exit;
 } // Exit if accessed directly.
+
+use Everypay\Helper;
+use WC_Gateway_Everypay as Gateway;
 
 /**
  * WooCommerce EveryPay.
  *
- * @class   WC_Gateway_Everypay_Card
- * @extends WC_Gateway_Everypay
+ * @class   Gateway_Card
+ * @extends Gateway
  * @version 1.2.0
  * @package WooCommerce Payment Gateway Everypay/Includes
  * @author  EveryPay
  */
-class WC_Gateway_Everypay_Card extends WC_Gateway_Everypay
+class Gateway_Card extends Gateway
 {
     /**
      * @var string
@@ -90,6 +96,6 @@ class WC_Gateway_Everypay_Card extends WC_Gateway_Everypay
      */
     public function get_payment_methods()
     {
-        return WC_Everypay_Helper::filter_payment_methods(parent::get_payment_methods(), WC_Gateway_Everypay::TYPE_CARD);
+        return Helper::filter_payment_methods(parent::get_payment_methods(), Gateway::TYPE_CARD);
     }
 }

@@ -1,23 +1,26 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
+if(!defined('ABSPATH')) {
     exit;
 } // Exit if accessed directly.
+
+use Everypay\Helper;
+use WC_Gateway_Everypay as Gateway;
 
 /**
  * WooCommerce EveryPay.
  *
- * @class   WC_Gateway_Everypay_Bank
- * @extends WC_Gateway_Everypay
+ * @class   Gateway_Alternative
+ * @extends Gateway
  * @version 1.2.0
  * @package WooCommerce Payment Gateway Everypay/Includes
  * @author  EveryPay
  */
-class WC_Gateway_Everypay_Bank extends WC_Gateway_Everypay
+class Gateway_Alternative extends Gateway
 {
     /**
      * @var string
      */
-    public $id = 'everypay_bank';
+    public $id = 'everypay_alter';
 
     /**
      * Constructor for the gateway.
@@ -37,7 +40,7 @@ class WC_Gateway_Everypay_Bank extends WC_Gateway_Everypay
      */
     protected function setup()
     {
-        $this->title = $this->get_option('title_bank');
+        $this->title = $this->get_option('title_alternative');
 
         // Add country selector for everypay payment methods
         add_action('woocommerce_everypay_fieldset_start', array($this, 'country_selector_html'), 10, 1);
@@ -50,6 +53,6 @@ class WC_Gateway_Everypay_Bank extends WC_Gateway_Everypay
      */
     public function get_payment_methods()
     {
-        return WC_Everypay_Helper::filter_payment_methods(parent::get_payment_methods(), WC_Gateway_Everypay::TYPE_BANK);
+        return Helper::filter_payment_methods(parent::get_payment_methods(), Gateway::TYPE_ALTER);
     }
 }

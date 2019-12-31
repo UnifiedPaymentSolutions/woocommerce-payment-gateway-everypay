@@ -44,6 +44,8 @@ require_once( 'woo-includes/woo-functions.php' );
 
 if ( ! class_exists( 'WC_Everypay' ) ) {
 
+
+
 	/**
 	 * WooCommerce EveryPay main class.
 	 *
@@ -263,16 +265,16 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 				$gateway = $this->get_gateway();
 				$payment_methods = $gateway->get_payment_methods();
 
-				if(WC_Everypay_Helper::has_payment_methods($payment_methods, WC_Gateway_Everypay::TYPE_CARD)) {
-					$methods[$this->gateway_slug . '_card'] = new WC_Gateway_Everypay_Card();
+				if(Everypay\Helper::has_payment_methods($payment_methods, WC_Gateway_Everypay::TYPE_CARD)) {
+					$methods[$this->gateway_slug . '_card'] = new Everypay\Gateway_Card();
 				}
 
-				if(WC_Everypay_Helper::has_payment_methods($payment_methods, WC_Gateway_Everypay::TYPE_BANK)) {
-					$methods[$this->gateway_slug . '_bank'] = new WC_Gateway_Everypay_Bank();
+				if(Everypay\Helper::has_payment_methods($payment_methods, WC_Gateway_Everypay::TYPE_BANK)) {
+					$methods[$this->gateway_slug . '_bank'] = new Everypay\Gateway_Bank();
 				}
 
-				if(WC_Everypay_Helper::has_payment_methods($payment_methods, WC_Gateway_Everypay::TYPE_ALTER)) {
-					$methods[$this->gateway_slug . '_alter'] = new WC_Gateway_Everypay_Alternative();
+				if(Everypay\Helper::has_payment_methods($payment_methods, WC_Gateway_Everypay::TYPE_ALTER)) {
+					$methods[$this->gateway_slug . '_alter'] = new Everypay\Gateway_Alternative();
 				}
 
 				$offset = array_search($this->gateway_slug, array_keys($_available_gateways));
@@ -515,26 +517,16 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 		 */
 		private function includes()
 		{
-			require_once('includes/class-wc-everypay-logger.php');
-			require_once('includes/class-wc-everypay-helper.php');
-			require_once('includes/class-wc-everypay-api.php');
+			require_once('includes/class-logger.php');
+			require_once('includes/class-helper.php');
+			require_once('includes/class-api.php');
 			require_once('includes/class-wc-gateway-everypay.php');
-			require_once('includes/class-wc-gateway-everypay-account.php');
-			require_once('includes/sub-methods/class-wc-gateway-everypay-card.php');
-			require_once('includes/sub-methods/class-wc-gateway-everypay-bank.php');
-			require_once('includes/sub-methods/class-wc-gateway-everypay-alternative.php');
+			require_once('includes/class-account.php');
+			require_once('includes/methods/class-gateway-card.php');
+			require_once('includes/methods/class-gateway-bank.php');
+			require_once('includes/methods/class-gateway-alternative.php');
+			new Everypay\Account();
 		}
-
-		/**
-		 * This filters the gateway to only supported countries.
-		 *
-		 * @access public
-		 */
-		/*
-			public function gateway_country_base() {
-			  return apply_filters( 'woocommerce_gateway_country_base', array( 'EE', 'US', 'UK', 'FR' ) );
-			}
-		*/
 
 		/**
 		 * Add the gateway.
@@ -594,7 +586,7 @@ if ( ! class_exists( 'WC_Everypay' ) ) {
 			}
 		}
 
-		/** Helper functions ******************************************************/
+		/** helper functions ******************************************************/
 
 		/**
 		 * Get gateway instance.

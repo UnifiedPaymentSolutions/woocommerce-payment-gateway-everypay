@@ -1,7 +1,11 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
+if(!defined('ABSPATH')) {
 	exit;
 } // Exit if accessed directly.
+
+use Everypay\Api;
+use Everypay\Helper;
+use Everypay\Logger;
 
 /**
  * WooCommerce EveryPay.
@@ -119,7 +123,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	protected $notify_url;
 
 	/**
-	 * @var WC_Logger
+	 * @var Logger
 	 */
 	protected $log;
 
@@ -157,7 +161,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	);
 
 	/**
-	 * @var WC_Everypay_Api
+	 * @var Api
 	 */
 	protected $api;
 
@@ -202,11 +206,11 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 
 		// Log is created always for main transaction points - debug option adds more logging points during transaction
 		$this->debug = $this->get_option('debug') === 'yes' ? true : false;
-		$this->log = new WC_Everypay_Logger();
+		$this->log = new Logger();
 		$this->log->set_debug($this->debug);
 
 		// Initialize API
-		$this->api = new WC_Everypay_Api($this->api_endpoint, $this->api_username, $this->api_secret, WC_Everypay()->get_version(), $this->debug);
+		$this->api = new Api($this->api_endpoint, $this->api_username, $this->api_secret, WC_Everypay()->get_version(), $this->debug);
 
 		// Payment methods to display in payment method
 		$payment_methods = $this->get_option('payment_methods', false);
@@ -264,7 +268,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 			    <div class="preferred-country">
 			    	<select name="<?php echo esc_attr($this->id); ?>[preferred_country]">
 				        <?php foreach ($countries as $country): ?>
-							<option value="<?php echo esc_attr($country->code); ?>" <?php selected(WC_Everypay_Helper::get_preferred_country(), $country->code); ?>>
+							<option value="<?php echo esc_attr($country->code); ?>" <?php selected(Helper::get_preferred_country(), $country->code); ?>>
 								<?php echo esc_html($country->name); ?>
 							</option>
 				        <?php endforeach ?>
@@ -698,7 +702,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 		$args = array(
 			'gateway_id' => $this->id,
 			'methods' => $this->get_payment_methods(),
-			'preferred_country' => WC_Everypay_Helper::get_preferred_country()
+			'preferred_country' => Helper::get_preferred_country()
 		);
 
 		wc_get_template('payment-methods.php', $args, '', WC_Everypay()->template_path());
@@ -910,7 +914,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	protected function iframe_availible(WC_Order $order)
 	{
 		$method = $order->get_meta(self::META_METHOD);
-		$card_methods = WC_Everypay_Helper::filter_payment_methods($this->get_payment_methods(), self::TYPE_CARD);
+		$card_methods = Helper::filter_payment_methods($this->get_payment_methods(), self::TYPE_CARD);
 
 		return count(array_filter($card_methods, function($card_method) use ($method) {
 			return $card_method->source === $method;
@@ -1342,7 +1346,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 	/**
 	 * Get API instance.
 	 *
-	 * @return WC_Everypay_Api
+	 * @return Api
 	 */
 	public function get_api()
 	{

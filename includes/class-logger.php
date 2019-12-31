@@ -1,6 +1,14 @@
 <?php
 
-class WC_Everypay_Logger extends WC_Logger
+namespace Everypay;
+
+if(!defined('ABSPATH')) {
+    exit;
+} // Exit if accessed directly.
+
+use WC_Logger;
+
+class Logger extends WC_Logger
 {
     /**
      * @var boolean
