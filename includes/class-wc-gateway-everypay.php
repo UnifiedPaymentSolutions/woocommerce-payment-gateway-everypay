@@ -1022,7 +1022,7 @@ class WC_Gateway_Everypay extends WC_Payment_Gateway
 
 		// $this->log->debug('Order ' . var_export($order, true));
 
-		if($order->has_status(wc_get_is_pending_statuses())) {
+		if(!$order->has_status(wc_get_is_paid_statuses())) {
 			$this->log->debug('Process order status');
 			$this->process_order_status($order);
 		}
