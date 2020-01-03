@@ -6,7 +6,6 @@ if(!defined('ABSPATH')) {
     exit;
 } // Exit if accessed directly.
 
-use WC_Gateway_Everypay as Gateway;
 use WC_Order;
 
 class Helper

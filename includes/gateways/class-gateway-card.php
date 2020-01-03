@@ -6,9 +6,6 @@ if(!defined('ABSPATH')) {
     exit;
 } // Exit if accessed directly.
 
-use Everypay\Helper;
-use WC_Gateway_Everypay as Gateway;
-
 /**
  * WooCommerce EveryPay.
  *
@@ -50,6 +47,9 @@ class Gateway_Card extends Gateway
 
         // Add country selector for everypay payment methods
         add_action('woocommerce_everypay_fieldset_start', array($this, 'country_selector_html'), 10, 1);
+        
+        // Payment methods to display
+        add_action('woocommerce_everypay_form_start', array($this, 'payment_method_options'));
     }
 
     /**
@@ -85,7 +85,7 @@ class Gateway_Card extends Gateway
                 'myaccount_page_id' => get_option('woocommerce_myaccount_page_id')
             );
 
-            wc_get_template('tokens.php', $args, '', WC_Everypay()->template_path());
+            wc_get_template('tokens.php', $args, '', Base::get_instance()->template_path());
         }
     }
 

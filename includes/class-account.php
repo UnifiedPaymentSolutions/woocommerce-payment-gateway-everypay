@@ -6,9 +6,6 @@ if(!defined('ABSPATH')) {
     exit;
 } // Exit if accessed directly.
 
-use WC_Everypay as Base;
-use WC_Gateway_Everypay as Gateway;
-
 /**
  * Manage saved cards on My Account page (needs to be active as WC does not initialize gateways on all pages)
  *

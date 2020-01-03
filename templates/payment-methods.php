@@ -8,7 +8,7 @@
 /**
  * Hook: woocommerce_everypay_fieldset_start.
  *
- * @hooked WC_Gateway_Everypay::token_hint_html - 20
+ * @hooked Everypay/Gateway_Card::token_hint_html - 20
  */
 do_action('woocommerce_everypay_fieldset_start', $gateway_id);
 ?>
@@ -22,13 +22,11 @@ do_action('woocommerce_everypay_fieldset_start', $gateway_id);
     do_action('woocommerce_everypay_form_start', $gateway_id);
     ?>
 
-    <?php include(WC_Everypay()->template_path('payment-methods-options.php')); ?>
-
     <?php 
     /**
      * Hook: woocommerce_everypay_form_end.
      *
-     * @hooked WC_Gateway_Everypay::tokens_html - 10
+     * @hooked Everypay/Gateway_Card::tokens_html - 10
      */
     do_action('woocommerce_everypay_form_end', $gateway_id);
     ?>
