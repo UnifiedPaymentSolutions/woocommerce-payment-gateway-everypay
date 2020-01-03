@@ -270,10 +270,10 @@ class Gateway extends WC_Payment_Gateway
      * @param int $gateway_id
      * @return void
      */
-    public function payment_method_options($gateway_id)
+    public function payment_method_options()
     {
         $args = array(
-            'gateway_id' => $gateway_id,
+            'gateway_id' => $this->id,
             'methods' => $this->get_payment_methods(),
             'preferred_country' => Helper::get_preferred_country()
         );
