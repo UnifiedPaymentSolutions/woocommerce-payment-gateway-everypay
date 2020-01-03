@@ -57,13 +57,18 @@ class Gateway extends WC_Payment_Gateway
     /**
      * @var string
      */
-    const META_COUNTRY = '_wc_everypay_preferred_country';
-    const META_METHOD = '_wc_everypay_payment_method';
-    const META_TOKEN = '_wc_everypay_token';
-    const META_LINK = '_wc_everypay_payment_link';
-    const META_REFERENCE = '_wc_everypay_payment_reference';
-    const META_TOKENS = '_wc_everypay_tokens';
-    const META_STATUS = '_wc_everypay_payment_status';
+    const META_PREF = '_wc_everypay';
+
+    /**
+     * @var string
+     */
+    const META_COUNTRY = self::META_PREF . '_preferred_country';
+    const META_METHOD = self::META_PREF . '_payment_method';
+    const META_TOKEN = self::META_PREF . '_token';
+    const META_LINK = self::META_PREF . '_payment_link';
+    const META_REFERENCE = self::META_PREF . '_payment_reference';
+    const META_TOKENS = self::META_PREF . '_tokens';
+    const META_STATUS = self::META_PREF . '_payment_status';
 
     /**
      * Frontend gateway type.
@@ -267,15 +272,13 @@ class Gateway extends WC_Payment_Gateway
      */
     public function payment_method_options($gateway_id)
     {
-        if($this->id == $gateway_id) {
-            $args = array(
-                'gateway_id' => $gateway_id,
-                'methods' => $this->get_payment_methods(),
-                'preferred_country' => Helper::get_preferred_country()
-            );
+        $args = array(
+            'gateway_id' => $gateway_id,
+            'methods' => $this->get_payment_methods(),
+            'preferred_country' => Helper::get_preferred_country()
+        );
 
-            wc_get_template('payment-methods-options.php', $args, '', Base::get_instance()->template_path());
-        }
+        wc_get_template('payment-methods-options.php', $args, '', Base::get_instance()->template_path());
     }
 
     /**
@@ -286,20 +289,18 @@ class Gateway extends WC_Payment_Gateway
      */
     public function country_selector_html($id)
     {
-        if($id == $this->id) {
-            $countries = $this->get_payment_method_countries();
-            if(!empty($countries)): ?>
-                <div class="preferred-country">
-                    <select name="<?php echo esc_attr($this->id); ?>[preferred_country]">
-                        <?php foreach ($countries as $country): ?>
-                            <option value="<?php echo esc_attr($country->code); ?>" <?php selected(Helper::get_preferred_country(), $country->code); ?>>
-                                <?php echo esc_html($country->name); ?>
-                            </option>
-                        <?php endforeach ?>
-                    </select>
-                </div>
-            <?php endif;
-        }
+        $countries = $this->get_payment_method_countries();
+        if(!empty($countries)): ?>
+            <div class="preferred-country">
+                <select name="<?php echo esc_attr($this->id); ?>[preferred_country]">
+                    <?php foreach ($countries as $country): ?>
+                        <option value="<?php echo esc_attr($country->code); ?>" <?php selected(Helper::get_preferred_country(), $country->code); ?>>
+                            <?php echo esc_html($country->name); ?>
+                        </option>
+                    <?php endforeach ?>
+                </select>
+            </div>
+        <?php endif;
     }
 
     /**
@@ -572,7 +573,7 @@ class Gateway extends WC_Payment_Gateway
         $translation_notice = '';
 
         if ( function_exists( 'icl_object_id' ) ) {
-            $translation_notice = ' ' . __( 'For translation with WPML use English here and translate in String Translation. Detailed instructions <a href="https://wpml.org/documentation/support/translating-woocommerce-sites-default-language-english/">here</a>.', 'everypay' );
+            $translation_notice = '<br>' . __( 'For translation with WPML use English here and translate in String Translation. Detailed instructions <a href="https://wpml.org/documentation/support/translating-woocommerce-sites-default-language-english/">here</a>.', 'everypay' );
         }
 
         $this->form_fields = array(
@@ -642,25 +643,25 @@ class Gateway extends WC_Payment_Gateway
                 'label'       => __( 'Update', 'everypay' ),
                 'type'        => 'update_button',
                 'disabled'    => !$this->api_username || !$this->api_secret || !$this->account_id,
-                'action'      => 'update_payment_methods',
+                'action'      => 'update_payment_methods_' . $this->id,
                 'desc_tip'    => false,
             ),
             'title_card'      => array(
                 'title'       => __( 'Title of Card Payment', 'everypay' ),
                 'type'        => 'text',
-                'description' => __( 'This controls the title which the user sees on card payments.', 'everypay' ),
+                'description' => __( 'This controls the title which the user sees on card payments.', 'everypay' ) . $translation_notice,
                 'default'     => __( 'Card payment', 'everypay' )
             ),
             'title_bank'      => array(
                 'title'       => __( 'Title of Bank Payment', 'everypay' ),
                 'type'        => 'text',
-                'description' => __( 'This controls the title which the user sees on bank payments.', 'everypay' ),
+                'description' => __( 'This controls the title which the user sees on bank payments.', 'everypay' ) . $translation_notice,
                 'default'     => __( 'Bank payment', 'everypay' )
             ),
             'title_alternative'      => array(
                 'title'       => __( 'Title of Alternative Payment', 'everypay' ),
                 'type'        => 'text',
-                'description' => __( 'This controls the title which the user sees on alternative payments.', 'everypay' ),
+                'description' => __( 'This controls the title which the user sees on alternative payments.', 'everypay' ) . $translation_notice,
                 'default'     => __( 'Alternative payment', 'everypay' )
             ),
             'payment_form'         => array(
@@ -737,7 +738,7 @@ class Gateway extends WC_Payment_Gateway
         $tokens = array();
 
         if((true === $this->token_enabled) && is_user_logged_in()) {
-            $tokens = maybe_unserialize(get_user_meta(get_current_user_id(), '_wc_everypay_tokens', true));
+            $tokens = maybe_unserialize(get_user_meta(get_current_user_id(), self::META_TOKENS, true));
         }
 
         /*
@@ -843,7 +844,7 @@ class Gateway extends WC_Payment_Gateway
                 unset($tokens[$token]);
             }
 
-            return (bool) update_user_meta(get_current_user_id(), '_wc_everypay_tokens', $tokens);
+            return (bool) update_user_meta(get_current_user_id(), self::META_TOKENS, $tokens);
         }
         return false;
     }
@@ -864,7 +865,7 @@ class Gateway extends WC_Payment_Gateway
 
             $tokens[ $token ]['default'] = true;
 
-            return (bool) update_user_meta( get_current_user_id(), '_wc_everypay_tokens', $tokens );
+            return (bool) update_user_meta( get_current_user_id(), self::META_TOKENS, $tokens );
 
         }
 

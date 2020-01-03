@@ -171,7 +171,7 @@ if(!class_exists('Everypay/Base')) {
                         */
 
                         // Update payment methods ajax
-                        add_action('wp_ajax_update_payment_methods', array($this, 'update_payment_methods'));
+                        add_action('wp_ajax_update_payment_methods_' . $this->gateway_slug, array($this, 'update_payment_methods'));
 
                         // Payment methods schedule update action
                         add_action(self::$schedule_hook, array($this, 'update_payment_methods'));
@@ -325,8 +325,7 @@ if(!class_exists('Everypay/Base')) {
                 wp_enqueue_style($style_handle, $this->plugin_url() . '/assets/css/style.css', array(), '20191011');
 
                 wp_register_script($script_handle, $this->plugin_url() . '/assets/js/script.js', array('jquery'), '20191011', true);
-                wp_localize_script($script_handle, 'payment_method_settings', array(
-                    'name' => $this->gateway_slug,
+                wp_localize_script($script_handle, $this->gateway_slug . '_payment_method_settings', array(
                     'names' => array(
                         $this->gateway_slug . '_' . Gateway::TYPE_CARD,
                         $this->gateway_slug . '_' . Gateway::TYPE_BANK,
