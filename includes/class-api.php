@@ -1,9 +1,15 @@
 <?php
 
+namespace Everypay;
+
+if(!defined('ABSPATH')) {
+    exit;
+} // Exit if accessed directly.
+
 /**
  * Communicate with API v3.
  */
-class WC_Everypay_Api
+class Api
 {
     /**
      * @var string
@@ -42,7 +48,7 @@ class WC_Everypay_Api
     protected $version;
 
     /**
-     * @var WC_Logger
+     * @var Logger
      */
     protected $log;
 
@@ -58,7 +64,7 @@ class WC_Everypay_Api
         $this->api_secret = $secret;
         $this->api_url = $url;
         $this->version = $version;
-        $this->log = new WC_Everypay_Logger();
+        $this->log = new Logger();
         $this->log->set_debug($debug);
     }
 
@@ -66,7 +72,7 @@ class WC_Everypay_Api
      * Initiate One-Off payment.
      *
      * @param Order $order
-     * @param WC_Gateway_Everypay $gateway
+     * @param Gateway $gateway
      * @return array
      */
     public function payment_oneoff($order, $gateway)
@@ -80,8 +86,8 @@ class WC_Everypay_Api
             'nonce' => $this->nonce(),
             'email' => $order->get_billing_email(),
             'customer_ip' => $order->get_customer_ip_address(),
-            'customer_url' => $gateway->get_notify_url(array('order_reference' => $order->get_id(), 'redirect' => 1)),
-            'locale' => WC_Everypay_Helper::get_locale(),
+            'customer_url' => $gateway->get_notify_url(array('redirect' => 1)),
+            'locale' => Helper::get_locale(),
             'request_token' => $gateway->get_token_enabled(),
             'timestamp' => get_date_from_gmt(current_time('mysql', true), 'c'),
             'integration_details' => $this->get_integration()
@@ -90,11 +96,11 @@ class WC_Everypay_Api
         $data = array_merge($data, $this->get_billing_fields($order));
         $data = array_merge($data, $this->get_shipping_fields($order));
 
-        if($preferred_country = WC_Everypay_Helper::get_order_preferred_country($order)) {
+        if($preferred_country = Helper::get_order_preferred_country($order)) {
             $data['preferred_country'] = $preferred_country;
         }
 
-        if($gateway->get_payment_form() == WC_Gateway_Everypay::FORM_IFRAME) {
+        if($gateway->get_payment_form() == Gateway::FORM_IFRAME) {
             $data['skin_name'] = $gateway->get_skin_name();
         }
 
@@ -105,7 +111,7 @@ class WC_Everypay_Api
      * Initiate CIT payment.
      *
      * @param Order $order
-     * @param WC_Gateway_Everypay $gateway
+     * @param Gateway $gateway
      * @return array
      */
     public function payment_cit($order, $gateway)
@@ -121,7 +127,7 @@ class WC_Everypay_Api
             'customer_ip' => $order->get_customer_ip_address(),
             'customer_url' => $gateway->get_notify_url(array('order_reference' => $order->get_id(), 'redirect' => 1)),
             'timestamp' => get_date_from_gmt(current_time('mysql', true), 'c'),
-            'token' => $order->get_meta(WC_Gateway_Everypay::META_TOKEN),
+            'token' => $order->get_meta(Gateway::META_TOKEN),
             'token_security' => 'none',
             'integration_details' => $this->get_integration()
         );
@@ -139,7 +145,7 @@ class WC_Everypay_Api
      */
     public function payment_status($order)
     {
-        return $this->request('payments', $order->get_meta(WC_Gateway_Everypay::META_REFERENCE), array(
+        return $this->request('payments', $order->get_meta(Gateway::META_REFERENCE), array(
             'api_username' => $this->api_username
         ), self::GET);
     }
@@ -147,7 +153,7 @@ class WC_Everypay_Api
     /**
      * Get processing account data.
      *
-     * @param WC_Gateway_Everypay $gateway
+     * @param Gateway $gateway
      * @return array
      */
     public function processing_account($gateway)

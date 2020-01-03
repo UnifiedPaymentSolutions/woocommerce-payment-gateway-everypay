@@ -1,6 +1,14 @@
 <?php
 
-class WC_Everypay_Helper
+namespace Everypay;
+
+if(!defined('ABSPATH')) {
+    exit;
+} // Exit if accessed directly.
+
+use WC_Order;
+
+class Helper
 {
     /**
      * @var string[]
@@ -59,7 +67,7 @@ class WC_Everypay_Helper
      */
     public static function get_order_preferred_country(WC_Order $order)
     {
-        $country = $order->get_meta(WC_Gateway_Everypay::META_COUNTRY);
+        $country = $order->get_meta(Gateway::META_COUNTRY);
 
         if(!$country) {
             $country = self::get_locale();
@@ -83,11 +91,11 @@ class WC_Everypay_Helper
             $bank = strpos($payment_method->source, '_ob_') !== false;
 
             switch ($type) {
-                case WC_Gateway_Everypay::TYPE_CARD:
+                case Gateway::TYPE_CARD:
                     return $card;
-                case WC_Gateway_Everypay::TYPE_BANK:
+                case Gateway::TYPE_BANK:
                     return $bank;
-                case WC_Gateway_Everypay::TYPE_ALTER:
+                case Gateway::TYPE_ALTER:
                     return !$card && !$bank;
                 default:
                     return true;

@@ -1,5 +1,11 @@
 <?php
 
+namespace Everypay;
+
+if(!defined('ABSPATH')) {
+    exit;
+} // Exit if accessed directly.
+
 /**
  * Manage saved cards on My Account page (needs to be active as WC does not initialize gateways on all pages)
  *
@@ -7,7 +13,7 @@
  * Date: 01/12/15
  * Time: 09:04
  */
-class WC_Gateway_Everypay_Account {
+class Account {
 
 
 	public function __construct() {
@@ -19,7 +25,7 @@ class WC_Gateway_Everypay_Account {
 		if ( ! is_user_logged_in() ) {
 			return;
 		}
-		$gateway = new WC_Gateway_Everypay();
+		$gateway = new Gateway();
 		$tokens  = $gateway->get_user_tokens();
 
 		if ( ! empty( $tokens ) ) {
@@ -29,7 +35,7 @@ class WC_Gateway_Everypay_Account {
 				'nonce_field' => wp_nonce_field( 'everypay_manage_tokens_uid_' . get_current_user_id(), '_wpnonce', true, false )
 			);
 
-			wc_get_template( 'my-account.php', $args, '', WC_Everypay::get_instance()->plugin_path() . '/templates/' );
+			wc_get_template( 'my-account.php', $args, '', Base::get_instance()->plugin_path() . '/templates/' );
 		}
 
 	}
@@ -60,7 +66,7 @@ class WC_Gateway_Everypay_Account {
 
 	public function remove_token( $token ) {
 
-		$gateway = new WC_Gateway_Everypay();
+		$gateway = new Gateway();
 		$result  = $gateway->remove_user_token( sanitize_text_field( $token ) );
 
 		if ( true === $result ) {
@@ -74,7 +80,7 @@ class WC_Gateway_Everypay_Account {
 
 	public function set_token_default( $token ) {
 
-		$gateway = new WC_Gateway_Everypay();
+		$gateway = new Gateway();
 		$result  = $gateway->set_user_token_default( sanitize_text_field( $token ) );
 
 		if ( true === $result ) {
@@ -84,9 +90,5 @@ class WC_Gateway_Everypay_Account {
 		}
 
 		return;
-
 	}
-
 }
-
-new WC_Gateway_Everypay_Account();

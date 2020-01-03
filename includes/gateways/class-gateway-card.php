@@ -1,18 +1,21 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) {
+
+namespace Everypay;
+
+if(!defined('ABSPATH')) {
     exit;
 } // Exit if accessed directly.
 
 /**
  * WooCommerce EveryPay.
  *
- * @class   WC_Gateway_Everypay_Card
- * @extends WC_Gateway_Everypay
+ * @class   Gateway_Card
+ * @extends Gateway
  * @version 1.2.0
  * @package WooCommerce Payment Gateway Everypay/Includes
  * @author  EveryPay
  */
-class WC_Gateway_Everypay_Card extends WC_Gateway_Everypay
+class Gateway_Card extends Gateway
 {
     /**
      * @var string
@@ -44,6 +47,9 @@ class WC_Gateway_Everypay_Card extends WC_Gateway_Everypay
 
         // Add country selector for everypay payment methods
         add_action('woocommerce_everypay_fieldset_start', array($this, 'country_selector_html'), 10, 1);
+        
+        // Payment methods to display
+        add_action('woocommerce_everypay_form_start', array($this, 'payment_method_options'));
     }
 
     /**
@@ -79,7 +85,7 @@ class WC_Gateway_Everypay_Card extends WC_Gateway_Everypay
                 'myaccount_page_id' => get_option('woocommerce_myaccount_page_id')
             );
 
-            wc_get_template('tokens.php', $args, '', WC_Everypay()->template_path());
+            wc_get_template('tokens.php', $args, '', Base::get_instance()->template_path());
         }
     }
 
@@ -90,6 +96,6 @@ class WC_Gateway_Everypay_Card extends WC_Gateway_Everypay
      */
     public function get_payment_methods()
     {
-        return WC_Everypay_Helper::filter_payment_methods(parent::get_payment_methods(), WC_Gateway_Everypay::TYPE_CARD);
+        return Helper::filter_payment_methods(parent::get_payment_methods(), Gateway::TYPE_CARD);
     }
 }
