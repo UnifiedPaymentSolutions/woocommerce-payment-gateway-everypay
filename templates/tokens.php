@@ -3,7 +3,7 @@
     <?php foreach($tokens as $token): ?>
         <?php if(true === $token['active']): ?>
             <label class="payment-token-option">
-                <img src="<?php echo esc_attr(plugins_url('/assets/images/', dirname(__FILE__)) . $token['cc_type']); ?>.png" alt="<?php echo esc_attr($token['labels']['type_name']); ?>" width="47" height="30">
+                <img src="<?php echo esc_attr(plugins_url('/assets/images/', dirname(__FILE__)) . $token['cc_type']); ?>.svg" alt="<?php echo esc_attr($token['labels']['type_name']); ?>" width="47" height="30">
                 <?php echo esc_html($token['labels']['card_name']); ?>
                 <input type="radio" name="<?php echo esc_attr($gateway_id); ?>[token]" value="<?php echo esc_attr($token['cc_token']); ?>"/>
             </label>
