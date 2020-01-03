@@ -43,10 +43,10 @@ class Gateway_Bank extends Gateway
         $this->title = $this->get_option('title_bank');
 
         // Add country selector for everypay payment methods
-        add_action('woocommerce_everypay_fieldset_start', array($this, 'country_selector_html'), 10, 1);
+        add_action('woocommerce_fieldset_start_' . $this->id, array($this, 'country_selector_html'), 10);
 
         // Payment methods to display
-        add_action('woocommerce_everypay_form_start', array($this, 'payment_method_options'));
+        add_action('woocommerce_form_start_' . $this->id, array($this, 'payment_method_options'), 10);
     }
 
     /**

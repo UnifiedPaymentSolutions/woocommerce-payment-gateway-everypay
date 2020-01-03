@@ -126,4 +126,16 @@ class Helper
         return in_array($locale, self::$allowed_countries) ? $locale : self::$default_country;
     }
 
+    /**
+     * Convert string suitable for api url.
+     *
+     * @param string $string
+     * @return string
+     */
+    public static function api_url_case($string)
+    {
+        $parts = explode('_', $string);
+        $parts = array_map('ucfirst', $parts);
+        return implode('_', $parts);
+    }
 }

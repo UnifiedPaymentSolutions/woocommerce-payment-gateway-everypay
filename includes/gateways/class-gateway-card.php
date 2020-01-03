@@ -32,8 +32,8 @@ class Gateway_Card extends Gateway
     {
         parent::__construct();
 
-        add_action('woocommerce_everypay_fieldset_start', array($this, 'token_hint_html'), 20, 1);
-        add_action('woocommerce_everypay_form_end', array($this, 'tokens_html'), 10, 1);
+        add_action('woocommerce_fieldset_start_' . $this->id, array($this, 'token_hint_html'), 20);
+        add_action('woocommerce_form_end_' . $this->id, array($this, 'tokens_html'), 10);
     }
 
     /**
@@ -46,10 +46,10 @@ class Gateway_Card extends Gateway
         $this->title = $this->get_option('title_card');
 
         // Add country selector for everypay payment methods
-        add_action('woocommerce_everypay_fieldset_start', array($this, 'country_selector_html'), 10, 1);
+        add_action('woocommerce_fieldset_start_' . $this->id, array($this, 'country_selector_html'), 10);
         
         // Payment methods to display
-        add_action('woocommerce_everypay_form_start', array($this, 'payment_method_options'));
+        add_action('woocommerce_form_start_' . $this->id, array($this, 'payment_method_options'), 10);
     }
 
     /**
@@ -58,9 +58,9 @@ class Gateway_Card extends Gateway
      * @param string $id
      * @return void
      */
-    public function token_hint_html($id)
+    public function token_hint_html()
     {
-        if($id == $this->id && !is_user_logged_in() && $this->token_enabled) {
+        if(!is_user_logged_in() && $this->token_enabled) {
             ?><p><?php esc_html_e('To save your card securely for easier future payments, sign up for an account or log in to your existing account.', 'everypay'); ?></p><?php
         }
     }
@@ -70,9 +70,9 @@ class Gateway_Card extends Gateway
      *
      * @return void
      */
-    public function tokens_html($id)
+    public function tokens_html()
     {
-        if($id == $this->id && $this->token_enabled) {
+        if($this->token_enabled) {
             $tokens = $this->get_user_tokens();
 
             if(empty($tokens)) {
