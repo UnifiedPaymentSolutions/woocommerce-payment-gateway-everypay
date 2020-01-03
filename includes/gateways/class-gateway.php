@@ -253,7 +253,7 @@ class Gateway extends WC_Payment_Gateway
         add_action('woocommerce_api_wc_gateway_' . $this->id, array($this, 'everypay_callback_handler'));
 
         // URL for callback / user redirect from gateway
-        $this->notify_url = WC()->api_request_url('WC_Gateway_' . ucfirst($this->id));
+        $this->notify_url = WC()->api_request_url('WC_Gateway_' . Helper::api_url_case($this->id));
 
         // Load the form fields.
         $this->init_form_fields();
@@ -333,22 +333,22 @@ class Gateway extends WC_Payment_Gateway
     public function admin_options()
     {
         ?>
-        <h3><?php _e( 'EveryPay', 'everypay' ); ?></h3>
-        <p><?php _e( 'EveryPay is a payment gateway service provider, enabling e-commerce merchants to online payments from their customers.', 'everypay' ); ?></p>
-        <p><a href="https://portal.every-pay.eu/"><?= __( 'Merchant Portal', 'everypay' ); ?></a> | <a
-                href="https://every-pay.com/contact/"><?= __( 'Contacts', 'everypay' ); ?></a> | <a
-                href="https://every-pay.com/documentation-overview/"><?= __( 'Documentation', 'everypay' ); ?></a>
+        <h3><?php esc_html_e( 'EveryPay', 'everypay' ); ?></h3>
+        <p><?php esc_html_e( 'EveryPay is a payment gateway service provider, enabling e-commerce merchants to online payments from their customers.', 'everypay' ); ?></p>
+        <p><a href="https://portal.every-pay.eu/"><?php esc_attr_e( 'Merchant Portal', 'everypay' ); ?></a> | <a
+                href="https://every-pay.com/contact/"><?php esc_attr_e( 'Contacts', 'everypay' ); ?></a> | <a
+                href="https://every-pay.com/documentation-overview/"><?php esc_attr_e( 'Documentation', 'everypay' ); ?></a>
         </p>
 
         <table class="form-table">
             <?php $this->generate_settings_html(); ?>
             <script type="text/javascript">
                 jQuery(function($) {
-                    var $sandbox = $('#woocommerce_everypay_sandbox'),
-                        $paymentForm = $('#woocommerce_everypay_payment_form'),
-                        $sandboxApiFields = $('#woocommerce_everypay_sandbox_api_username, #woocommerce_everypay_sandbox_api_secret').closest('tr'),
-                        $liveApiFields = $('#woocommerce_everypay_api_username, #woocommerce_everypay_api_secret').closest('tr'),
-                        $skinname = $('#woocommerce_everypay_skin_name').closest('tr');
+                    var $sandbox = $('#woocommerce_<?php echo esc_html($this->id); ?>_sandbox'),
+                        $paymentForm = $('#woocommerce_<?php echo esc_html($this->id); ?>_payment_form'),
+                        $sandboxApiFields = $('#woocommerce_<?php echo esc_html($this->id); ?>_sandbox_api_username, #woocommerce_<?php echo esc_html($this->id); ?>_sandbox_api_secret').closest('tr'),
+                        $liveApiFields = $('#woocommerce_<?php echo esc_html($this->id); ?>_api_username, #woocommerce_<?php echo esc_html($this->id); ?>_api_secret').closest('tr'),
+                        $skinname = $('#woocommerce_<?php echo esc_html($this->id); ?>_skin_name').closest('tr');
 
                     if($sandbox.val() == 'yes') {
                         $sandboxApiFields.show();
