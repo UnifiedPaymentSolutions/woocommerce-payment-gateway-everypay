@@ -24,16 +24,28 @@ class Helper
      * @var array[]
      */
     protected static $locales = array(
-        'EE' => array('et', 'et_EE'),
-        'LT' => array('lt', 'lt_LT'),
-        'LV' => array('lv', 'lv_LV'),
-        'RU' => array('ru', 'ru_RU')
+        'en' => array('en', 'en_US', 'en_AU', 'en_CA', 'en_NZ', 'en_GB'),
+        'et' => array('et', 'et_EE'),
+        'fi' => array('fi', 'fi_FI'),
+        'de' => array('de', 'de_DE', 'de_AT', 'de_CH'),
+        'lv' => array('lv', 'lv_LV'),
+        'lt' => array('lt', 'lt_LT'),
+        'ru' => array('ru', 'ru_RU'),
+        'es' => array('es', 'es_ES', 'es_AR', 'es_MX'),
+        'sv' => array('sv', 'sv_SE'),
+        'da' => array('da', 'da_DK'),
+        'pl' => array('pl', 'pl_PL'),
+        'it' => array('it', 'it_IT'),
+        'fr' => array('fr', 'fr_FR', 'fr_CA'),
+        'nl' => array('nl', 'nl_NL', 'nl_BE'),
+        'pt' => array('pt', 'pt-br', 'pt-pt', 'pt_BR', 'pt_PT'),
+        'no' => array('no', 'nb_NO', 'nn_NO')
     );
 
     /**
      * @var string
      */
-    protected static $default_locale = 'EN';
+    protected static $default_locale = 'en';
 
     /**
      * Get locale used for gateway.
