@@ -884,9 +884,17 @@ class Gateway extends WC_Payment_Gateway
     public function process_payment($order_id)
     {
         $order = wc_get_order($order_id);
-
+        
         if(!$this->valid_method($order)) {
             wc_add_notice(__('Payment method not selected!', 'everypay'), 'error');
+            return;
+        }
+
+        $validation_errors = $this->validate_order_data($order);
+        if(!empty($validation_errors)) {
+            foreach ($validation_errors as $validation_error) {
+                wc_add_notice($validation_error, 'error');
+            }
             return;
         }
 
@@ -905,7 +913,7 @@ class Gateway extends WC_Payment_Gateway
             } else {
                 $message = '';
             }
-            wc_add_notice(__('Payment error', 'everypay') . ' ' . $message, 'error');
+            wc_add_notice(__('Payment error', 'everypay') . $message, 'error');
             return;
         }
 
@@ -925,7 +933,24 @@ class Gateway extends WC_Payment_Gateway
     }
 
     /**
-     * 
+     * Validates order data that can not be used for API calls later.
+     *
+     * @param WC_Order $order
+     * @return array
+     */
+    public function validate_order_data(WC_Order $order)
+    {
+        $errors = array();
+
+        if(preg_match('/\A[\p{L}\- ]{3,30}\z/', $order->get_billing_state()) !== 1) {
+            $errors[] = __('Invalid billing state!', 'everypay');
+        }
+
+        return $errors;
+    }
+
+    /**
+     * If iframe can be used to pay for supplied order.
      *
      * @param WC_Order $order
      * @return boolean
