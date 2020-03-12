@@ -942,7 +942,7 @@ class Gateway extends WC_Payment_Gateway
     {
         $errors = array();
 
-        if(preg_match('/\A[\p{L}\- ]{3,30}\z/', $order->get_billing_state()) !== 1) {
+        if(!empty($order->get_billing_state()) && preg_match('/\A[\p{L}\- ]{3,30}\z/', $order->get_billing_state()) !== 1) {
             $errors[] = __('Invalid billing state!', 'everypay');
         }
 
