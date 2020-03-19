@@ -1049,13 +1049,7 @@ class Gateway extends WC_Payment_Gateway
 
         header( 'HTTP/1.1 200 OK' );
 
-        $input = file_get_contents('php://input');
-        if($input) {
-            parse_str($input, $data);
-            $order_id = $data['order_reference'];
-        } else {
-            $order_id = $_GET['order_reference'];
-        }
+        $order_id = $_GET['order_reference'];
 
         $this->log->debug('Callback handler started: order id = ' . print_r($order_id, true));
 

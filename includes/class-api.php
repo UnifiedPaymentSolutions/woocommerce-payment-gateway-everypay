@@ -125,7 +125,7 @@ class Api
             'nonce' => $this->nonce(),
             'email' => $order->get_billing_email(),
             'customer_ip' => $order->get_customer_ip_address(),
-            'customer_url' => $gateway->get_notify_url(array('order_reference' => $order->get_id(), 'redirect' => 1)),
+            'customer_url' => $gateway->get_notify_url(array('redirect' => 1)),
             'timestamp' => get_date_from_gmt(current_time('mysql', true), 'c'),
             'token' => $order->get_meta(Gateway::META_TOKEN),
             'token_security' => 'none',
