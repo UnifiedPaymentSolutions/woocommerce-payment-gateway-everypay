@@ -97,7 +97,13 @@ class Helper
      */
     public static function filter_payment_methods($payment_methods, $type)
     {
-        return array_filter($payment_methods, function($payment_method) use ($type) {
+        $sources = array();
+        return array_filter($payment_methods, function($payment_method) use ($type, &$sources) {
+
+            if(in_array($payment_method->source, $sources)) {
+                return false;
+            }
+            array_push($sources, $payment_method->source);
 
             $card = strpos($payment_method->source, 'card') !== false;
             $bank = strpos($payment_method->source, '_ob_') !== false;

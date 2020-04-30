@@ -199,8 +199,6 @@ class Gateway extends WC_Payment_Gateway
 
         $this->has_fields = true;
 
-        $this->order_button_text = __('Proceed to payment', 'everypay');
-
         // Title/description for WooCommerce admin
         $this->method_title       = __('EveryPay', 'everypay');
         $this->method_description = __('Card payments are provided by EveryPay', 'everypay');
