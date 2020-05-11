@@ -1,9 +1,47 @@
+.everypay-wrapper .preferred-country {
+    margin-bottom: 10px;
+}
+
 .everypay-wrapper label.payment-method-option.hidden {
     display: none;
 }
-.everypay-wrapper label.payment-method-option input, .everypay-wrapper label.payment-token-option input {
+
+.everypay-wrapper label.payment-method-option input,
+.everypay-wrapper label.payment-token-option input {
     display: none;
 }
-.everypay-wrapper label.payment-method-option.selected, .everypay-wrapper label.payment-token-option.selected {
-    border: 1px green solid;
+
+.everypay-wrapper .payment-method-options {
+    display: inline-grid;
+    grid-template-columns: auto auto;
+    grid-gap: 10px;
+}
+
+.everypay-wrapper label.payment-method-option,
+.everypay-wrapper label.payment-token-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 0 0px 1px #dfdcde;
+    cursor: pointer;
+    transition: box-shadow .3s;
+}
+
+.everypay-wrapper label.payment-method-option:hover,
+.everypay-wrapper label.payment-token-option:hover {
+    box-shadow: 0 0 0px 1px #000;
+}
+
+.everypay-wrapper label.payment-method-option.selected,
+.everypay-wrapper label.payment-token-option.selected {
+    box-shadow: 0 0 0px 2px #000;
+}
+
+.woocommerce-checkout #payment .everypay-wrapper label.payment-method-option img,
+.woocommerce-checkout #payment .everypay-wrapper label.payment-token-option img {
+    margin: 0;
 }
