@@ -201,7 +201,7 @@ class Gateway extends WC_Payment_Gateway
 
         // Title/description for WooCommerce admin
         $this->method_title       = __('EveryPay', 'everypay');
-        $this->method_description = __('Card payments are provided by EveryPay', 'everypay');
+        $this->method_description = __('E-commerce payments provided by Everypay', 'everypay');
 
         $this->supports = array('products');
 
