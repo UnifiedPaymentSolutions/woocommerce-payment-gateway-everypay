@@ -733,10 +733,12 @@ class Gateway extends WC_Payment_Gateway
      */
     public function get_user_tokens()
     {
-        $tokens = array();
-
         if((true === $this->token_enabled) && is_user_logged_in()) {
             $tokens = maybe_unserialize(get_user_meta(get_current_user_id(), self::META_TOKENS, true));
+        }
+
+        if(!isset($tokens) || !is_array($tokens)) {
+            $tokens = array();
         }
 
         /*
