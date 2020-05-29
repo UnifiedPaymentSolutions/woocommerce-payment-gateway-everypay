@@ -46,3 +46,9 @@ require_once('woo-includes/woo-functions.php');
  * Base functions
  */
 require_once('includes/class-base.php');
+
+add_action('plugins_loaded', function() {
+	EveryPay\Base::get_instance(
+		plugin_basename(__FILE__)
+	);
+}, 0);

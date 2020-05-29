@@ -97,14 +97,23 @@ if(!class_exists('Everypay/Base')) {
         protected $sub_methods_enabled = false;
 
         /**
+         * @var string
+         */
+        protected $plugin_basename;
+
+        /**
          * Return an instance of this class.
          *
+         * @param string $basename
          * @return object A single instance of this class.
          */
-        public static function get_instance() {
+        public static function get_instance($basename = null) {
             // If the single instance hasn't been set, set it now.
             if ( null == self::$instance ) {
-                self::$instance = new self;
+                if(!$basename) {
+                    throw new \Exception("Plugin basename missing!");
+                }
+                self::$instance = new self($basename);
             }
 
             return self::$instance;
@@ -144,10 +153,12 @@ if(!class_exists('Everypay/Base')) {
          *
          * @access private
          */
-        private function __construct()
+        private function __construct($basename)
         {
+            $this->plugin_basename = $basename;
+
             // Hooks.
-            add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'action_links' ) );
+            add_filter( 'plugin_action_links_' . $this->plugin_basename, array( $this, 'action_links' ) );
             add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
             add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
 
@@ -426,7 +437,7 @@ if(!class_exists('Everypay/Base')) {
          * @return array $input
          */
         public function plugin_row_meta( $input, $file ) {
-            if ( plugin_basename( __FILE__ ) !== $file ) {
+            if ( $this->plugin_basename !== $file ) {
                 return $input;
             }
 
@@ -450,7 +461,7 @@ if(!class_exists('Everypay/Base')) {
          */
         public function load_plugin_textdomain() {
             // Set filter for plugin's languages directory
-            $lang_dir = dirname( plugin_basename( __FILE__ ) ) . '/languages/';
+            $lang_dir = dirname( $this->plugin_basename ) . '/languages/';
             $lang_dir = apply_filters( 'woocommerce_' . $this->gateway_slug . '_languages_directory', $lang_dir );
 
             // Traditional WordPress plugin locale filter
@@ -605,8 +616,6 @@ if(!class_exists('Everypay/Base')) {
             return $this->plugin_path('templates') . '/' . ($append ? trim($append, '/') : '');
         }
     }
-
-    add_action('plugins_loaded', array(Base::class, 'get_instance'), 0);
 
     register_activation_hook(__FILE__, array(Base::class, 'activate'));
     register_deactivation_hook(__FILE__, array(Base::class, 'deactivate'));
