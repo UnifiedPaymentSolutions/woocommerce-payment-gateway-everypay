@@ -82,7 +82,7 @@ if(!class_exists('Everypay/Base')) {
          * @access public
          * @var    string
          */
-        public $doc_url = "https://every-pay.com/documentation-overview/";
+        public $doc_url = "https://support.every-pay.com/";
 
         /**
          * Wordpress schedule hook for automatic payment method updates.
@@ -436,18 +436,26 @@ if(!class_exists('Everypay/Base')) {
          *
          * @return array $input
          */
-        public function plugin_row_meta( $input, $file ) {
+        public function plugin_row_meta( $meta, $file ) {
             if ( $this->plugin_basename !== $file ) {
-                return $input;
+                return $meta;
             }
 
             $links = array(
-                '<a href="' . esc_url( $this->doc_url ) . '">' . __( 'Documentation', 'everypay' ) . '</a>',
+                '<a href="' . esc_url( $this->doc_url ) . '">' . __( 'EveryPay merchant support web', 'everypay' ) . '</a>',
             );
 
-            $input = array_merge( $input, $links );
+            $meta = array_merge( $meta, $links );
 
-            return $input;
+            $viewDetailsText = __( 'View details' );
+            foreach ($meta as $key => $value) {
+                if(strpos($value, $viewDetailsText) !== false) {
+                    unset($meta[$key]);
+                    break;
+                }
+            }
+
+            return $meta;
         }
 
         /**
