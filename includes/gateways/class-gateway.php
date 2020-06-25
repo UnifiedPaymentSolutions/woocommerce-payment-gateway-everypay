@@ -319,7 +319,7 @@ class Gateway extends WC_Payment_Gateway
      */
     public function script_manager()
     {
-        wp_register_script('wc-everypay-iframe', plugins_url( '/assets/js/everypay-iframe-handler.js', dirname(__FILE__)), array('jquery'), '1.0', true);
+        wp_register_script('wc-everypay-iframe', Base::get_instance()->plugin_url() . '/assets/js/everypay-iframe-handler.js', array('jquery'), '1.0', true);
         wp_enqueue_script('wc-everypay-iframe');
     }
 

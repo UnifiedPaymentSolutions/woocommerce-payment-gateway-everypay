@@ -96,6 +96,16 @@ class Gateway_Card extends Gateway
      */
     public function get_payment_methods()
     {
-        return Helper::filter_payment_methods(parent::get_payment_methods(), Gateway::TYPE_CARD);
+        $methods = Helper::filter_payment_methods(parent::get_payment_methods(), Gateway::TYPE_CARD);
+
+        $no_tokens = false;
+        if(is_user_logged_in() && $this->token_enabled) {
+            $no_tokens = empty($this->get_user_tokens());
+        }
+
+        if((!is_user_logged_in() || $no_tokens) && count($methods) == 1) {
+            $methods[0]->selected = true;
+        }
+        return $methods;
     }
 }
