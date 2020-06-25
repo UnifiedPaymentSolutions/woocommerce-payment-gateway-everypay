@@ -104,7 +104,9 @@ class Gateway_Card extends Gateway
         }
 
         if((!is_user_logged_in() || $no_tokens) && count($methods) == 1) {
-            $methods[0]->selected = true;
+            foreach ($methods as $key => $method) {
+                $methods[$key]->selected = true;
+            }
         }
         return $methods;
     }
