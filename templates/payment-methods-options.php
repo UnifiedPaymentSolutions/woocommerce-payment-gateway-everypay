@@ -2,7 +2,7 @@
 
     <div class="payment-method-options">
         <?php foreach ($methods as $method): ?>
-            <label class="payment-method-option <?php if($method->country && $preferred_country != $method->country) echo 'hidden'; ?> <?php if(isset($method->selected) && $method->selected) echo 'selected'; ?>">
+            <label class="payment-method-option <?php if($method->country && $preferred_country != $method->country) echo 'hidden'; ?> <?php if($method->selected) echo 'selected'; ?>">
                 <?php if($method->logo): ?>
                     <img src="<?php echo esc_attr($method->logo); ?>" alt="<?php echo esc_attr($method->name); ?>">
                 <?php else: ?>
@@ -12,7 +12,7 @@
                     data-country="<?php echo esc_attr($method->country); ?>"
                     name="<?php echo esc_attr($gateway_id); ?>[method]"
                     value="<?php echo esc_attr($method->source); ?>"
-                    <?php if($method->selected) echo 'checked'; ?>
+                    <?php checked($method->selected); ?>
                     >
             </label>
         <?php endforeach; ?>

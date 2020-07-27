@@ -135,13 +135,27 @@ class Helper
 
     /**
      * Get preferred country.
+     * If available countries supplied and
+     * preferred country not listed
+     * then returns first available country.
      *
+     * @param array|null $available
      * @return string
      */
-    public static function get_preferred_country()
+    public static function get_preferred_country($available = array())
     {
+        $preferred = self::$default_country;
+
         $locale = self::get_locale();
-        return in_array($locale, self::$allowed_countries) ? $locale : self::$default_country;
+        if(in_array($locale, self::$allowed_countries)) {
+            $preferred = $locale;
+        }
+
+        if(count($available) && !in_array($preferred, $available)) {
+            $preferred = reset($available);
+        }
+
+        return $preferred;
     }
 
     /**

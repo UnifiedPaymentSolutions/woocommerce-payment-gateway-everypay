@@ -338,9 +338,9 @@ if(!class_exists('Everypay/Base')) {
                 wp_register_script($script_handle, $this->plugin_url() . '/assets/js/script.js', array('jquery'), '20191011', true);
                 wp_localize_script($script_handle, $this->gateway_slug . '_payment_method_settings', array(
                     'names' => array(
-                        $this->gateway_slug . '_' . Gateway::TYPE_CARD,
-                        $this->gateway_slug . '_' . Gateway::TYPE_BANK,
-                        $this->gateway_slug . '_' . Gateway::TYPE_ALTER
+                        $this->gateway_slug . '_card',
+                        $this->gateway_slug . '_bank',
+                        $this->gateway_slug . '_alter'
                     )
                 ));
                 wp_enqueue_script($script_handle);

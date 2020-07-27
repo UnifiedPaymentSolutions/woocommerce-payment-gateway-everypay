@@ -270,17 +270,36 @@ class Gateway extends WC_Payment_Gateway
      */
     public function payment_method_options()
     {
+        $methods = $this->get_payment_methods();
+
         $args = array(
             'gateway_id' => $this->id,
-            'methods' => $this->get_payment_methods(),
-            'preferred_country' => Helper::get_preferred_country()
+            'methods' => $this->select_method_option($methods),
+            'preferred_country' => Helper::get_preferred_country(array_map(function($method) {
+                return $method->country;
+            }, $methods))
         );
 
         wc_get_template('payment-methods-options.php', $args, '', Base::get_instance()->template_path());
     }
 
     /**
-     * Display token hint html.
+     * Marks selected method.
+     *
+     * @param array $methods
+     * @return array
+     */
+    protected function select_method_option($methods)
+    {
+        $single = count($methods) == 1;
+        return array_map(function($method) use ($single) {
+            $method->selected = $single ? true : false;
+            return $method;
+        }, $methods);
+    }
+
+    /**
+     * Display country select html.
      *
      * @param string $id
      * @return void
@@ -288,11 +307,15 @@ class Gateway extends WC_Payment_Gateway
     public function country_selector_html($id)
     {
         $countries = $this->get_payment_method_countries();
+        $preferred_country = Helper::get_preferred_country(array_map(function($country) {
+            return $country->code;
+        }, $countries));
+
         if(!empty($countries)): ?>
             <div class="preferred-country">
                 <select name="<?php echo esc_attr($this->id); ?>[preferred_country]">
                     <?php foreach ($countries as $country): ?>
-                        <option value="<?php echo esc_attr($country->code); ?>" <?php selected(Helper::get_preferred_country(), $country->code); ?>>
+                        <option value="<?php echo esc_attr($country->code); ?>" <?php selected($preferred_country, $country->code); ?>>
                             <?php echo esc_html($country->name); ?>
                         </option>
                     <?php endforeach ?>
@@ -1303,7 +1326,7 @@ class Gateway extends WC_Payment_Gateway
     }
 
     /**
-     * Get methods by type.
+     * Get payment methods.
      *
      * @return object[]
      */
