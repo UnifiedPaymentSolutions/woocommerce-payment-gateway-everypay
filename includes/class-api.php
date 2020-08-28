@@ -86,9 +86,8 @@ class Api
             'nonce' => $this->nonce(),
             'email' => $order->get_billing_email(),
             'customer_ip' => $order->get_customer_ip_address(),
-            'customer_url' => $gateway->get_notify_url(array('redirect' => 1)),
             'locale' => Helper::get_locale(),
-            'request_token' => $gateway->get_token_enabled(),
+            'request_token' => $gateway->get_token_enabled() && is_user_logged_in(),
             'timestamp' => get_date_from_gmt(current_time('mysql', true), 'c'),
             'integration_details' => $this->get_integration()
         );
@@ -100,8 +99,11 @@ class Api
             $data['preferred_country'] = $preferred_country;
         }
 
-        if($gateway->get_payment_form() == Gateway::FORM_IFRAME) {
+        if($gateway->useIframe($order)) {
             $data['skin_name'] = $gateway->get_skin_name();
+            $data['customer_url'] = $gateway->get_iframe_return_url();
+        } else {
+            $data['customer_url'] = $gateway->get_customer_redirect_url($order->get_id());
         }
 
         return $this->request('payments', 'oneoff', $data, self::POST);
@@ -120,20 +122,26 @@ class Api
             'api_username' => $this->api_username,
             'account_name' => $gateway->get_account_id(),
             'amount' => number_format($order->get_total(), self::DECIMALS, '.', ''),
-            'token_agreement' => self::AGREEMENT_UNSCHEDULED,
             'order_reference' => $order->get_order_number(),
+            'token_agreement' => self::AGREEMENT_UNSCHEDULED,
             'nonce' => $this->nonce(),
             'email' => $order->get_billing_email(),
             'customer_ip' => $order->get_customer_ip_address(),
-            'customer_url' => $gateway->get_notify_url(array('redirect' => 1)),
             'timestamp' => get_date_from_gmt(current_time('mysql', true), 'c'),
             'token' => $order->get_meta(Gateway::META_TOKEN),
-            'token_security' => 'none',
             'integration_details' => $this->get_integration()
         );
 
         $data = array_merge($data, $this->get_billing_fields($order));
+        $data = array_merge($data, $this->get_shipping_fields($order));
 
+        if($gateway->useIframe($order)) {
+            $data['skin_name'] = $gateway->get_skin_name();
+            $data['customer_url'] = $gateway->get_iframe_return_url();
+        } else {
+            $data['customer_url'] = $gateway->get_customer_redirect_url($order->get_id());
+        }
+        
         return $this->request('payments', 'cit', $data, self::POST);
     }
 

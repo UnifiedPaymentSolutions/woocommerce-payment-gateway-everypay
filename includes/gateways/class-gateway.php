@@ -133,6 +133,16 @@ class Gateway extends WC_Payment_Gateway
     protected $notify_url;
 
     /**
+     * @var string
+     */
+    protected $iframe_return_url;
+
+    /**
+     * @var string
+     */
+    protected $customer_redirect_url;
+
+    /**
      * @var Logger
      */
     protected $log;
@@ -252,11 +262,17 @@ class Gateway extends WC_Payment_Gateway
         // Receipt page creates POST to gateway or hosts iFrame
         add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
 
-        // Add returning user / callback handler to WC API
-        add_action('woocommerce_api_wc_gateway_' . $this->id, array($this, 'everypay_callback_handler'));
+        $callback = 'WC_Gateway_' . Helper::api_url_case($this->id);
+        // Api callback handler
+        add_action('woocommerce_api_' . strtolower($callback), array($this, 'api_callback_handler'));
+        // Returning iframe customer handler
+        add_action('woocommerce_api_' . strtolower($callback) . '_iframe', array($this, 'iframe_return_handler'));
+        // Redirect customer to final page success/cancel/cart
+        add_action('woocommerce_api_' . strtolower($callback) . '_redirect', array($this, 'customer_redirect_handler'));
 
-        // URL for callback / user redirect from gateway
-        $this->notify_url = WC()->api_request_url('WC_Gateway_' . Helper::api_url_case($this->id));
+        $this->notify_url = WC()->api_request_url($callback);
+        $this->iframe_return_url = WC()->api_request_url($callback . '_Iframe');
+        $this->customer_redirect_url = WC()->api_request_url($callback . '_Redirect');
 
         // Load the form fields.
         $this->init_form_fields();
@@ -342,8 +358,8 @@ class Gateway extends WC_Payment_Gateway
      */
     public function script_manager()
     {
-        wp_register_script('wc-everypay-iframe', Base::get_instance()->plugin_url() . '/assets/js/everypay-iframe-handler.js', array('jquery'), '1.0', true);
-        wp_enqueue_script('wc-everypay-iframe');
+        wp_register_script('wc-payment-' . $this->id, Base::get_instance()->plugin_url() . '/assets/js/payment-handler.js', array('jquery'), '1.0', true);
+        wp_enqueue_script('wc-payment-'. $this->id);
     }
 
     /**
@@ -945,7 +961,7 @@ class Gateway extends WC_Payment_Gateway
 
         $this->log->debug(ucfirst($this->id) . ' selected for order #' . $order->get_id());
 
-        $redirect = $this->get_payment_form() == self::FORM_IFRAME && $this->iframe_availible($order) ? $order->get_checkout_payment_url(true) : $order->get_meta(self::META_LINK);
+        $redirect = $this->useIframe($order) ? $order->get_checkout_payment_url(true) : $order->get_meta(self::META_LINK);
         $this->log->debug('Redirect to: ' . $redirect);
 
         // Redirect to receipt page for iframe payment
@@ -970,6 +986,17 @@ class Gateway extends WC_Payment_Gateway
         }
 
         return $errors;
+    }
+
+    /**
+     * If iframe will be used for payment.
+     *
+     * @param WC_Order $order
+     * @return boolean
+     */
+    public function useIframe(WC_Order $order)
+    {
+        return $this->get_payment_form() == self::FORM_IFRAME && $this->iframe_availible($order);
     }
 
     /**
@@ -1049,16 +1076,30 @@ class Gateway extends WC_Payment_Gateway
 
         $this->script_manager();
 
-        $params = array(
-            'uri'       => 'https://' . parse_url($this->api_endpoint, PHP_URL_HOST),
-            'completed' => $this->get_return_url($order),
+        $script_data = array(
+            'uri'       => get_site_url(),
+            'redirect'  => $this->get_customer_redirect_url($order_id),
             'sandbox'   => $this->sandbox,
+            'ping'      => !$this->useIframe($order),
+            'order_id'  => $order_id,
+            'ajax_url'  => admin_url('admin-ajax.php')
         );
-        wp_localize_script('wc-everypay-iframe', 'wc_everypay_params', $params);
 
-        $payment_link = $order->get_meta(self::META_LINK);
-        echo '<iframe id="wc_everypay_iframe" name="wc_everypay_iframe" width="358" height="409" style="border: 0;" src="' . $payment_link . '"></iframe>';
+        $tempalte_args = array(
+            'use_iframe' => false
+        );
 
+        if($this->useIframe($order)) {
+            $script_data['ping'] = false;
+            $tempalte_args['use_iframe'] = true;
+            $tempalte_args['payment_link'] = $order->get_meta(self::META_LINK);
+        } else {
+            $script_data['ping'] = true;
+        }
+
+        wp_localize_script('wc-payment-' . $this->id, 'wc_payment_params', $script_data);
+
+        wc_get_template('payment.php', $tempalte_args, '', Base::get_instance()->template_path());
     }
 
     /**
@@ -1066,7 +1107,7 @@ class Gateway extends WC_Payment_Gateway
      *
      * @return void
      */
-    public function everypay_callback_handler()
+    public function api_callback_handler()
     {
         @ob_clean();
 
@@ -1092,46 +1133,79 @@ class Gateway extends WC_Payment_Gateway
             $this->process_order_status($order);
         }
 
-        if(isset($_GET['redirect'])) {
-            $this->redirect_callback($order);
-        }
         exit;
     }
 
     /**
-     * Redirect 
+     * Handle returning iframe payments.
      *
-     * @param WC_Order $order
      * @return void
      */
-    protected function redirect_callback($order)
+    public function iframe_return_handler()
     {
+        ?>
+        <script type="text/javascript">
+            window.parent.postMessage("start_ping", "<?php echo get_site_url(); ?>");
+        </script>
+        <?php
+        exit;
+    }
+
+    /**
+     * Redirect customer to final order page
+     *
+     * @param WC_Order|null $order
+     * @return void
+     */
+    public function customer_redirect_handler()
+    {
+        $order_id = (int) $_GET['order_id'];
+        $order = wc_get_order($order_id);
+
+        // Default redirect url
+        $redirect_url = wc_get_checkout_url();
+
+        // Order not found, redirect to checkout
+        if(!$order) {
+            $this->log->debug('Order not found = ' . $order_id . ' GET ' . $_GET['order_id']);
+            wc_add_notice(__('Order not found!', 'everypay'), 'error');
+            wp_redirect($redirect_url);
+            exit;
+        }
+
+        // Order not paid yet, redirect to payment page for status pinging.
+        if(!$order->has_status(wc_get_is_paid_statuses())) {
+            $redirect_url = $order->get_checkout_payment_url(true);
+            wp_redirect($redirect_url);
+            exit;
+        }
+
         $this->change_language($order->get_id());
 
         $payment_status = $order->get_meta(self::META_STATUS);
 
-        $this->log->debug('Do redirect, payment status = ' . print_r($payment_status, true));
-
-        switch($payment_status) {
-            case self::_VERIFY_SUCCESS:
-                $redirect_url = $this->get_return_url($order);
-                break;
-            case self::_VERIFY_FAIL:
-                wc_add_notice($this->status_messages[self::_VERIFY_FAIL], 'error');
-                $redirect_url = wc_get_checkout_url();
-                break;
-            case self::_VERIFY_CANCEL:
-                wc_add_notice($this->status_messages[self::_VERIFY_CANCEL], 'error');
-                $redirect_url = $order->get_cancel_order_url();
-                break;
-            case self::_VERIFY_ERROR:
-                wc_add_notice($this->status_messages[self::_VERIFY_ERROR], 'error');
-            default:
-                $redirect_url = wc_get_checkout_url();
-                break;
+        if($payment_status === '') {
+            // No status/response message
+            wc_add_notice(__('No payment status response received, please notify merchant!', 'everypay'), 'error');
+        } else if($payment_status == self::_VERIFY_SUCCESS) {
+            // Successfull payment redirect
+            $redirect_url = $this->get_return_url($order);
+        } else if($payment_status == self::_VERIFY_FAIL) {
+            // Failed payment message
+            wc_add_notice($this->status_messages[self::_VERIFY_FAIL], 'error');
+        } else if($payment_status == self::_VERIFY_CANCEL) {
+            // Canceled payment redirect and message
+            wc_add_notice($this->status_messages[self::_VERIFY_CANCEL], 'error');
+            $redirect_url = $order->get_cancel_order_url();
+        } else if($payment_status == self::_VERIFY_ERROR) {
+            // General error message
+            wc_add_notice($this->status_messages[self::_VERIFY_ERROR], 'error');
         }
 
-        wp_redirect($redirect_url); }
+        $this->log->debug('Do redirect, payment status = ' . print_r(array($payment_status, $redirect_url), true));
+        wp_redirect($redirect_url);
+        exit;
+    }
 
     /**
      * Change active language.
@@ -1441,6 +1515,27 @@ class Gateway extends WC_Payment_Gateway
             $url = $this->notify_url;
         }
         return $url;
+    }
+
+    /**
+     * Get iframe return url.
+     *
+     * @return string
+     */
+    public function get_iframe_return_url()
+    {
+        return $this->iframe_return_url;
+    }
+
+    /**
+     * Get customer redirect url.
+     *
+     * @param int $order_id
+     * @return string
+     */
+    public function get_customer_redirect_url($order_id)
+    {
+        return add_query_arg(array('order_id' => $order_id), $this->customer_redirect_url);
     }
 
     /**

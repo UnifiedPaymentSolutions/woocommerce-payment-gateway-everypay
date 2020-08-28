@@ -8,6 +8,7 @@ if(!defined('ABSPATH')) {
 
 use DateTime;
 use DateTimeZone;
+use Everypay\Gateway;
 
 if(!class_exists('Everypay/Base')) {
 
@@ -199,12 +200,39 @@ if(!class_exists('Everypay/Base')) {
                         add_action('woocommerce_checkout_update_order_meta', array($this, 'update_order_checkout_meta'), 10, 2);
 
                         add_filter('woocommerce_available_payment_gateways', array($this, 'multiply_methods'));
+
+                        add_action('wp_ajax_wc_payment_ping_status', array($this, 'ajax_status_ping'));
+                        add_action('wp_ajax_nopriv_wc_payment_ping_status', array($this, 'ajax_status_ping'));
                     }
                 } else {
                     add_action( 'admin_notices', array( $this, 'upgrade_notice' ) );
 
                     return false;
                 }
+            }
+        }
+
+        /**
+         * Check if order is in pending status.
+         *
+         * @return void
+         */
+        public function ajax_status_ping()
+        {
+            $order_id = (int) $_POST['order_id'];
+            $order = wc_get_order($order_id);
+
+            $payment_status = $order->get_meta(Gateway::META_STATUS);
+
+            switch ($order->get_meta(Gateway::META_STATUS)) {
+                case Gateway::_VERIFY_SUCCESS:
+                    die('SUCCESS');
+                case Gateway::_VERIFY_FAIL:
+                    die('FAIL');
+                case Gateway::_VERIFY_CANCEL:
+                    die('CANCEL');
+                default:
+                    die('PENDING');
             }
         }
 
