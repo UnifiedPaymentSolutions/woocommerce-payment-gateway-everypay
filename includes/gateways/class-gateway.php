@@ -1162,6 +1162,8 @@ class Gateway extends WC_Payment_Gateway
         $order_id = (int) $_GET['order_id'];
         $order = wc_get_order($order_id);
 
+        $initial = isset($_GET['init']) && $_GET['init'];
+
         // Default redirect url
         $redirect_url = wc_get_checkout_url();
 
@@ -1173,8 +1175,8 @@ class Gateway extends WC_Payment_Gateway
             exit;
         }
 
-        // Order not paid yet, redirect to payment page for status pinging.
-        if(!$order->has_status(wc_get_is_paid_statuses())) {
+        // Return from everypay, order not paid yet, redirect to payment page for status pinging.
+        if($initial && $order->has_status(wc_get_is_pending_statuses())) {
             $redirect_url = $order->get_checkout_payment_url(true);
             wp_redirect($redirect_url);
             exit;
@@ -1531,11 +1533,18 @@ class Gateway extends WC_Payment_Gateway
      * Get customer redirect url.
      *
      * @param int $order_id
+     * @param bool $initial
      * @return string
      */
-    public function get_customer_redirect_url($order_id)
+    public function get_customer_redirect_url($order_id, $initial = false)
     {
-        return add_query_arg(array('order_id' => $order_id), $this->customer_redirect_url);
+        $arguments = array(
+            'order_id' => $order_id
+        );
+        if($initial) {
+            $arguments['init'] = 1;
+        }
+        return add_query_arg($arguments, $this->customer_redirect_url);
     }
 
     /**

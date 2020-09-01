@@ -103,7 +103,7 @@ class Api
             $data['skin_name'] = $gateway->get_skin_name();
             $data['customer_url'] = $gateway->get_iframe_return_url();
         } else {
-            $data['customer_url'] = $gateway->get_customer_redirect_url($order->get_id());
+            $data['customer_url'] = $gateway->get_customer_redirect_url($order->get_id(), true);
         }
 
         return $this->request('payments', 'oneoff', $data, self::POST);
