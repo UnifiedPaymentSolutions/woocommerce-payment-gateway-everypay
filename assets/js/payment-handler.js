@@ -10,7 +10,8 @@ jQuery(function($) {
         var interval,
             timeout,
             requestInProgress = false,
-            pingActive = false;
+            pingActive = false,
+            redirectActive = false;
 
         var intervalTimeout = 4000,
             pingLimitTimeout = 30000;
@@ -60,15 +61,20 @@ jQuery(function($) {
         };
 
         var callbackTimeout = function() {
-            this.stop();
-            messages.hide().$failed.show();
-            redirect();
+            if(!redirectActive) {
+                this.stop();
+                messages.hide().$failed.show();
+                redirect();
+            }
         };
 
         var redirect = function() {
-            setTimeout(function() {
-                window.location.href = redirect_url;
-            }, 2000);
+            if(!redirectActive) {
+                redirectActive = true;
+                setTimeout(function() {
+                    window.location.href = redirect_url;
+                }, 2000);
+            }
         };
 
         this.start = function() {

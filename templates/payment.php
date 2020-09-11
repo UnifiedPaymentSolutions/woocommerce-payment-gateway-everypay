@@ -10,6 +10,6 @@
 
 <div class="ping-message-wrapper">
 	<p class="status-message pending" style="display: none;"><?php esc_html_e('Please wait while we check your payment status…', 'everypay'); ?></p>
-	<p class="status-message success" style="display: none;"><?php esc_html_e('Payment successful. Redirecting to success page.', 'everypay'); ?></p>
+	<p class="status-message success" style="display: none;"><?php esc_html_e('Payment successful. Redirecting to success page.', 'everypay'); ?><br><?php echo str_replace(['{', '}'], ['<a href="' . $redirect_url . '">', '</a>'], esc_html__('If you are not automatically redirected within a few seconds click {here}.', 'everypay')); ?></p>
 	<p class="status-message failed" style="display: none;"><?php esc_html_e('Payment failed.', 'everypay'); ?></p>
 </div>

@@ -17,7 +17,7 @@ use WC_Payment_Gateway;
  *
  * @class   Gateway
  * @extends WC_Payment_Gateway
- * @version 1.2.0
+ * @version 1.2.1
  * @package WooCommerce Payment Gateway Everypay/Includes
  * @author  EveryPay
  */
@@ -1086,7 +1086,8 @@ class Gateway extends WC_Payment_Gateway
         );
 
         $tempalte_args = array(
-            'use_iframe' => false
+            'use_iframe' => false,
+            'redirect_url'  => $this->get_customer_redirect_url($order_id)
         );
 
         if($this->useIframe($order)) {
@@ -1109,9 +1110,11 @@ class Gateway extends WC_Payment_Gateway
      */
     public function api_callback_handler()
     {
+        $this->log->debug('Callback handler GET = ' . json_encode($_GET));
+
         @ob_clean();
 
-        header( 'HTTP/1.1 200 OK' );
+        header('HTTP/1.1 200 OK');
 
         $order_id = $_GET['order_reference'];
 
@@ -1159,10 +1162,12 @@ class Gateway extends WC_Payment_Gateway
      */
     public function customer_redirect_handler()
     {
-        $order_id = (int) $_GET['order_id'];
-        $order = wc_get_order($order_id);
+        $this->log->debug('Redirect handler GET = ' . json_encode($_GET));
 
+        $order_id = (int) $_GET['order_id'];
         $initial = isset($_GET['init']) && $_GET['init'];
+
+        $order = wc_get_order($order_id);
 
         // Default redirect url
         $redirect_url = wc_get_checkout_url();
@@ -1175,9 +1180,19 @@ class Gateway extends WC_Payment_Gateway
             exit;
         }
 
+        $this->log->debug('Order status = ' . $order->get_status());
+
+        // Pending order must have empty payment status, order processing in progress, wait and reload order
+        if($initial && $order->has_status(wc_get_is_pending_statuses()) && $order->get_meta(self::META_STATUS) !== '') {
+            $this->log->debug('Order processing in progress, WAIT and reload');
+            sleep(1);
+            $order = wc_get_order($order_id);
+        }
+
         // Return from everypay, order not paid yet, redirect to payment page for status pinging.
         if($initial && $order->has_status(wc_get_is_pending_statuses())) {
             $redirect_url = $order->get_checkout_payment_url(true);
+            $this->log->debug('Redirect to ping = ' . $redirect_url);
             wp_redirect($redirect_url);
             exit;
         }
@@ -1204,7 +1219,7 @@ class Gateway extends WC_Payment_Gateway
             wc_add_notice($this->status_messages[self::_VERIFY_ERROR], 'error');
         }
 
-        $this->log->debug('Do redirect, payment status = ' . print_r(array($payment_status, $redirect_url), true));
+        $this->log->debug(sprintf('Do redirect, payment status = %s, redirect url = %s', $payment_status, $redirect_url));
         wp_redirect($redirect_url);
         exit;
     }
@@ -1245,6 +1260,7 @@ class Gateway extends WC_Payment_Gateway
     {
         // No payment reference, don't do antything
         if(!$order->get_meta(self::META_REFERENCE)) {
+            $this->log->debug(sprintf('Can\'t process order %s status, missing meta reference', $order->get_id()));
             return;
         }
 
@@ -1255,6 +1271,10 @@ class Gateway extends WC_Payment_Gateway
         if($status === null) {
             return;
         }
+
+        $this->log->debug(sprintf('Save order %s status %s = %s', $order->get_id(), self::META_STATUS, $status));
+        $order->update_meta_data(self::META_STATUS, $status);
+        $order->save();
 
         $message = false;
 
@@ -1285,9 +1305,6 @@ class Gateway extends WC_Payment_Gateway
             $order->update_status('failed', $this->status_messages[self::_VERIFY_ERROR]);
             $this->log->debug('An error occurred while processing the payment response.');
         }
-
-        $order->update_meta_data(self::META_STATUS, $status);
-        $order->save();
     }
 
     /**

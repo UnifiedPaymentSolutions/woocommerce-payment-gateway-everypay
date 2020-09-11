@@ -225,7 +225,7 @@ class Api
             $this->log->info('API error: ' . wc_print_r('code - ' . $code, true));
         } else {
             $decoded = json_decode($result);
-            $this->log->info('API response: ' . wc_print_r($decoded, true));
+            $this->log->info('API response: ' . wc_print_r($this->mask_data($decoded), true));
         }
 
         curl_close($curl);
@@ -302,8 +302,8 @@ class Api
     /**
      * Masks sensitive data for logging.
      *
-     * @param array $data
-     * @return array
+     * @param mixed $data
+     * @return mixed
      */
     protected function mask_data($data)
     {
@@ -325,7 +325,21 @@ class Api
             'shipping_state' => '***'
         );
 
-        return array_merge($data, array_intersect_key($mask, $data));
+        if(is_array($data)) {
+            return array_merge($data, array_intersect_key($mask, $data));
+        }
+
+        if(is_object($data)) {
+            $dataMasked = clone $data;
+            foreach ($mask as $field => $masked) {
+                if(isset($dataMasked->{$field})) {
+                    $dataMasked->{$field} = $masked;
+                }
+            }
+            return $dataMasked;
+        }
+
+        return $data;
     }
 
     /**
