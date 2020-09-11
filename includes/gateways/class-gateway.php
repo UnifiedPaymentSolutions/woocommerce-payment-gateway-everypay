@@ -1187,6 +1187,7 @@ class Gateway extends WC_Payment_Gateway
             $this->log->debug('Order processing in progress, WAIT and reload');
             sleep(1);
             $order = wc_get_order($order_id);
+            $this->log->debug('Order status after processing = ' . $order->get_status());
         }
 
         // Return from everypay, order not paid yet, redirect to payment page for status pinging.
