@@ -14,32 +14,27 @@ class Helper
      * @var string[]
      */
     protected static $allowed_countries = array('EE', 'LT', 'LV');
-    
-    /**
-     * @var string
-     */
-    protected static $default_country = 'EE';
 
     /**
      * @var array[]
      */
     protected static $locales = array(
-        'en' => array('en', 'en_US', 'en_AU', 'en_CA', 'en_NZ', 'en_GB'),
-        'et' => array('et', 'et_EE'),
-        'fi' => array('fi', 'fi_FI'),
-        'de' => array('de', 'de_DE', 'de_AT', 'de_CH'),
-        'lv' => array('lv', 'lv_LV'),
-        'lt' => array('lt', 'lt_LT'),
-        'ru' => array('ru', 'ru_RU'),
-        'es' => array('es', 'es_ES', 'es_AR', 'es_MX'),
-        'sv' => array('sv', 'sv_SE'),
-        'da' => array('da', 'da_DK'),
-        'pl' => array('pl', 'pl_PL'),
-        'it' => array('it', 'it_IT'),
-        'fr' => array('fr', 'fr_FR', 'fr_CA'),
-        'nl' => array('nl', 'nl_NL', 'nl_BE'),
-        'pt' => array('pt', 'pt-br', 'pt-pt', 'pt_BR', 'pt_PT'),
-        'no' => array('no', 'nb_NO', 'nn_NO')
+        'EN' => array('en', 'en_US', 'en_AU', 'en_CA', 'en_NZ', 'en_GB'),
+        'EE' => array('et', 'et_EE'),
+        'FI' => array('fi', 'fi_FI'),
+        'DE' => array('de', 'de_DE', 'de_AT', 'de_CH'),
+        'LV' => array('lv', 'lv_LV'),
+        'LT' => array('lt', 'lt_LT'),
+        'RU' => array('ru', 'ru_RU'),
+        'ES' => array('es', 'es_ES', 'es_AR', 'es_MX'),
+        'SV' => array('sv', 'sv_SE'),
+        'DA' => array('da', 'da_DK'),
+        'PL' => array('pl', 'pl_PL'),
+        'IT' => array('it', 'it_IT'),
+        'FR' => array('fr', 'fr_FR', 'fr_CA'),
+        'NL' => array('nl', 'nl_NL', 'nl_BE'),
+        'PT' => array('pt', 'pt-br', 'pt-pt', 'pt_BR', 'pt_PT'),
+        'NO' => array('no', 'nb_NO', 'nn_NO')
     );
 
     /**
@@ -139,20 +134,25 @@ class Helper
      * preferred country not listed
      * then returns first available country.
      *
-     * @param array|null $available
+     * @param array $available_countries
+     * @param string|null $default_country
      * @return string
      */
-    public static function get_preferred_country($available = array())
+    public static function get_preferred_country($available_countries, $default_country = null)
     {
-        $preferred = self::$default_country;
+        $preferred = null;
 
-        $locale = self::get_locale();
-        if(in_array($locale, self::$allowed_countries)) {
-            $preferred = $locale;
+        if($default_country) {
+            $preferred = $default_country;
+        } else {
+            $locale = self::get_locale();
+            if(in_array($locale, self::$allowed_countries)) {
+                $preferred = $locale;
+            }
         }
 
-        if(count($available) && !in_array($preferred, $available)) {
-            $preferred = reset($available);
+        if(is_null($preferred) || !in_array($preferred, $available_countries)) {
+            $preferred = reset($available_countries);
         }
 
         return $preferred;

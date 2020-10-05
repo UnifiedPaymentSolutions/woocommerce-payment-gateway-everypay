@@ -125,6 +125,11 @@ class Gateway extends WC_Payment_Gateway
     /**
      * @var string
      */
+    protected $default_country;
+
+    /**
+     * @var string
+     */
     protected $skin_name;
 
     /**
@@ -220,6 +225,7 @@ class Gateway extends WC_Payment_Gateway
 
         $this->payment_form = $this->get_option('payment_form');
         $this->skin_name = $this->get_option('skin_name');
+        $this->default_country = $this->get_option('default_country');
         $this->token_enabled = $this->get_option('token_enabled') === 'yes' ? true : false;
 
         // Log is created always for main transaction points - debug option adds more logging points during transaction
@@ -291,9 +297,7 @@ class Gateway extends WC_Payment_Gateway
         $args = array(
             'gateway_id' => $this->id,
             'methods' => $this->select_method_option($methods),
-            'preferred_country' => Helper::get_preferred_country(array_map(function($method) {
-                return $method->country;
-            }, $methods))
+            'preferred_country' => Helper::get_preferred_country($this->get_available_country_codes(), $this->get_default_country())
         );
 
         wc_get_template('payment-methods-options.php', $args, '', Base::get_instance()->template_path());
@@ -323,9 +327,7 @@ class Gateway extends WC_Payment_Gateway
     public function country_selector_html($id)
     {
         $countries = $this->get_payment_method_countries();
-        $preferred_country = Helper::get_preferred_country(array_map(function($country) {
-            return $country->code;
-        }, $countries));
+        $preferred_country = Helper::get_preferred_country($this->get_available_country_codes(), $this->get_default_country());
 
         if(!empty($countries)): ?>
             <div class="preferred-country">
@@ -706,9 +708,22 @@ class Gateway extends WC_Payment_Gateway
                 'type'        => 'select',
                 'options'     => array(
                     self::FORM_REDIRECT => __( 'Redirect to hosted form on EveryPay server', 'everypay' ),
-                    self::FORM_IFRAME => __( 'iFrame payment form integrated into checkout', 'everypay' ),
+                    self::FORM_IFRAME   => __( 'iFrame payment form integrated into checkout', 'everypay' ),
                 ),
                 'description' => __( "Hosted form on EveryPay server is the secure solution of choice, while iFrame provides better customer experience (https strongly advised)", 'everypay' ),
+                'default'     => 'redirect',
+                'desc_tip'    => false,
+            ),
+            'default_country' => array(
+                'title'       => __( 'Default Country ', 'everypay' ),
+                'type'        => 'select',
+                'options'     => array(
+                    ''   => __( 'Default (by locale)', 'everypay' ),
+                    'EE' => __( 'Estonia', 'everypay' ),
+                    'LV' => __( 'Latvia', 'everypay' ),
+                    'LT' => __( 'Lithuaina', 'everypay' )
+                ),
+                'description' => __( "By default country selection is attempted by currently active locale", 'everypay' ),
                 'default'     => 'redirect',
                 'desc_tip'    => false,
             ),
@@ -1453,6 +1468,24 @@ class Gateway extends WC_Payment_Gateway
     }
 
     /**
+     * Get availible country codes from payment methods.
+     *
+     * @return array
+     */
+    public function get_available_country_codes()
+    {
+        $country_codes = array_unique(
+            array_map(function($method) {
+                return $method->country;
+            }, $this->get_payment_methods())
+        );
+
+        sort($country_codes);
+
+        return $country_codes;
+    }
+
+    /**
      * Update payment methods for gateway.
      *
      * @param array $methods
@@ -1563,6 +1596,16 @@ class Gateway extends WC_Payment_Gateway
             $arguments['init'] = 1;
         }
         return add_query_arg($arguments, $this->customer_redirect_url);
+    }
+
+    /**
+     * Get default selected country.
+     *
+     * @return string
+     */
+    public function get_default_country()
+    {
+        return $this->default_country;
     }
 
     /**
