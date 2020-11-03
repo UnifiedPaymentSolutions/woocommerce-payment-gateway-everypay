@@ -16,25 +16,34 @@ class Helper
     protected static $allowed_countries = array('EE', 'LT', 'LV');
 
     /**
+     * @var string[]
+     */
+    protected static $locale_country_map = array(
+        'et' => 'EE',
+        'lt' => 'LT',
+        'lv' => 'LV'
+    );
+
+    /**
      * @var array[]
      */
     protected static $locales = array(
-        'EN' => array('en', 'en_US', 'en_AU', 'en_CA', 'en_NZ', 'en_GB'),
-        'EE' => array('et', 'et_EE'),
-        'FI' => array('fi', 'fi_FI'),
-        'DE' => array('de', 'de_DE', 'de_AT', 'de_CH'),
-        'LV' => array('lv', 'lv_LV'),
-        'LT' => array('lt', 'lt_LT'),
-        'RU' => array('ru', 'ru_RU'),
-        'ES' => array('es', 'es_ES', 'es_AR', 'es_MX'),
-        'SV' => array('sv', 'sv_SE'),
-        'DA' => array('da', 'da_DK'),
-        'PL' => array('pl', 'pl_PL'),
-        'IT' => array('it', 'it_IT'),
-        'FR' => array('fr', 'fr_FR', 'fr_CA'),
-        'NL' => array('nl', 'nl_NL', 'nl_BE'),
-        'PT' => array('pt', 'pt-br', 'pt-pt', 'pt_BR', 'pt_PT'),
-        'NO' => array('no', 'nb_NO', 'nn_NO')
+        'en' => array('en', 'en_US', 'en_AU', 'en_CA', 'en_NZ', 'en_GB'),
+        'et' => array('et', 'et_EE'),
+        'fi' => array('fi', 'fi_FI'),
+        'de' => array('de', 'de_DE', 'de_AT', 'de_CH'),
+        'lv' => array('lv', 'lv_LV'),
+        'lt' => array('lt', 'lt_LT'),
+        'ru' => array('ru', 'ru_RU'),
+        'es' => array('es', 'es_ES', 'es_AR', 'es_MX'),
+        'sv' => array('sv', 'sv_SE'),
+        'da' => array('da', 'da_DK'),
+        'pl' => array('pl', 'pl_PL'),
+        'it' => array('it', 'it_IT'),
+        'fr' => array('fr', 'fr_FR', 'fr_CA'),
+        'nl' => array('nl', 'nl_NL', 'nl_BE'),
+        'pt' => array('pt', 'pt-br', 'pt-pt', 'pt_BR', 'pt_PT'),
+        'no' => array('no', 'nb_NO', 'nn_NO')
     );
 
     /**
@@ -77,10 +86,10 @@ class Helper
         $country = $order->get_meta(Gateway::META_COUNTRY);
 
         if(!$country) {
-            $country = self::get_locale();
+            $country = self::getCountryByLocale(self::get_locale());
         }
 
-        return in_array($country, self::$allowed_countries) ? $country : null;
+        return $country && in_array($country, self::$allowed_countries) ? $country : null;
     }
 
     /**
@@ -145,9 +154,9 @@ class Helper
         if($default_country) {
             $preferred = $default_country;
         } else {
-            $locale = self::get_locale();
-            if(in_array($locale, self::$allowed_countries)) {
-                $preferred = $locale;
+            $country = self::getCountryByLocale(self::get_locale());
+            if($country && in_array($country, self::$allowed_countries)) {
+                $preferred = $country;
             }
         }
 
@@ -169,5 +178,16 @@ class Helper
         $parts = explode('_', $string);
         $parts = array_map('ucfirst', $parts);
         return implode('_', $parts);
+    }
+
+    /**
+     * Find corresponding country code for locale.
+     *
+     * @param string $locale
+     * @return string|null
+     */
+    private static function getCountryByLocale($locale)
+    {
+        return isset(self::$locale_country_map[$locale]) ? self::$locale_country_map[$locale] : null;
     }
 }
