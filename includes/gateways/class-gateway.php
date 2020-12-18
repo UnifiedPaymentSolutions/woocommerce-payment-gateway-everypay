@@ -35,6 +35,7 @@ class Gateway extends WC_Payment_Gateway
     const _VERIFY_SUCCESS = 1;  // payment successful
     const _VERIFY_FAIL = 2;     // payment failed
     const _VERIFY_CANCEL = 3;   // payment cancelled by user
+    const _VERIFY_PENDING = 4;  // payment sent for processing
 
     /**
      * @var string[]
@@ -1220,7 +1221,7 @@ class Gateway extends WC_Payment_Gateway
         if($payment_status === '') {
             // No status/response message
             wc_add_notice(__('No payment status response received, please notify merchant!', 'everypay'), 'error');
-        } else if($payment_status == self::_VERIFY_SUCCESS) {
+        } else if($payment_status == self::_VERIFY_SUCCESS || $payment_status == self::_VERIFY_PENDING) {
             // Successfull payment redirect
             $redirect_url = $this->get_return_url($order);
         } else if($payment_status == self::_VERIFY_FAIL) {
@@ -1308,6 +1309,10 @@ class Gateway extends WC_Payment_Gateway
 
             // Remove cart
             WC()->cart->empty_cart();
+        } elseif(self::_VERIFY_PENDING === $status) {
+            $order->update_status('on-hold', __('Payment sent to processing', 'everypay'));
+            WC()->cart->empty_cart();
+            $this->log->debug('Payment in processing.');
 
         } elseif(self::_VERIFY_FAIL === $status) {
             $order->update_status('failed', $this->status_messages[self::_VERIFY_FAIL]);
@@ -1362,6 +1367,7 @@ class Gateway extends WC_Payment_Gateway
     {
         $statuses = array(
             'settled' => self::_VERIFY_SUCCESS,
+            'sent_for_processing' => self::_VERIFY_PENDING,
             'authorised' => self::_VERIFY_SUCCESS,
             'failed'    => self::_VERIFY_FAIL,
             'cancelled' => self::_VERIFY_CANCEL,
