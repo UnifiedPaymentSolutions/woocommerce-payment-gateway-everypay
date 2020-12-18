@@ -1300,7 +1300,7 @@ class Gateway extends WC_Payment_Gateway
             $order->payment_complete($order->get_meta(self::META_REFERENCE));
 
             // Add order note
-            $order->add_order_note(sprintf(__('Card payment was successfully processed by EveryPay (Reference: %s, Timestamp: %s)', 'everypay'), $order->get_meta(self::META_REFERENCE), $response->payment_created_at));
+            $order->add_order_note(sprintf(__('Payment was successfully processed by EveryPay (Reference: %s, Timestamp: %s)', 'everypay'), $order->get_meta(self::META_REFERENCE), $response->payment_created_at));
 
             // Store the transaction ID for WC 2.2 or later.
             $order->update_meta_data('_transaction_id', $order->get_meta(self::META_REFERENCE));
@@ -1310,7 +1310,7 @@ class Gateway extends WC_Payment_Gateway
             // Remove cart
             WC()->cart->empty_cart();
         } elseif(self::_VERIFY_PENDING === $status) {
-            $order->update_status('on-hold', __('Payment sent to processing', 'everypay'));
+            $order->update_status('on-hold', __('Payment in processing', 'everypay'));
             WC()->cart->empty_cart();
             $this->log->debug('Payment in processing.');
 
