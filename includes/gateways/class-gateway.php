@@ -1379,12 +1379,12 @@ class Gateway extends WC_Payment_Gateway
             return self::_VERIFY_ERROR;
         }
 
-        $created_at = strtotime($response->payment_created_at);
-        $now = time() + 60;
-        if (($created_at > $now) || ($created_at < ($now - 600))) {
-            $this->log->debug('EveryPay error: response is older than 10 minutes, order not completed!');
-            return self::_VERIFY_ERROR;
-        }
+        // $created_at = strtotime($response->payment_created_at);
+        // $now = time() + 60;
+        // if (($created_at > $now) || ($created_at < ($now - 600))) {
+        //     $this->log->debug('EveryPay error: response is older than 10 minutes, order not completed!');
+        //     return self::_VERIFY_ERROR;
+        // }
 
         $status = isset($statuses[$response->payment_state]) ? $statuses[$response->payment_state] : null;
 
