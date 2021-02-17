@@ -60,7 +60,7 @@ if(!class_exists('Everypay/Base')) {
          * @access public
          * @var    string
          */
-        public $version = '1.3.5';
+        public $version = '1.3.6';
 
         /**
          * Required woocommerce version.
@@ -164,7 +164,7 @@ if(!class_exists('Everypay/Base')) {
             add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
 
             // Is WooCommerce activated?
-            if ( ! in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
+            if(!$this->is_plugin_active('woocommerce/woocommerce.php')) {
                 add_action( 'admin_notices', array( $this, 'woocommerce_missing_notice' ) );
 
                 return false;
@@ -445,7 +445,7 @@ if(!class_exists('Everypay/Base')) {
         public function action_links( $links ) {
             if ( current_user_can( 'manage_woocommerce' ) ) {
                 $plugin_links = array(
-                    '<a href="' . admin_url( 'admin.php?page=wc-settings&tab=checkout&section=wc_gateway_' . $this->gateway_slug ) . '">' . __( 'Payment Settings', 'everypay' ) . '</a>',
+                    '<a href="' . admin_url( 'admin.php?page=wc-settings&tab=checkout&section=' . $this->gateway_slug ) . '">' . __( 'Payment Settings', 'everypay' ) . '</a>',
                 );
 
                 return array_merge( $plugin_links, $links );
@@ -650,6 +650,19 @@ if(!class_exists('Everypay/Base')) {
         public function template_path($append = '')
         {
             return $this->plugin_path('templates') . '/' . ($append ? trim($append, '/') : '');
+        }
+
+        /**
+         * Check if plugin is active (also considers multisite settings).
+         *
+         * @param strign $plugin
+         * @return boolean
+         */
+        private function is_plugin_active($plugin)
+        {
+            $active_plugins = (array) get_option('active_plugins', array());
+            $active_site_plugins = get_site_option('active_sitewide_plugins');
+            return in_array($plugin, $active_plugins, true) || (is_multisite() ? isset($active_site_plugins[$plugin]) : false);
         }
     }
 
