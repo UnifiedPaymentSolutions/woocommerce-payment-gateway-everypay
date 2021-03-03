@@ -57,6 +57,33 @@ EveryPay has support for English and Estonian included, additional translations 
 
 ## Changelog ##
 
+# 1.3.6 #
+* Multisite compatible requirements check
+
+# 1.3.5 #
+* Removed 10 min payment response restriction
+
+# 1.3.4 #
+* On-hold status logic when payment takes longer to process
+
+# 1.3.3 #
+* Invalid locale value fix
+* Version sematics change, x.3.x references to the v3 API compability
+
+# 1.2.2 #
+* Preselected country implementetion
+
+# 1.2.1 #
+* Implemented order status ping logic after returning to the store
+
+# 1.2.0 #
+* New plugin structure for new API (v3)
+* Duplicate payment methods fix
+* Payment methods design upgrade
+* Fix notice when no tokens are saved
+* Add missing card logo
+* Preselect submethod if only one option availible
+
 # 1.1.0 #
 * Replace deprecated woocommerce functions
 
