@@ -10,8 +10,7 @@ jQuery(function($) {
         var interval,
             timeout,
             requestInProgress = false,
-            pingActive = false,
-            redirectActive = false;
+            pingActive = false;
 
         var intervalTimeout = 4000,
             pingLimitTimeout = 32000;
@@ -54,7 +53,7 @@ jQuery(function($) {
 
                 callback = this.list.shift();
 
-                // Callback return true, next queue element execution is allowed
+                // Callback returns true, next queue element execution is allowed
                 if(callback()) {
                     this.running = false;
 
@@ -107,24 +106,18 @@ jQuery(function($) {
 
         var callbackTimeout = function() {
             queue.add($.proxy(function() {
-                if(!redirectActive) {
-                    this.stop();
-                    messages.failed();
+                this.stop();
+                messages.failed();
 
-                    redirect();
-                    return false;
-                }
-                return true;
+                redirect();
+                return false;
             }, this));
         };
 
         var redirect = function() {
-            if(!redirectActive) {
-                redirectActive = true;
-                setTimeout(function() {
-                    window.location.href = redirect_url;
-                }, 2000);
-            }
+            setTimeout(function() {
+                window.location.href = redirect_url;
+            }, 2000);
         };
 
         this.start = function() {
