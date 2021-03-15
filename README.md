@@ -57,6 +57,9 @@ EveryPay has support for English and Estonian included, additional translations 
 
 ## Changelog ##
 
+# 1.3.7 #
+* Order status ping with action queue implementation
+
 # 1.3.6 #
 * Multisite compatible requirements check
 
@@ -71,7 +74,7 @@ EveryPay has support for English and Estonian included, additional translations 
 * Version sematics change, x.3.x references to the v3 API compability
 
 # 1.2.2 #
-* Preselected country implementetion
+* Preselected country implementation
 
 # 1.2.1 #
 * Implemented order status ping logic after returning to the store

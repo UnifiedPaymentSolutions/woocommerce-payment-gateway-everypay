@@ -14,17 +14,60 @@ jQuery(function($) {
             redirectActive = false;
 
         var intervalTimeout = 4000,
-            pingLimitTimeout = 30000;
+            pingLimitTimeout = 32000;
 
         var messages = {
-            $pending: $('.ping-message-wrapper .status-message.pending'),
-            $success: $('.ping-message-wrapper .status-message.success'),
-            $failed: $('.ping-message-wrapper .status-message.failed'),
+            elements: {
+                $pending: $('.ping-message-wrapper .status-message.pending'),
+                $success: $('.ping-message-wrapper .status-message.success'),
+                $failed: $('.ping-message-wrapper .status-message.failed')
+            },
             hide: function() {
-                this.$pending.hide();
+                this.elements.$pending.hide();
+                return this;
+            },
+            pending: function() {
+                this.elements.$pending.show();
+                return this;
+            },
+            failed: function() {
+                this.hide();
+                this.elements.$failed.show();
+                return this;
+            },
+            success: function() {
+                this.hide();
+                this.elements.$success.show();
                 return this;
             }
         };
+
+        var queue = {
+            list: [],
+            running: false,
+            execute: function() {
+                var callback;
+
+                if(this.running) return;
+
+                this.running = true;
+
+                callback = this.list.shift();
+
+                // Callback return true, next queue element execution is allowed
+                if(callback()) {
+                    this.running = false;
+
+                    if(this.list.length) {
+                        this.execute();
+                    }
+                }
+            },
+            add: function(callback) {
+                this.list.push(callback);
+                this.execute();
+            }
+        }
 
         var pingOrderStatus = function() {
             if(requestInProgress) return;
@@ -42,30 +85,37 @@ jQuery(function($) {
         };
 
         var handleResponse = function(response) {
-            if(pingActive) {
-                if(response !== 'PENDING') {
+            queue.add($.proxy(function() {
+                if(pingActive) {
+                    if(response !== 'PENDING') {
 
-                    this.stop();
+                        this.stop();
 
-                    if(response === 'SUCCESS') {
-                        messages.hide().$success.show();
-                    } else {
-                        messages.hide().$failed.show();
+                        if(response === 'SUCCESS') {
+                            messages.success();
+                        } else {
+                            messages.failed();
+                        }
+                          
+                        redirect();
+                        return false;
                     }
-                      
-                    redirect();
-                } else {
-                    messages.hide().$pending.show();
                 }
-            }
+                return true;
+            }, this));
         };
 
         var callbackTimeout = function() {
-            if(!redirectActive) {
-                this.stop();
-                messages.hide().$failed.show();
-                redirect();
-            }
+            queue.add($.proxy(function() {
+                if(!redirectActive) {
+                    this.stop();
+                    messages.failed();
+
+                    redirect();
+                    return false;
+                }
+                return true;
+            }, this));
         };
 
         var redirect = function() {
@@ -79,7 +129,7 @@ jQuery(function($) {
 
         this.start = function() {
             pingActive = true;
-            messages.hide().$pending.show();
+            messages.pending();
             interval = setInterval($.proxy(pingOrderStatus, this), intervalTimeout);
             timeout = setTimeout($.proxy(callbackTimeout, this), pingLimitTimeout);
         }

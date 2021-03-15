@@ -361,7 +361,7 @@ class Gateway extends WC_Payment_Gateway
      */
     public function script_manager()
     {
-        wp_register_script('wc-payment-' . $this->id, Base::get_instance()->plugin_url() . '/assets/js/payment-handler.js', array('jquery'), '1.0', true);
+        wp_register_script('wc-payment-' . $this->id, Base::get_instance()->plugin_url() . '/assets/js/payment-handler.js', array('jquery'), '1.1', true);
         wp_enqueue_script('wc-payment-'. $this->id);
     }
 
