@@ -60,7 +60,7 @@ if(!class_exists('Everypay/Base')) {
          * @access public
          * @var    string
          */
-        public $version = '1.3.7';
+        public $version = '1.3.8';
 
         /**
          * Required woocommerce version.
@@ -203,6 +203,8 @@ if(!class_exists('Everypay/Base')) {
 
                         add_action('wp_ajax_wc_payment_ping_status', array($this, 'ajax_status_ping'));
                         add_action('wp_ajax_nopriv_wc_payment_ping_status', array($this, 'ajax_status_ping'));
+
+                        add_filter("woocommerce_order_get_payment_method_title", array($this, 'get_sub_method_title'), 10, 2);
                     }
                 } else {
                     add_action( 'admin_notices', array( $this, 'upgrade_notice' ) );
@@ -292,6 +294,36 @@ if(!class_exists('Everypay/Base')) {
                 }
             }
             return $_available_gateways;
+        }
+
+        /**
+         * Get sub method title for gateway.
+         * 
+         * @param string $title
+         * @param WC_Order $order
+         * @return string
+         */
+        public function get_sub_method_title($title, $order)
+        {
+            if($order->get_payment_method() === $this->gateway_slug) {
+
+                $gateway = $this->get_gateway();
+                $methods = $gateway->get_payment_methods();
+                $sub_method = $order->get_meta(Gateway::META_METHOD);
+                
+                // Get sub method for token payemnt
+                if($order->get_meta(Gateway::META_TOKEN) && !$sub_method) {
+                    $sub_method = 'card';
+                }
+
+                foreach($methods as $method) {
+                    if($method->source === $sub_method) {
+                        $title = $method->name;
+                        break;
+                    }
+                }
+            }
+            return $title;
         }
 
         /**

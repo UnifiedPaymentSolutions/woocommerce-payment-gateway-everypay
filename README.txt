@@ -67,6 +67,9 @@ EveryPay has support for English and Estonian included, additional translations 
 
 == Changelog ==
 
+= 1.3.8 =
+* Display sub-method name for payment gateway title
+
 = 1.3.7 =
 * Order status ping with action queue implementation
 
