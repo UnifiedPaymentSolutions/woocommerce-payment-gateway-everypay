@@ -313,13 +313,15 @@ if(!class_exists('Everypay/Base')) {
                 
                 // Get sub method for token payemnt
                 if($order->get_meta(Gateway::META_TOKEN) && !$sub_method) {
-                    $sub_method = 'card';
+                    $title = __('Card', 'everypay');
                 }
 
-                foreach($methods as $method) {
-                    if($method->source === $sub_method) {
-                        $title = $method->name;
-                        break;
+                if($sub_method) {
+                    foreach($methods as $method) {
+                        if($method->source === $sub_method) {
+                            $title = $method->name;
+                            break;
+                        }
                     }
                 }
             }
