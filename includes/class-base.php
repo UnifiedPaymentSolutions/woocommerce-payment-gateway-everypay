@@ -60,7 +60,7 @@ if(!class_exists('Everypay/Base')) {
          * @access public
          * @var    string
          */
-        public $version = '1.3.8';
+        public $version = '1.3.9';
 
         /**
          * Required woocommerce version.
@@ -224,8 +224,6 @@ if(!class_exists('Everypay/Base')) {
             $order_id = (int) $_POST['order_id'];
             $order = wc_get_order($order_id);
 
-            $payment_status = $order->get_meta(Gateway::META_STATUS);
-
             switch ($order->get_meta(Gateway::META_STATUS)) {
                 case Gateway::_VERIFY_SUCCESS:
                     die('SUCCESS');
@@ -284,6 +282,12 @@ if(!class_exists('Everypay/Base')) {
                 }
 
                 $offset = array_search($this->gateway_slug, array_keys($_available_gateways));
+
+                $order = array_map(function($code) {
+                    $code = $code === Gateway::TYPE_ALTER ? 'alter' : $code;
+                    return $this->gateway_slug . '_' . $code;
+                }, $gateway->get_sort_order());
+                $gateway->sort_method_types( $methods, $order );
 
                 // Replace everypay method with multiple payment methods
                 if($offset !== false) {

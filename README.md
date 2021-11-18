@@ -57,6 +57,9 @@ EveryPay has support for English and Estonian included, additional translations 
 
 ## Changelog ##
 
+# 1.3.9 #
+* Add payment method types sorting
+
 # 1.3.8 #
 * Display sub-method name for payment gateway title
 

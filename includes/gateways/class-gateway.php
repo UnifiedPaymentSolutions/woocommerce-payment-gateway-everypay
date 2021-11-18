@@ -104,6 +104,11 @@ class Gateway extends WC_Payment_Gateway
     protected $payment_methods;
 
     /**
+     * @var array
+     */
+    protected $sort_order;
+
+    /**
      * @var string
      */
     protected $api_endpoint;
@@ -187,6 +192,11 @@ class Gateway extends WC_Payment_Gateway
     );
 
     /**
+     * @var string[]
+     */
+    protected $method_types;
+
+    /**
      * @var Api
      */
     protected $api;
@@ -240,6 +250,16 @@ class Gateway extends WC_Payment_Gateway
         // Payment methods to display in payment method
         $payment_methods = $this->get_option('payment_methods', false);
         $this->payment_methods = $payment_methods ? json_decode($payment_methods) : array();
+
+        // Method types names and default sort order
+        $this->method_types = array(
+            self::TYPE_CARD => __('Card Payment', 'everypay'),
+            self::TYPE_BANK => __('Bank Payment', 'everypay'),
+            self::TYPE_ALTER => __('Alternative Payment', 'everypay')
+        );
+
+        // Methods sort order
+        $this->sort_order = $this->get_option('sort_order');
 
         $this->status_messages = array(
             self::_VERIFY_FAIL => __('Payment was declined. Please try again.', 'everypay'),
@@ -604,6 +624,131 @@ class Gateway extends WC_Payment_Gateway
     }
 
     /**
+     * Generate sort order table
+     *
+     * @param string $key
+     * @param array $data
+     * @return string
+     */
+    public function generate_sort_order_html($key, $data)
+    {
+        $field_key = $this->get_field_key( $key );
+        $defaults  = array(
+            'title'             => '',
+            'disabled'          => false,
+            'class'             => '',
+            'css'               => '',
+            'placeholder'       => '',
+            'type'              => 'text',
+            'desc_tip'          => false,
+            'description'       => '',
+            'custom_attributes' => array(),
+        );
+
+        $data = wp_parse_args( $data, $defaults );
+
+        $value = $this->get_option( $key );
+        $methods_sorted = $this->method_types;
+
+        $this->sort_method_types( $methods_sorted, $value );
+
+        ob_start();
+        ?>
+        <tr valign="top">
+            <th scope="row" class="titledesc">
+                <label><?php echo wp_kses_post( $data['title'] ); ?> <?php echo $this->get_tooltip_html( $data ); // WPCS: XSS ok. ?></label>
+            </th>
+            <td class="forminp">
+                <fieldset>
+                    <legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
+                    <table class="wc_gateways widefat" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <?php
+                                $columns = array(
+                                    'sort'        => '',
+                                    'name'        => __( 'Method', 'woocommerce' )
+                                );
+
+                                foreach ( $columns as $key => $column ) {
+                                    echo '<th class="' . esc_attr( $key ) . '">' . esc_html( $column ) . '</th>';
+                                }
+                                ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            foreach ( $methods_sorted as $code => $name ) {
+                                echo '<tr>';
+                                    foreach ( $columns as $key => $column ) {
+                                        $width = $key === 'sort' ? '1%' : '';
+                                        echo '<td class="' . esc_attr( $key ) . '" width="' . esc_attr( $width ) . '">';
+                                        switch ( $key ) {
+                                            case 'sort':
+                                                ?>
+                                                <div class="wc-item-reorder-nav">
+                                                    <button type="button" class="wc-move-up" tabindex="0" aria-hidden="false" aria-label="<?php /* Translators: %s Payment gateway name. */ echo esc_attr( sprintf( __( 'Move the "%s" methods up', 'woocommerce' ), $name ) ); ?>"><?php esc_html_e( 'Move up', 'woocommerce' ); ?></button>
+                                                    <button type="button" class="wc-move-down" tabindex="0" aria-hidden="false" aria-label="<?php /* Translators: %s Payment gateway name. */ echo esc_attr( sprintf( __( 'Move the "%s" methods down', 'woocommerce' ), $name ) ); ?>"><?php esc_html_e( 'Move down', 'woocommerce' ); ?></button>
+                                                    <input type="hidden" name="<?php echo esc_attr($field_key.'[]'); ?>" value="<?php echo esc_attr( $code ); ?>" />
+                                                </div>
+                                                <?php
+                                                break;
+                                            case 'name':
+                                                echo wp_kses_post( $name );
+                                                break;
+                                        }
+                                        echo '</td>';
+
+                                    }
+                                echo '</tr>';
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                    <?php echo $this->get_description_html( $data ); // WPCS: XSS ok. ?>
+                </fieldset>
+            </td>
+        </tr>
+        <?php
+
+        return ob_get_clean();
+    }
+
+    /**
+     * Sort methods by order
+     *
+     * @param array $methods
+     * @param array $order
+     * @return void
+     */
+    public function sort_method_types(&$methods, $order)
+    {
+        uksort($methods, function($a, $b) use ($order) {
+            $order = $order ?: [];
+            $a_index = array_search($a, $order);
+            $b_index = array_search($b, $order);
+            return ($a_index !== false ? $a_index : 100) < ($b_index !== false ? $b_index : 100) ? -1 : 1;
+        });
+    }
+
+    /**
+     * Validate sort order values
+     *
+     * @param string $key
+     * @param mixed $value
+     * @return array
+     */
+    public function validate_sort_order_field( $key, $value )
+    {
+        $default_order = array_keys($this->method_types);
+        $value = !is_array( $value ) ? $default_order :
+            array_filter( $value, function($val) use ($default_order) {
+                return in_array($val, $default_order);
+            });
+        return array_values($value);
+    }
+
+    /**
      * Initialise Gateway Settings Form Fields
      *
      * @access public
@@ -703,6 +848,12 @@ class Gateway extends WC_Payment_Gateway
                 'type'        => 'text',
                 'description' => __( 'This controls the title which the user sees on alternative payments.', 'everypay' ) . $translation_notice,
                 'default'     => __( 'Alternative payment', 'everypay' )
+            ),
+            'sort_order'  => array(
+                'title'       => __( 'Methods Order', 'everypay' ),
+                'type'        => 'sort_order',
+                'description' => __( 'Sort order of payment method types.', 'everypay' ),
+                'default'     => array_keys($this->method_types)
             ),
             'payment_form'         => array(
                 'title'       => __( 'Payment Integration Variants ', 'everypay' ),
@@ -1642,5 +1793,15 @@ class Gateway extends WC_Payment_Gateway
     public function get_token_enabled()
     {
         return $this->token_enabled;
+    }
+
+    /**
+     * Get methods sort order.
+     *
+     * @return array
+     */
+    public function get_sort_order()
+    {
+        return $this->sort_order;
     }
 }
