@@ -873,7 +873,7 @@ class Gateway extends WC_Payment_Gateway
                     ''   => __( 'Default (by locale)', 'everypay' ),
                     'EE' => __( 'Estonia', 'everypay' ),
                     'LV' => __( 'Latvia', 'everypay' ),
-                    'LT' => __( 'Lithuaina', 'everypay' )
+                    'LT' => __( 'Lithuania', 'everypay' )
                 ),
                 'description' => __( "By default country selection is attempted by currently active locale", 'everypay' ),
                 'default'     => 'redirect',
