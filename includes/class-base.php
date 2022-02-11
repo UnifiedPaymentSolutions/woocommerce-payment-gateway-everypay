@@ -205,6 +205,8 @@ if(!class_exists('Everypay/Base')) {
                         add_action('wp_ajax_nopriv_wc_payment_ping_status', array($this, 'ajax_status_ping'));
 
                         add_filter("woocommerce_order_get_payment_method_title", array($this, 'get_sub_method_title'), 10, 2);
+
+                        add_action('woocommerce_admin_order_data_after_order_details', array($this, 'admin_sub_method_title'), 10, 1);
                     }
                 } else {
                     add_action( 'admin_notices', array( $this, 'upgrade_notice' ) );
@@ -330,6 +332,33 @@ if(!class_exists('Everypay/Base')) {
                 }
             }
             return $title;
+        }
+
+        /**
+         * Add sub method title for order view in admin.
+         *
+         * @param WC_Order $order
+         * @return void
+         */
+        public function admin_sub_method_title($order)
+        {
+            $sub_title = $this->get_sub_method_title(null, $order);
+            if($sub_title):
+                $original = sprintf(
+                    __( 'Payment via %s', 'woocommerce' ),
+                    esc_html( $this->get_gateway()->get_title() )
+                );
+            ?>
+                <script type="text/javascript">
+                    jQuery(function($) {
+                        var $orderNumberElement = $('p.order_number'),
+                            origText = '<?php echo $original; ?>',
+                            newText = origText + ' (<?php echo esc_html($sub_title); ?>)',
+                            replace = $orderNumberElement.text().replace(origText, newText);
+                        $orderNumberElement.text(replace);
+                    });
+                </script>
+            <?php endif;
         }
 
         /**
