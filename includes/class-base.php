@@ -60,7 +60,7 @@ if(!class_exists('Everypay/Base')) {
          * @access public
          * @var    string
          */
-        public $version = '1.3.9';
+        public $version = '1.3.10';
 
         /**
          * Required woocommerce version.
