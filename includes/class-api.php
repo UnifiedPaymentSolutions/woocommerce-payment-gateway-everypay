@@ -180,7 +180,7 @@ class Api
      * @param string $method
      * @return array
      */
-    protected function request($endpoint, $parameter = null, $data, $method)
+    protected function request($endpoint, $parameter, $data, $method)
     {
         $url = $this->api_url . '/' . $endpoint;
 

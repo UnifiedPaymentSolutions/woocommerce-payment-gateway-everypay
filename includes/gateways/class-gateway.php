@@ -853,7 +853,7 @@ class Gateway extends WC_Payment_Gateway
                 'title'       => __( 'Methods Order', 'everypay' ),
                 'type'        => 'sort_order',
                 'description' => __( 'Sort order of payment method types.', 'everypay' ),
-                'default'     => array_keys($this->method_types)
+                'default'     => $this->method_types ? array_keys($this->method_types) : null
             ),
             'payment_form'         => array(
                 'title'       => __( 'Payment Integration Variants ', 'everypay' ),
@@ -1612,12 +1612,14 @@ class Gateway extends WC_Payment_Gateway
         $countries = WC()->countries->get_countries();
 
         foreach ($this->get_payment_methods() as $method) {
-            $code = strtoupper($method->country);
-            if($method->country && !isset($payment_countries[$code])) {
-                $country = new stdClass;
-                $country->code = $code;
-                $country->name = isset($countries[$code]) ? $countries[$code] : $code;
-                $payment_countries[$code] = $country;
+            if($method->country) {
+                $code = strtoupper($method->country);
+                if(!isset($payment_countries[$code])) {
+                    $country = new stdClass;
+                    $country->code = $code;
+                    $country->name = isset($countries[$code]) ? $countries[$code] : $code;
+                    $payment_countries[$code] = $country;
+                }
             }
         }
 
