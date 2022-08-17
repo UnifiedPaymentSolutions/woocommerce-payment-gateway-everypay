@@ -67,6 +67,9 @@ EveryPay has support for English and Estonian included, additional translations 
 
 == Changelog ==
 
+= 1.3.11 =
+* PHP version 8 fixes
+
 = 1.3.10 =
 * Display sub-method name for payment gateway title in admin order view
 
